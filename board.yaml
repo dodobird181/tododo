@@ -375,12 +375,12 @@ items:
   title: '[Claude] Refactor relationship concept'
   points: 0
   description: ''
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782163122.327
   edited: 1782163122.327
-  moved: 1782163450.854
-  moved_to: Doing
+  moved: 1782163451.277
+  moved_to: Todo
   viewed: 1782163380.205
   actor: dodobird181
