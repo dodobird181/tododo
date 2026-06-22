@@ -8,7 +8,7 @@ items:
   title: Drag me into another column
   points: 1
   description: ''
-  column: FARTS AND PEE
+  column: Doing
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
