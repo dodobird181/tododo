@@ -159,3 +159,14 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782106789.225
+- id: 5d8831a7bfb74d8a96457d2b5a060ff3
+  title: '[CLAUDE] add concept of "relationships" for items'
+  points: 0
+  description: these should be stored in board.yaml under each item as a new field,
+    where the key is one of the items in the "relationships" top-level key (defaults
+    are "Assigned to"  and "Reporter",) and the value is a github user from the list
+    of collaborators (also a new toplevel key, probably the github username)
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107106.297
