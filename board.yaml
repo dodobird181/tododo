@@ -1,7 +1,10 @@
 columns:
 - Todo
 - Doing
+- I farted
+- AND PEED MY PANTS
 - Done
+- Hidden
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
@@ -130,6 +133,13 @@ items:
   column: Todo
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+- id: 4edf41a82f864d178a5293f84eefb7ff
+  title: '[CLAUDE] the columns should be minimizable'
   points: 0
   description: ''
   column: Todo
