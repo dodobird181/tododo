@@ -528,19 +528,35 @@ class App:
         (tracked in workspace.yaml) so removing oneself from the YAML later sticks
         and isn't undone on the next commit."""
         key = self._board_key()
-        if self.workspace.self_added(key):
-            return
         name, email = self.git.identity()
         if email:
             self.board.register_author(email, name)
-        # Prefer a resolved GitHub login (what collaborators normally are); fall
-        # back to the git display name when the login isn't known yet.
         rec = self.board.authors.get(email, {}) if email else {}
-        handle = rec.get("github") or name
+        # Prefer: already-resolved login in authors > gh CLI > git display name.
+        gh_login = rec.get("github") or self.git.github_username()
+        handle = gh_login or name
         if not handle:
             return  # no identity available yet — try again on the next commit
-        if handle.lower() not in {c.lower() for c in self.board.collaborators}:
-            self.board.collaborators.append(handle)
+
+        in_list = handle.lower() in {c.lower() for c in self.board.collaborators}
+        if in_list:
+            if not self.workspace.self_added(key):
+                self.workspace.mark_self_added(key)
+                self.workspace.save(key, self.board.columns)
+            return
+
+        # Handle not in collaborators.
+        # If self_added is true and collaborators is non-empty, the user intentionally
+        # removed themselves — respect that and don't re-add.
+        if self.workspace.self_added(key) and self.board.collaborators:
+            return
+
+        # First commit on this board, or recovering from an empty collaborators list.
+        self.board.collaborators.append(handle)
+        # Cache the gh-resolved login in authors so avatar lookup skips the HTTP call.
+        if gh_login and email and not rec.get("github"):
+            if self.board.set_author_meta(email, github=gh_login):
+                self._authors_dirty = True
         self.workspace.mark_self_added(key)
         self.workspace.save(key, self.board.columns)
 
@@ -1926,7 +1942,10 @@ class App:
             self.screen.blit(initials, (cx - initials.get_width() // 2, cy - initials.get_height() // 2))
         if not floating:
             gh = self.board.authors.get(email, {}).get("github")
-            who = f"@{gh}" if gh else (name or "unknown")
+            if gh:
+                who = f"{name} (@{gh})" if name else f"@{gh}"
+            else:
+                who = name or "unknown"
             label = f"{who} <{email}>" if email else who
             self._avatar_hits.append((pygame.Rect(cx - r, cy - r, av_d, av_d), label))
 

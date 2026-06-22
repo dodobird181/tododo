@@ -107,6 +107,22 @@ class GitSync:
             self._identity = cached
         return cached
 
+    def github_username(self) -> str:
+        """The GitHub login for the local user via the gh CLI; cached, best-effort."""
+        cached = getattr(self, "_github_username", None)
+        if cached is None:
+            try:
+                result = subprocess.run(
+                    ["gh", "api", "user", "--jq", ".login"],
+                    capture_output=True, text=True, timeout=5,
+                    cwd=self.repo_root,
+                )
+                cached = result.stdout.strip() if result.returncode == 0 else ""
+            except Exception:
+                cached = ""
+            self._github_username = cached
+        return cached
+
     def last_fetch_label(self) -> str:
         with self._lock:
             ts = self.last_fetch
