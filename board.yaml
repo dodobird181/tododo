@@ -317,3 +317,13 @@ items:
   created: 1782134490.619
   edited: 1782134507.738
   actor: Sam
+- id: 8f53b674079a4b788ddbf552e8677523
+  title: '[CLAUDE] switching to a new board should be a siupported action'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782134585.545
+  edited: 1782134585.545
+  actor: Sam
