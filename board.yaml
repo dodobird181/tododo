@@ -400,21 +400,47 @@ items:
     \ and the first item in the list (if any) should automatically be selected as\
     \ you're typing (so that by pressing ENTER you open that board.)\n   4. the current\
     \ board should be hidden from the boards view"
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135739.203
   edited: 1782136060.943
-  actor: Sam
+  moved: 1782136318.223
+  moved_to: Done
+  actor: Claude
 - id: 2c5e08d64dad4bb792b6d6e777969ff9
   title: '[CLAUDE] Markdown soft-rendering should workm inside the description editor
     itself'
   points: 0
   description: similar to obsidian. right now it only works in the kanban / column
     view
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135785.318
   edited: 1782135785.318
+  moved: 1782136570.774
+  moved_to: Done
+  actor: Claude
+- id: a08251b3565c44a1bfb0e9565fdd7d91
+  title: '[CLAUDE] add color themes'
+  points: 0
+  description: '1. There should be a default theme .yaml file (with the current theme
+    right now,) following the pattern of settings and default settings / keybindings
+    and default keybindings in the codebase.
+
+
+    2. the theme files should live in a folder, with default_theme.yaml version controlled,
+    current_theme.yaml not version ontrolled, and then a list of 3 other themes to
+    choose from that come with the program (you can make them up yourself) all version
+    controlled. however, any additional files in the themes folder will not be version-ciontrolled
+    (user added themes)
+
+
+    3. the theme search view should work basically the same as the board search view'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782136651.714
+  edited: 1782136651.714
   actor: Sam
