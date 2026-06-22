@@ -1,0 +1,21 @@
+columns:
+- Todo
+- Doing
+- Done
+items:
+- id: seed0002
+  title: Hit the command key to open operations
+  points: 2
+  column: Todo
+- id: seed0003
+  title: Edits auto-commit and push to git
+  points: 3
+  column: Doing
+- id: seed0004
+  title: Set up tododo
+  points: 1
+  column: Done
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  column: Doing
