@@ -30,7 +30,7 @@ items:
     awdawd
 
     * awdawd'
-  column: Todo
+  column: Doing
 - id: seed0004
   title: Set up tododo
   points: 1
