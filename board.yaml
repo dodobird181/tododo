@@ -1,4 +1,5 @@
 columns:
+- Ideas
 - Todo
 - Doing
 - Done
@@ -90,7 +91,7 @@ items:
 
 
     should auto-create the directory if one does not exist on initial project start'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782148103.902
@@ -199,7 +200,7 @@ items:
   created: 1782145529.017
   edited: 1782148865.832
   moved: 1782148853.679
-  moved_to: Todo
+  moved_to: Done
   actor: Sam
 - id: c5e95c7f2e3d47feaf2471fb0f237dd6
   title: '[CLAUDE] please make the collaborator name / author name / actor name the
@@ -207,7 +208,7 @@ items:
   points: 0
   description: this should be unique, rather than real NAmes / first names / emails
     (which can change in github preferences)
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782150864.502
@@ -220,7 +221,7 @@ items:
   description: the list of items should basically be rendered in a similar way to
     columns, using the same higing / showing  display login as a ragular column would
     have, except it's in a popup modal
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151214.065
@@ -231,9 +232,21 @@ items:
   points: 0
   description: and also the keybinding should be added to the default keybindings
     and the keybindings.yaml for this current project
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151732.534
   edited: 1782151732.534
+  actor: Sam
+- id: 069280a9563b470da096488e8bf0ebf9
+  title: '[CLAUDE] automatically add the current github user / committer to collaborators
+    in the yaml board files (CLAUDE DID YOU DO THIS BECAUSE IT DOESNT SEEM SO)'
+  points: 0
+  description: should be on first commit. the users can manually remove people if
+    they want fromt he YAML
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782152514.008
+  edited: 1782152514.008
   actor: Sam
