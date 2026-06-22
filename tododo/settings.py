@@ -17,7 +17,8 @@ DEFAULT_PATH = ROOT / "default_settings.yaml"
 USER_PATH = ROOT / "settings.yaml"
 
 DEFAULTS = {
-    "descriptions": "selected",  # "selected" or "all"
+    "descriptions": "selected",      # "selected" or "all"
+    "merge_conflicts": "incoming",   # "incoming" (-X theirs) or "current" (-X ours)
 }
 
 
@@ -47,3 +48,8 @@ class Settings:
     @property
     def descriptions_always(self) -> bool:
         return str(self.values.get("descriptions", "selected")).lower() == "all"
+
+    def merge_option(self) -> str:
+        """git merge -X option: 'theirs' for incoming-wins, 'ours' for current-wins."""
+        return "ours" if str(self.values.get("merge_conflicts", "incoming")).lower() == "current" \
+            else "theirs"

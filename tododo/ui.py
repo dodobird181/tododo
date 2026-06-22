@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from . import clipboard, markdown, merge
+from . import clipboard, markdown
 from .board import Board, Item
 from .keybindings import ACTIONS, Keybindings, code_to_key_name
 from .gitsync import GitSync
@@ -170,7 +170,6 @@ class App:
     EDIT = "edit"
     CONFIRM = "confirm"
     KEYBINDINGS = "keybindings"
-    CONFLICT = "conflict"
 
     def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
         pygame.init()
@@ -212,11 +211,6 @@ class App:
         self.kb_index = 0
         self.kb_capturing = False
 
-        # conflict-resolution state
-        self.conflicts: list = []
-        self.conflict_idx = 0
-        self.conflict_choices: dict[str, str] = {}
-
         # cached card rects from last render, for hit-testing
         self.card_rects: list[CardRect] = []
         self.column_rects: dict[str, pygame.Rect] = {}
@@ -244,11 +238,8 @@ class App:
         while self.running:
             for event in pygame.event.get():
                 self.handle_event(event)
-            # A background merge may have paused awaiting conflict resolution.
-            if self.git.conflicts_ready.is_set() and self.mode != self.CONFLICT:
-                self.open_conflicts()
-            # External pulls may have changed the file on disk (not mid-resolve).
-            if self.git.board_changed.is_set() and self.mode != self.CONFLICT:
+            # External pulls may have changed the file on disk.
+            if self.git.board_changed.is_set():
                 self.git.board_changed.clear()
                 self.reload_board()
             self.render()
@@ -261,45 +252,6 @@ class App:
         if self.selected_id and not self.board.find(self.selected_id):
             self.selected_id = None
         self.notify("reloaded from git")
-
-    def open_conflicts(self) -> None:
-        pending = self.git.take_conflicts()
-        if not pending or not pending[1]:
-            return
-        self.conflicts = pending[1]
-        self.conflict_idx = 0
-        self.conflict_choices = {}
-        self.mode = self.CONFLICT
-
-    def handle_conflict(self, event) -> None:
-        if event.type != pygame.KEYDOWN:
-            return
-        if not self.conflicts:
-            self.mode = self.NORMAL
-            return
-        if event.key == pygame.K_ESCAPE:
-            self.git.cancel_conflicts()
-            self.conflicts = []
-            self.mode = self.NORMAL
-            self.notify("merge canceled")
-            return
-        c = self.conflicts[self.conflict_idx]
-        choice = None
-        if event.key == pygame.K_c:
-            choice = merge.CURRENT
-        elif event.key == pygame.K_i:
-            choice = merge.INCOMING
-        elif event.key == pygame.K_b and c.kind in ("edit", "add"):
-            choice = merge.BOTH
-        if choice is None:
-            return
-        self.conflict_choices[c.id] = choice
-        self.conflict_idx += 1
-        if self.conflict_idx >= len(self.conflicts):
-            self.git.resolve_conflicts(self.conflict_choices)
-            self.conflicts = []
-            self.mode = self.NORMAL
-            self.notify("conflicts resolved")
 
     # --- event handling --------------------------------------------------
 
@@ -326,9 +278,6 @@ class App:
             return
         if self.mode == self.KEYBINDINGS:
             self.handle_keybindings(event)
-            return
-        if self.mode == self.CONFLICT:
-            self.handle_conflict(event)
             return
         if self.mode == self.PALETTE:
             self.handle_palette(event)
@@ -636,8 +585,6 @@ class App:
             self.draw_confirm(w, h)
         elif self.mode == self.KEYBINDINGS:
             self.draw_keybindings(w, h)
-        elif self.mode == self.CONFLICT:
-            self.draw_conflict(w, h)
 
         self.draw_toast(w, h)
         pygame.display.flip()
@@ -913,59 +860,6 @@ class App:
                 val = self.font.render(self.keys.mapping.get(action, ""), True, BADGE)
             self.screen.blit(val, (rect.right - val.get_width() - 24, y))
             y += 36
-
-    def _field_value(self, item: dict | None, field: str) -> str:
-        if item is None:
-            return "(deleted)"
-        val = item.get(field, "")
-        return str(val) if val != "" else "—"
-
-    def draw_conflict(self, w: int, h: int) -> None:
-        self.dim(w, h)
-        rect = self.panel(w, h, 780, 480)
-        c = self.conflicts[self.conflict_idx]
-        head = self.font_lg.render(
-            f"Merge conflict  ({self.conflict_idx + 1}/{len(self.conflicts)})", True, TEXT)
-        self.screen.blit(head, (rect.x + 24, rect.y + 18))
-        kind_text = {
-            "edit": "Both sides edited this item.",
-            "edit_delete": "Edited on one side, deleted on the other.",
-            "add": "Same id added differently on both sides.",
-        }.get(c.kind, "")
-        self.screen.blit(self.font_sm.render(kind_text, True, MUTED), (rect.x + 24, rect.y + 56))
-        self.screen.blit(self.font.render(c.title, True, ACCENT), (rect.x + 24, rect.y + 80))
-
-        col_l = rect.x + 200
-        col_r = rect.x + 480
-        colw = 280
-        self.screen.blit(self.font.render("CURRENT (yours)", True, TEXT), (col_l, rect.y + 116))
-        self.screen.blit(self.font.render("INCOMING (theirs)", True, TEXT), (col_r, rect.y + 116))
-
-        y = rect.y + 150
-        for field in ("title", "points", "description"):
-            lhs = self._field_value(c.ours, field)
-            rhs = self._field_value(c.theirs, field)
-            differ = lhs != rhs
-            self.screen.blit(self.font_sm.render(field, True, MUTED), (rect.x + 24, y))
-            lcolor = ACCENT if differ else TEXT
-            rcolor = ACCENT if differ else TEXT
-            rows_l = self.wrap_text(lhs, self.font_sm, colw)[:4]
-            rows_r = self.wrap_text(rhs, self.font_sm, colw)[:4]
-            yy = y
-            for line in rows_l:
-                self.screen.blit(self.font_sm.render(line, True, lcolor), (col_l, yy))
-                yy += self.font_sm.get_linesize()
-            yy = y
-            for line in rows_r:
-                self.screen.blit(self.font_sm.render(line, True, rcolor), (col_r, yy))
-                yy += self.font_sm.get_linesize()
-            y += max(len(rows_l), len(rows_r), 1) * self.font_sm.get_linesize() + 12
-
-        if c.kind == "edit_delete":
-            foot = "[C] keep your item    [I] accept deletion    [ESC] cancel merge"
-        else:
-            foot = "[C] keep current    [I] take incoming    [B] keep both    [ESC] cancel merge"
-        self.screen.blit(self.font_sm.render(foot, True, MUTED), (rect.x + 24, rect.bottom - 30))
 
     def draw_toast(self, w: int, h: int) -> None:
         if not self.toast or pygame.time.get_ticks() > self.toast_until:

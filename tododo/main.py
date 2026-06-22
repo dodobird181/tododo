@@ -20,7 +20,7 @@ def main() -> None:
     board = Board.load(BOARD_PATH)
     keys = Keybindings.load()
     settings = Settings.load()
-    git = GitSync(ROOT, BOARD_PATH)
+    git = GitSync(ROOT, BOARD_PATH, merge_option=settings.merge_option())
     git.start()
     app = App(board, keys, git, settings)
     app.run()

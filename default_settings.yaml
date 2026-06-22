@@ -6,3 +6,10 @@
 #   selected -> only the currently selected item shows its description (default)
 #   all      -> every item shows its description, always expanded
 descriptions: selected
+
+# How concurrent-edit conflicts are auto-resolved when syncing with git:
+#   incoming -> the remote side wins on conflicting changes (git merge -X theirs)
+#   current  -> your local side wins on conflicting changes (git merge -X ours)
+# Non-conflicting changes always merge normally. A merge git still can't resolve
+# falls back to a manual fix (shown in the status bar).
+merge_conflicts: incoming

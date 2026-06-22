@@ -8,9 +8,10 @@ backing store:
     are new local commits, fetches+merges (always pull before push) and pushes.
   * When idle it still fetches periodically so the running app picks up edits
     made elsewhere.
-  * Concurrent edits are reconciled with a **semantic 3-way merge** of the board
-    by item id (see :mod:`tododo.merge`). Disjoint edits merge automatically;
-    true same-item collisions are handed to the UI as conflicts to resolve.
+  * Concurrent edits are reconciled by git with a configurable strategy option:
+    ``-X theirs`` (incoming wins) or ``-X ours`` (current wins). Non-conflicting
+    changes always merge normally; a merge git still can't resolve falls back to
+    "needs manual merge".
 
 All git calls are best-effort: failures (offline, etc.) are reflected in an
 in-memory status string shown in the app status bar rather than crashing.
@@ -22,12 +23,9 @@ import queue
 import subprocess
 import threading
 import time
-import uuid
 from pathlib import Path
 
-import yaml
-
-from . import merge as merge_mod
+from .board import Board
 
 # Sync loop tick. Pushes happen at most this often (bundling commits).
 PUSH_INTERVAL_SECONDS = 1
@@ -36,9 +34,10 @@ POLL_INTERVAL_SECONDS = 120
 
 
 class GitSync:
-    def __init__(self, repo_root: Path, tracked_file: Path):
+    def __init__(self, repo_root: Path, tracked_file: Path, merge_option: str = "theirs"):
         self.repo_root = Path(repo_root)
         self.tracked_file = Path(tracked_file)
+        self.merge_option = merge_option if merge_option in ("ours", "theirs") else "theirs"
         try:
             self._rel = str(self.tracked_file.relative_to(self.repo_root))
         except ValueError:
@@ -52,10 +51,6 @@ class GitSync:
         self.last_fetch: float = 0.0
         # Set when a pull changed the board file on disk; the UI reloads on it.
         self.board_changed = threading.Event()
-        # Conflict handoff: a merge paused awaiting the user's choices.
-        self.conflicts_ready = threading.Event()
-        self._merge_pending = False
-        self._pending: tuple[dict, list] | None = None
         self._enabled = self._is_repo()
         self._committer = threading.Thread(target=self._commit_loop, name="gitcommit", daemon=True)
         self._syncer = threading.Thread(target=self._sync_loop, name="gitsync", daemon=True)
@@ -85,43 +80,6 @@ class GitSync:
             return "never"
         return time.strftime("%H:%M:%S", time.localtime(ts))
 
-    def take_conflicts(self):
-        """Return ``(merged_board, conflicts)`` for a paused merge, or None."""
-        return self._pending
-
-    def resolve_conflicts(self, choices: dict[str, str]) -> None:
-        """Apply the user's per-conflict choices, finish the merge commit, push."""
-        with self._git_lock:
-            try:
-                if not self._pending:
-                    return
-                merged, conflicts = self._pending
-                final = merge_mod.apply_resolutions(merged, conflicts, choices,
-                                                    lambda: uuid.uuid4().hex)
-                self._write_board(final)
-                self._git("add", self._rel)
-                self._git("commit", "--no-edit")
-                push = self._git("push")
-                self._set_status("git: merged + pushed" if push.returncode == 0
-                                 else "git: merged (push failed)")
-                self.board_changed.set()
-            except Exception as exc:
-                self._set_status(f"git: resolve error {exc}")
-            finally:
-                self._pending = None
-                self._merge_pending = False
-                self.conflicts_ready.clear()
-
-    def cancel_conflicts(self) -> None:
-        """Abort the paused merge, restoring the pre-merge board."""
-        with self._git_lock:
-            self._git("merge", "--abort")
-            self._pending = None
-            self._merge_pending = False
-            self.conflicts_ready.clear()
-            self.board_changed.set()
-            self._set_status("git: merge canceled")
-
     # --- internals -------------------------------------------------------
 
     def _set_status(self, text: str) -> None:
@@ -146,21 +104,6 @@ class GitSync:
         except OSError:
             return 0.0
 
-    def _board_at(self, ref: str) -> dict | None:
-        res = self._git("show", f"{ref}:{self._rel}")
-        if res.returncode != 0:
-            return None
-        try:
-            return yaml.safe_load(res.stdout) or {}
-        except yaml.YAMLError:
-            return None
-
-    def _write_board(self, board: dict) -> None:
-        tmp = self.tracked_file.with_suffix(self.tracked_file.suffix + ".tmp")
-        with tmp.open("w", encoding="utf-8") as fh:
-            yaml.safe_dump(board, fh, sort_keys=False, allow_unicode=True)
-        tmp.replace(self.tracked_file)
-
     def _commit(self, message: str) -> bool:
         """Commit the tracked file locally. Returns True if a commit was made."""
         self._git("add", self._rel)
@@ -171,7 +114,7 @@ class GitSync:
         return True
 
     def _pull(self) -> None:
-        """Fetch and reconcile remote changes (semantic merge on divergence)."""
+        """Fetch and reconcile remote changes."""
         before = self._file_mtime()
         self._git("fetch", "--quiet")
         with self._lock:
@@ -190,42 +133,34 @@ class GitSync:
             else:
                 self._set_status("git: needs manual merge")
             return
-        self._semantic_merge(before)
+        self._strategy_merge(before)
 
-    def _semantic_merge(self, before: float) -> None:
-        base_ref = self._git("merge-base", "HEAD", "@{u}").stdout.strip()
-        self._git("merge", "--no-commit", "--no-ff", "@{u}")
-        # We only auto-resolve the board file; bail to manual for anything else.
+    def _strategy_merge(self, before: float) -> None:
+        """Diverged history: let git merge with the configured -X option."""
+        self._git("merge", "--no-commit", "--no-edit", "-X", self.merge_option, "@{u}")
         unmerged = self._git("diff", "--name-only", "--diff-filter=U").stdout.split()
-        if any(Path(u).name != self.tracked_file.name for u in unmerged):
+        if unmerged:
             self._git("merge", "--abort")
             self._set_status("git: needs manual merge")
             return
-
-        base = self._board_at(base_ref)
-        ours = self._board_at("HEAD")
-        theirs = self._board_at("MERGE_HEAD")
-        merged, conflicts = merge_mod.merge_boards(base, ours or {}, theirs or {})
-        self._write_board(merged)
-
-        if not conflicts:
-            self._git("add", self._rel)
-            self._git("commit", "--no-edit")
-            if self._file_mtime() != before:
-                self.board_changed.set()
-            self._set_status("git: merged remote changes")
-        else:
-            # Pause the merge in progress and hand conflicts to the UI.
-            self._pending = (merged, conflicts)
-            self._merge_pending = True
-            self.conflicts_ready.set()
-            self._set_status(f"git: {len(conflicts)} conflict(s) — resolve in app")
+        # Safety net: a line-based merge can occasionally produce a corrupt or
+        # duplicated board. Parse-validate + normalize; bail to manual if broken.
+        try:
+            board = Board.load(self.tracked_file)
+            board.save()
+        except Exception:
+            self._git("merge", "--abort")
+            self._set_status("git: needs manual merge")
+            return
+        self._git("add", self._rel)
+        self._git("commit", "--no-edit")
+        if self._file_mtime() != before:
+            self.board_changed.set()
+        self._set_status(f"git: merged remote changes (-X {self.merge_option})")
 
     def _push(self) -> None:
         # Always fetch + merge before pushing.
         self._pull()
-        if self._merge_pending:
-            return  # cannot push until the user resolves conflicts
         push = self._git("push")
         if push.returncode == 0:
             self._set_status("git: pushed")
@@ -237,9 +172,6 @@ class GitSync:
             message = self._jobs.get()
             if message is None:
                 break
-            # Don't commit on top of a paused (conflicted) merge.
-            while self._merge_pending and not self._stop.is_set():
-                self._stop.wait(0.2)
             try:
                 with self._git_lock:
                     made = self._commit(message)
@@ -253,9 +185,6 @@ class GitSync:
     def _sync_loop(self) -> None:
         last_poll = 0.0
         while not self._stop.is_set():
-            if self._merge_pending:
-                self._stop.wait(PUSH_INTERVAL_SECONDS)
-                continue
             now = time.monotonic()
             try:
                 if self._dirty.is_set():

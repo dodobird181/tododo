@@ -58,6 +58,16 @@ class Board:
             data = yaml.safe_load(fh) or {}
         columns = data.get("columns") or list(DEFAULT_COLUMNS)
         items = [Item.from_dict(d) for d in (data.get("items") or [])]
+        # Dedupe by id (keep first). A line-based git merge's main corruption mode
+        # is a duplicated item block; drop the copies so the board stays sane.
+        seen: set[str] = set()
+        deduped = []
+        for it in items:
+            if it.id in seen:
+                continue
+            seen.add(it.id)
+            deduped.append(it)
+        items = deduped
         # Drop items whose column no longer exists, snapping them to first column.
         for it in items:
             if it.column not in columns:
