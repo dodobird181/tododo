@@ -34,11 +34,6 @@ items:
   points: 0
   description: HEHEHEHE
   column: Todo
-- id: seed0004
-  title: Set up tododo
-  points: 1
-  description: ''
-  column: Doing
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
@@ -49,3 +44,8 @@ items:
   points: 13
   description: ''
   column: Done
+- id: seed0004
+  title: Set up tododo
+  points: 1
+  description: ''
+  column: FARTS AND PEE
