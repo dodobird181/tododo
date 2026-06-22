@@ -195,14 +195,14 @@ items:
 
     the display should also say WHO did the do-oing, for example "Marked as done 10
     minutes ago by turukano123"'
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782132995.913
   edited: 1782134364.106
-  moved: 1782134390.901
-  moved_to: Done
-  actor: Claude
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
@@ -210,21 +210,27 @@ items:
     where the key is one of the items in the "relationships" top-level key (defaults
     are "Assigned to"  and "Reporter",) and the value is a github user from the list
     of collaborators (also a new toplevel key, probably the github username)
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134029.271
   edited: 1782134029.271
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: d8048d54962042c5842daf46f05d6b82
   title: '[CLAUDE] Make sure github avatar is pulled correctly from github'
   points: 0
   description: why is there auth logic in avatars.py? we shouldn't need auth to grab
     their profile photo / image
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133556.776
   edited: 1782133556.776
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
@@ -235,22 +241,25 @@ items:
 
     3. this command should be triggerable from edi view, as well as the main window
     (when an item is selected)'
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133556.461
   edited: 1782133556.461
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 12d197d142894e82a04ee62905d6887a
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
   description: should be a separate file...
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133766.387
   edited: 1782133766.387
-  moved: 1782134874.949
-  moved_to: Done
+  moved: 1782134883.243
+  moved_to: Doing
   actor: Sam
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
@@ -258,14 +267,14 @@ items:
   description: and when they do, their name should show up in the commit to tell that
     it was them and then we display this information like we display the other blame
     information related to timestamps!
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782108156.875
   edited: 1782108156.875
-  moved: 1782134391.877
-  moved_to: Done
-  actor: Claude
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 076880a7422a449cabcfdda54408b4f0
   title: '[CLAUDE] remove github webhook'
   points: 0
@@ -283,35 +292,41 @@ items:
     it'
   points: 0
   description: ''
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133556.657
   edited: 1782133556.657
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 47b53be39dcc49c4a3103e0a279de8a9
   title: '[CLAUDE] create a local workspace.yaml file to track which columns are minimized
     between saves'
   points: 0
   description: when a column is deleted, the workspace file should be updated to remove
     any references to the deleted column
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133640.403
   edited: 1782133640.403
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: b8c96048eb3f4a1aa859cf3b55fc8b76
   title: '[CLAUDE] hitting CTRL + a on an item in a column hould select all items
     in that column'
   points: 0
   description: ''
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133980.195
   edited: 1782133980.195
-  moved: 1782134812.273
-  moved_to: Done
-  actor: Claude
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 8f53b674079a4b788ddbf552e8677523
   title: '[CLAUDE] switching to a new board should be a siupported action'
   points: 0
@@ -320,24 +335,24 @@ items:
 
     the default shortcut or switching boards should be CTRL + B (right now doesn''t
     appear in the command pallette menu)'
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134585.545
   edited: 1782134662.356
-  moved: 1782134813.263
-  moved_to: Done
-  actor: Claude
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
 - id: 66d486c8abbd49e9aedb69b469899fb8
   title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
     board name'
   points: 0
   description: to avoid clobbering other board's settings when switching boards
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134490.619
   edited: 1782134507.738
-  moved: 1782134814.308
-  moved_to: Done
-  actor: Claude
+  moved: 1782134883.243
+  moved_to: Doing
+  actor: Sam
