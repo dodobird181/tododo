@@ -248,3 +248,40 @@ items:
   created: 1782152514.008
   edited: 1782152659.422
   actor: Sam
+- id: 2bf1b0a323334c6f9e1fa671b80238fc
+  title: '[CLAUDE] Add an MCP Server'
+  points: 0
+  description: 'Available endpoints should be:
+
+
+    - search for an item by a keyword
+
+
+    - list boards
+
+
+    - list columns
+
+
+    - list items in board
+
+
+    - list items in column
+
+
+    - show item details (YAML)
+
+
+    - create new item (must provide LLM name, e.g., Claude)
+
+
+    - move item (must provide LLM name, e.g., Claude)
+
+
+    - edit item (must provide LLM name, e.g., Claude)'
+  column: Ideas
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782152830.294
+  edited: 1782152830.294
+  actor: Sam
