@@ -8,7 +8,7 @@ items:
   title: Drag me into another columnawdawd
   points: 1
   description: ''
-  column: Doing
+  column: Done
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
@@ -33,7 +33,7 @@ items:
   title: Set up tododo
   points: 1
   description: ''
-  column: Doing
+  column: Todo
 - id: 449ee787806f4bd4b52854ad6e9cda02
   title: JOEY
   points: 5
