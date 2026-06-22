@@ -195,12 +195,14 @@ items:
 
     the display should also say WHO did the do-oing, for example "Marked as done 10
     minutes ago by turukano123"'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782132995.913
   edited: 1782134364.106
-  actor: Sam
+  moved: 1782134390.901
+  moved_to: Done
+  actor: Claude
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
@@ -253,11 +255,14 @@ items:
   description: and when they do, their name should show up in the commit to tell that
     it was them and then we display this information like we display the other blame
     information related to timestamps!
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782108156.875
   edited: 1782108156.875
+  moved: 1782134391.877
+  moved_to: Done
+  actor: Claude
 - id: 076880a7422a449cabcfdda54408b4f0
   title: '[CLAUDE] remove github webhook'
   points: 0
@@ -301,3 +306,14 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782133980.195
   edited: 1782133980.195
+- id: 66d486c8abbd49e9aedb69b469899fb8
+  title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
+    board name'
+  points: 0
+  description: to avoid clobbering other board's settings when switching boards
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782134490.619
+  edited: 1782134490.619
+  actor: Sam
