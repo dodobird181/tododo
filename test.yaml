@@ -2,7 +2,18 @@ columns:
 - Todo
 - Doing
 - Done
+authors:
+  dodobird181@gmail.com:
+    name: Sam
 relationships:
 - Assigned to
 - Reporter
-items: []
+items:
+- id: 997b4332b6354c348c185416235cc20b
+  title: TEst item
+  points: 0
+  description: awdawd
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782134188.368
