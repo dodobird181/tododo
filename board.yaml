@@ -3,10 +3,6 @@ columns:
 - Doing
 - Done
 items:
-- id: seed0004
-  title: Set up tododo
-  points: 1
-  column: Done
 - id: 0f9bfb9fd56c4ec89e22239902da0a82
   title: FOobar badaepwdfawkd
   points: 12
@@ -22,4 +18,8 @@ items:
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
+  column: Done
+- id: seed0004
+  title: Set up tododo
+  points: 1
   column: Done
