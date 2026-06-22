@@ -14,13 +14,13 @@ items:
   title: '[CLAUDE] mark the current board in the workspace'
   points: 0
   description: and on app startup open to that board, not always boarddddd.yaml
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145250.217
   edited: 1782145266.3
-  moved: 1782150997.85
-  moved_to: Done
+  moved: 1782150998.73
+  moved_to: Hidden
   actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
