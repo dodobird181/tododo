@@ -365,9 +365,11 @@ items:
   points: 0
   description: the cursor should just highlight the column title. this is primarily
     so that it is eay to create new items in empty columns
-  column: Done
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135367.544
   edited: 1782135367.544
+  moved: 1782135368.637
+  moved_to: Todo
   actor: Sam
