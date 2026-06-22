@@ -58,7 +58,7 @@ items:
 
 
     the behaviour should be to move up and down inside the actual description text...'
-  column: Doing
+  column: Todo
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
