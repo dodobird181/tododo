@@ -151,3 +151,14 @@ items:
   created: 1782148633.133
   edited: 1782148633.133
   actor: Sam
+- id: 0834562156a54a72b3858facd0d1b816
+  title: '[CLAUDE] if there is no difference when opening he edit view to saving it,
+    then don''t mark the item as Last edited by ___ at X.'
+  points: 0
+  description: instead add a new tracking timestamp for "viewed"
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782148788.325
+  edited: 1782148788.325
+  actor: Sam
