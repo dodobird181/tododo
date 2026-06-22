@@ -3,6 +3,9 @@ columns:
 - Doing
 - Done
 - Hidden
+authors:
+  dodobird181@gmail.com:
+    name: Sam
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
@@ -193,7 +196,7 @@ items:
   points: 0
   description: right now it's just the initials of the github user, it should actually
     pull their github profile photo and display that instead
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107482.794
