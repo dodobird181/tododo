@@ -219,3 +219,11 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107853.218
+- id: b8fa4efaf5e046b4ab1e882705da98d3
+  title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107984.021
