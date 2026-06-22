@@ -105,7 +105,7 @@ items:
 - id: 3d926282b32e4db3b37f0113eb141c2c
   title: '[CLAUDE] add scrollbar to commad pallet'
   points: 0
-  description: similar to the keybindings view!
+  description: similar to the keybindings view! TEST EDIT
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
