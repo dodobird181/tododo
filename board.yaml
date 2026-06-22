@@ -20,20 +20,6 @@ items:
   created: 1782145250.217
   edited: 1782145266.3
   actor: Sam
-- id: 26050e3affcf4104bf4089bade5fa6be
-  title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
-  points: 0
-  description: '### Extra notes
-
-    - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
-
-    - [ ] Keep maximization behaviour the same'
-  column: Done
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782144992.07
-  edited: 1782144992.07
-  actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
   points: 0
@@ -166,4 +152,18 @@ items:
   edited: 1782148933.998
   moved: 1782148898.507
   moved_to: Todo
+  actor: Sam
+- id: 26050e3affcf4104bf4089bade5fa6be
+  title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
+  points: 0
+  description: '### Extra notes
+
+    - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
+
+    - [ ] Keep maximization behaviour the same'
+  column: Done
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782144992.07
+  edited: 1782144992.07
   actor: Sam
