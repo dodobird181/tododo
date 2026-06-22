@@ -81,3 +81,16 @@ items:
   created: 1782146372.771
   edited: 1782146372.771
   actor: Sam
+- id: 2011c8bc17f343bb9720f208a77fd0e3
+  title: '[CLAUDE] add copy/paste functionality to items'
+  points: 0
+  description: 'bindings are CTRL + C and CTRL + V.
+
+
+    i have changed the default bindings for creating new items, dont worry'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782146529.362
+  edited: 1782146529.362
+  actor: Sam
