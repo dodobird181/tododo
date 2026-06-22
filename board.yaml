@@ -77,5 +77,5 @@ items:
   title: '[CLAUDE] CTRL + Enter key should open the selected item just like regular
     enter key does'
   points: 0
-  description: ''
+  description: make this a separate keybinding for the confirm action
   column: Todo
