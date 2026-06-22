@@ -7,16 +7,10 @@ authors:
     name: Sam
     github: dodobird181
 items:
-- id: 1c4a0f0cc08c47dbac3a6dab9e13b3d1
-  title: Foo bar item
+- id: db80cafe5faa49c584fe80e7fdf66842
+  title: Test item
   points: 0
-  description: BAZ!
-  column: Doing
+  description: adawdawdwd
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782164322.918
-  edited: 1782164322.918
-  moved: 1782164326.414
-  moved_to: Doing
-  actor: dodobird181
-  creator: dodobird181@gmail.com
