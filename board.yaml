@@ -21,13 +21,15 @@ items:
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 100d5f0dd03f421b84263ab1361686ee
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
   description: in all editable text boxes
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
   points: 0
@@ -36,7 +38,8 @@ items:
     backoff... limiting it at 5 mins. The limit should be configurable but exponential
     backoff should not
   column: Hidden
-  updated: 1782107803.177
+  created: 1782107803.177
+  edited: 1782107803.177
 - id: 612a6fb39f3c49749e14a66a5019b4b1
   title: '[CLAUDE] fix right and left arrow not moving the cursor'
   points: 0
@@ -48,7 +51,8 @@ items:
 
     2. when hittijng the right or left key once.'
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
@@ -56,39 +60,45 @@ items:
 
     awdawdawd'
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 506f105cde884233a31c7bc9f8c7ed64
   title: '[CLAUDE] Hot reload when source file is edited'
   points: 0
   description: The UI should hot reload / sense changes when the source board.yaml,
     settings.yaml, or keybindings.yaml files are changes.
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 6c80eed62efa450b85b39f34976d43fa
   title: '[CLAUDE] CTRL + Enter key should open the selected item just like regular
     enter key does'
   points: 0
   description: make this a separate keybinding for the confirm action
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: b2472359c4a44409912c752e391d4708
   title: '[CLAUDE] Clicking description or title in edit view should focus them'
   points: 0
   description: ''
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 371cdb58bd2b49fba5cd4a3c62f01f52
   title: '[CLAUDE] change hint at bottom of edit view'
   points: 0
   description: 'hint should read: "TAB switch *CTRL + Enter save * ESC"'
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: b9924b0769eb40c89afc4c589bcc025f
   title: '[CLAUDE] Holdijng shift and moving up or down should select items'
   points: 0
   description: items can then be collectively moved and deleted
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 9b19aae67df541f18b095e36e84b9806
   title: '[CLAUDE] all items should have a timestamp of when they were last moved
     / edited and this should show up in the display'
@@ -108,14 +118,16 @@ items:
     "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
     minute intervals)'
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 00afe206dcf24d9a8f40e2bb7f6c19bb
   title: '[CLAUDE] description in edit view should be 2x taller and overflow with
     scroll bar'
   points: 0
   description: ''
   column: Hidden
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 51283c5224974167a6eab5eb701f2fc4
   title: '[CLAUDE] add git avatars'
   points: 0
@@ -125,7 +137,8 @@ items:
 
     mousing over git avatar should show git username / email'
   column: Hidden
-  updated: 1782133946.588
+  created: 1782133946.588
+  edited: 1782133946.588
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
@@ -133,7 +146,8 @@ items:
   column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 4edf41a82f864d178a5293f84eefb7ff
   title: '[CLAUDE] the columns should be minimizable'
   points: 0
@@ -141,7 +155,8 @@ items:
   column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: dc47ad8c3ebc4e539cff0276ede87cfb
   title: '[CLAUDE] git avatar image should be pulled from git'
   points: 0
@@ -153,7 +168,8 @@ items:
   column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107726.244
+  created: 1782107726.244
+  edited: 1782107726.244
 - id: 57f8db36280d4df8be45f39f013b57a0
   title: '[CLAUDE] delete updated and add different datetime fields'
   points: 0
@@ -182,7 +198,9 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782132995.913
+  created: 1782132995.913
+  edited: 1782134364.106
+  actor: Sam
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
@@ -190,10 +208,11 @@ items:
     where the key is one of the items in the "relationships" top-level key (defaults
     are "Assigned to"  and "Reporter",) and the value is a github user from the list
     of collaborators (also a new toplevel key, probably the github username)
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107442.508
+  created: 1782134029.271
+  edited: 1782134029.271
 - id: d8048d54962042c5842daf46f05d6b82
   title: '[CLAUDE] Make sure github avatar is pulled correctly from github'
   points: 0
@@ -202,7 +221,8 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133556.776
+  created: 1782133556.776
+  edited: 1782133556.776
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
@@ -216,7 +236,8 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133556.461
+  created: 1782133556.461
+  edited: 1782133556.461
 - id: 12d197d142894e82a04ee62905d6887a
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
@@ -224,7 +245,8 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133766.387
+  created: 1782133766.387
+  edited: 1782133766.387
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
   points: 0
@@ -234,7 +256,8 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782108156.875
+  created: 1782108156.875
+  edited: 1782108156.875
 - id: 076880a7422a449cabcfdda54408b4f0
   title: '[CLAUDE] remove github webhook'
   points: 0
@@ -245,7 +268,8 @@ items:
   column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133608.415
+  created: 1782133608.415
+  edited: 1782133608.415
 - id: 86324d59d86b452bb10690cbd6c8a63b
   title: '[CLAUDE] when a selected item is in a minimized column, tempoarily maximize
     it'
@@ -254,7 +278,8 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133556.657
+  created: 1782133556.657
+  edited: 1782133556.657
 - id: 47b53be39dcc49c4a3103e0a279de8a9
   title: '[CLAUDE] create a local workspace.yaml file to track which columns are minimized
     between saves'
@@ -264,7 +289,8 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133640.403
+  created: 1782133640.403
+  edited: 1782133640.403
 - id: b8c96048eb3f4a1aa859cf3b55fc8b76
   title: '[CLAUDE] hitting CTRL + a on an item in a column hould select all items
     in that column'
@@ -273,4 +299,5 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133980.195
+  created: 1782133980.195
+  edited: 1782133980.195
