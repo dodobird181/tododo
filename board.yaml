@@ -446,3 +446,17 @@ items:
   moved: 1782138855.791
   moved_to: Hidden
   actor: Sam
+- id: 26050e3affcf4104bf4089bade5fa6be
+  title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
+  points: 0
+  description: '### Extra notes
+
+    - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
+
+    - [ ] Keep maximization behaviour the same'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782144992.07
+  edited: 1782144992.07
+  actor: Sam
