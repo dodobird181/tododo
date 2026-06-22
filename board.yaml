@@ -2,7 +2,6 @@ columns:
 - Todo
 - Doing
 - Done
-- Hidden
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
@@ -136,10 +135,3 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-- id: b33c2fa950d34151a435e67829dc26f7
-  title: new tingy
-  points: 0
-  description: 'hellooooo
-
-    AWDKAWMDKAWD'
-  column: Hidden
