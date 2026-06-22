@@ -2,7 +2,22 @@ columns:
 - Todo
 - Doing
 - Done
+authors:
+  dodobird181@gmail.com:
+    name: Sam
 relationships:
 - Assigned to
 - Reporter
-items: []
+collaborators:
+- Sam
+items:
+- id: 118ce08619c74f26b7a97f1cc5110867
+  title: Install Window AC in Room
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782149008.643
+  edited: 1782149008.643
+  actor: Sam
