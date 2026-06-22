@@ -294,18 +294,32 @@ items:
 - id: c8d6711da77247c7a20ba6085df160a9
   title: '[CLAUDE] Unified Item Display'
   points: 0
-  description: 'TODO
+  description: 'items should be displayed the same in columns, in the edit view, and
+    in the search function. theyt have two modes, expanded and collapsed.
 
 
-    items are displayed the same in columns, in the edit view, and in the search function.
-    theyt have two modes, expanded and collapsed. The user can define in YAML what
-    should be displayed in each of these modes.
+    in the edit view always show expanded mode.
 
 
-    There should also be an editor for these modes'
+    in the search and column views, always show the collapsed view, unless the item
+    is actively selected.
+
+
+    the user should be able to define in their YAML settings which fields should be
+    displayed in each of these modes.
+
+
+    the rendering should work in a grid-layout with text wrapping inside individual
+    grid cells and 1:1 mapping between fields and grid cells. The grid cells dont
+    need to be uniform, e.g., "1 1 2" on top of "1" creates a two row table, the first
+    row has two 25% width columns, followed by a 50% with column, while the second  row
+    has a single 100% column. (this is streamlit inspired declarative UI)
+
+
+    there should be a UI available in the program (opened wiuth)'
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
-  edited: 1782153019.195
+  edited: 1782154295.721
   actor: Sam
