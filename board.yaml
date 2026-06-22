@@ -5,9 +5,15 @@ columns:
 - Done
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
-  title: SAM IS HOT
+  title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
   points: 0
-  description: ''
+  description: 'in title, up moves the cursor to the beginning of the line, and down
+    to the end of the line.
+
+
+    in the description, up moves to the line directly above (and if it''s the first
+    line then to the beginning of that line), and down moves to the line below (and
+    if it''s the last line then to the end of that line)'
   column: Todo
 - id: b33c2fa950d34151a435e67829dc26f7
   title: new tingy
