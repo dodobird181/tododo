@@ -6,6 +6,9 @@ columns:
 authors:
   dodobird181@gmail.com:
     name: Sam
+relationships:
+- Assigned to
+- Reporter
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
@@ -80,6 +83,12 @@ items:
   description: 'hint should read: "TAB switch *CTRL + Enter save * ESC"'
   column: Hidden
   updated: 1782107726.244
+- id: b9924b0769eb40c89afc4c589bcc025f
+  title: '[CLAUDE] Holdijng shift and moving up or down should select items'
+  points: 0
+  description: items can then be collectively moved and deleted
+  column: Hidden
+  updated: 1782107726.244
 - id: 51283c5224974167a6eab5eb701f2fc4
   title: '[CLAUDE] add git avatars'
   points: 0
@@ -89,13 +98,7 @@ items:
 
     mousing over git avatar should show git username / email'
   column: Hidden
-  updated: 1782107726.244
-- id: b9924b0769eb40c89afc4c589bcc025f
-  title: '[CLAUDE] Holdijng shift and moving up or down should select items'
-  points: 0
-  description: items can then be collectively moved and deleted
-  column: Hidden
-  updated: 1782107726.244
+  updated: 1782133946.04
 - id: 9b19aae67df541f18b095e36e84b9806
   title: '[CLAUDE] all items should have a timestamp of when they were last moved
     / edited and this should show up in the display'
@@ -218,10 +221,10 @@ items:
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
   description: should be a separate file...
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107853.218
+  updated: 1782133766.387
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
   points: 0
@@ -258,7 +261,7 @@ items:
   points: 0
   description: when a column is deleted, the workspace file should be updated to remove
     any references to the deleted column
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782132292.718
+  updated: 1782133640.403
