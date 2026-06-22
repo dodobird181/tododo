@@ -19,6 +19,16 @@ items:
   points: 1
   description: ''
   column: FARTS AND PEE
+- id: seed0004
+  title: Set up tododo
+  points: 1
+  description: ''
+  column: FARTS AND PEE
+- id: seed0003
+  title: Edits auto-commit and push to git
+  points: 3
+  description: ''
+  column: Done
 - id: 449ee787806f4bd4b52854ad6e9cda02
   title: JOEY
   points: 5
@@ -31,14 +41,4 @@ items:
     awdawd
 
     * awdawd'
-  column: Done
-- id: seed0004
-  title: Set up tododo
-  points: 1
-  description: ''
-  column: FARTS AND PEE
-- id: seed0003
-  title: Edits auto-commit and push to git
-  points: 3
-  description: ''
-  column: Done
+  column: Doing
