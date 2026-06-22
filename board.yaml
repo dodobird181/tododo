@@ -75,7 +75,7 @@ items:
 
     if no maximized column is available, deselect all columns (uysing arrow keys or
     clicking will just select columns again and move around)'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
@@ -88,7 +88,7 @@ items:
 
 
     i have changed the default bindings for creating new items, dont worry'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146529.362
@@ -106,4 +106,18 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782146593.55
   edited: 1782146603.839
+  actor: Sam
+- id: 26c1c1ec1c7d4b46a18ea9edd44a3f10
+  title: '[CLAUDE] keybindings view should scroll'
+  points: 0
+  description: '1. the keybindings view should scroll down instead of overflowing
+
+
+    2. also the keybindings loist is getting long enough that functional groups (via
+    YAML indentation) should be added and incorporated into the display'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782147478.802
+  edited: 1782147478.802
   actor: Sam
