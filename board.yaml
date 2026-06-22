@@ -42,13 +42,13 @@ items:
   points: 0
   description: hey thats stinky dont poo in my tododo!!!
   column: Doing
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: FARTS AND PEE
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
+  description: ''
+  column: Doing
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
   description: ''
   column: Doing
