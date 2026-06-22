@@ -4,11 +4,6 @@ columns:
 - FARTS AND PEE
 - Done
 items:
-- id: seed0001
-  title: Drag me into another column
-  points: 1
-  description: ''
-  column: FARTS AND PEE
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
@@ -42,3 +37,8 @@ items:
   points: 3
   description: ''
   column: Done
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  description: ''
+  column: FARTS AND PEE
