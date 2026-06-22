@@ -2,6 +2,7 @@ columns:
 - Todo
 - Doing
 - Done
+- Hidden
 items:
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
@@ -13,14 +14,14 @@ items:
     in the description, up moves to the line directly above (and if it''s the first
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
-  column: Done
-  updated: 1782106549.537
+  column: Hidden
+  updated: 1782107726.244
 - id: 100d5f0dd03f421b84263ab1361686ee
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
   description: in all editable text boxes
-  column: Done
-  updated: 1782106239.172
+  column: Hidden
+  updated: 1782107726.244
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
   points: 0
@@ -28,7 +29,8 @@ items:
     there are no local commits that haven't been pushed, we can do an exponential
     backoff... limiting it at 5 mins. The limit should be configurable but exponential
     backoff should not
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 612a6fb39f3c49749e14a66a5019b4b1
   title: '[CLAUDE] fix right and left arrow not moving the cursor'
   points: 0
@@ -39,36 +41,42 @@ items:
     1. when holdijng down, or;
 
     2. when hittijng the right or left key once.'
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
   description: '# awdawd
 
     awdawdawd'
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 506f105cde884233a31c7bc9f8c7ed64
   title: '[CLAUDE] Hot reload when source file is edited'
   points: 0
   description: The UI should hot reload / sense changes when the source board.yaml,
     settings.yaml, or keybindings.yaml files are changes.
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 6c80eed62efa450b85b39f34976d43fa
   title: '[CLAUDE] CTRL + Enter key should open the selected item just like regular
     enter key does'
   points: 0
   description: make this a separate keybinding for the confirm action
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: b2472359c4a44409912c752e391d4708
   title: '[CLAUDE] Clicking description or title in edit view should focus them'
   points: 0
   description: ''
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 371cdb58bd2b49fba5cd4a3c62f01f52
   title: '[CLAUDE] change hint at bottom of edit view'
   points: 0
   description: 'hint should read: "TAB switch *CTRL + Enter save * ESC"'
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 51283c5224974167a6eab5eb701f2fc4
   title: '[CLAUDE] add git avatars'
   points: 0
@@ -77,12 +85,14 @@ items:
 
 
     mousing over git avatar should show git username / email'
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: b9924b0769eb40c89afc4c589bcc025f
   title: '[CLAUDE] Holdijng shift and moving up or down should select items'
   points: 0
   description: items can then be collectively moved and deleted
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 9b19aae67df541f18b095e36e84b9806
   title: '[CLAUDE] all items should have a timestamp of when they were last moved
     / edited and this should show up in the display'
@@ -101,27 +111,31 @@ items:
     if the time is less than 24 hours, output one of the following, "X minutes ago",
     "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
     minute intervals)'
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: 00afe206dcf24d9a8f40e2bb7f6c19bb
   title: '[CLAUDE] description in edit view should be 2x taller and overflow with
     scroll bar'
   points: 0
   description: ''
-  column: Done
+  column: Hidden
+  updated: 1782107726.244
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
   description: ''
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
+  updated: 1782107726.244
 - id: 4edf41a82f864d178a5293f84eefb7ff
   title: '[CLAUDE] the columns should be minimizable'
   points: 0
   description: ''
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
+  updated: 1782107726.244
 - id: 57f8db36280d4df8be45f39f013b57a0
   title: '[CLAUDE] delete updated and add different datetime fields'
   points: 0
@@ -159,10 +173,10 @@ items:
 
 
     https://avatars.githubusercontent.com/u/53889741?v=4'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107554.46
+  updated: 1782107726.244
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
