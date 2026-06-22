@@ -43,9 +43,6 @@ items:
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782152830.294
-  edited: 1782163608.454
-  actor: dodobird181
   due: in 2 days
 - id: 52e7cd99b7064379812c00015db1493a
   title: '[Claude] Refactor relationship concept'
@@ -57,12 +54,6 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782163122.327
-  edited: 1782163873.901
-  moved: 1782164143.674
-  moved_to: Done
-  viewed: 1782163380.205
-  actor: dodobird181
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
@@ -70,9 +61,6 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782163909.484
-  edited: 1782163923.792
-  actor: dodobird181
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -96,12 +84,6 @@ items:
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782164278.643
-  edited: 1782165696.684
-  moved: 1782165321.628
-  moved_to: Ideas
-  actor: dodobird181
-  creator: dodobird181@gmail.com
 - id: 9f3776ab588d4f66830e8b76564a33af
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
@@ -109,7 +91,13 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  created: 1782166260.677
-  edited: 1782166260.677
-  actor: dodobird181
-  creator: dodobird181@gmail.com
+- id: f57ffdca07ae46d5b9bcdd2f08bb8797
+  title: '[CLAUDE] fix author representation in YAML'
+  points: 0
+  description: "```\ncolumns:\n- Todo\n- Doing\n- Done\nauthors:\n  dodobird181@gmail.com:\n\
+    \    name: Sam\n    github: dodobird181\nitems:\n- id: db80cafe5faa49c584fe80e7fdf66842\n\
+    \  title: Test item\n  points: 0\n  description: adawdawdwd\n  column: Todo\n\
+    \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
