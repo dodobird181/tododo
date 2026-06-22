@@ -109,6 +109,13 @@ items:
     minute intervals)'
   column: Hidden
   updated: 1782107726.244
+- id: 00afe206dcf24d9a8f40e2bb7f6c19bb
+  title: '[CLAUDE] description in edit view should be 2x taller and overflow with
+    scroll bar'
+  points: 0
+  description: ''
+  column: Hidden
+  updated: 1782107726.244
 - id: 51283c5224974167a6eab5eb701f2fc4
   title: '[CLAUDE] add git avatars'
   points: 0
@@ -118,14 +125,7 @@ items:
 
     mousing over git avatar should show git username / email'
   column: Hidden
-  updated: 1782133946.428
-- id: 00afe206dcf24d9a8f40e2bb7f6c19bb
-  title: '[CLAUDE] description in edit view should be 2x taller and overflow with
-    scroll bar'
-  points: 0
-  description: ''
-  column: Hidden
-  updated: 1782107726.244
+  updated: 1782133946.588
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
