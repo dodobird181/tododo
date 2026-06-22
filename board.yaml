@@ -9,6 +9,9 @@ authors:
 relationships:
 - Assigned to
 - Reporter
+collaborators:
+- Sam
+- Joey
 items:
 - id: 26050e3affcf4104bf4089bade5fa6be
   title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
@@ -18,7 +21,7 @@ items:
     - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
 
     - [ ] Keep maximization behaviour the same'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782144992.07
@@ -28,7 +31,7 @@ items:
   title: '[CLAUDE] mark the current board in the workspace'
   points: 0
   description: and on app startup open to that board, not always boarddddd.yaml
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145250.217
@@ -40,7 +43,7 @@ items:
   points: 0
   description: should be on first commit. the users can manually remove people if
     they want fromt he YAML
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
@@ -59,5 +62,7 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
-  edited: 1782145716.577
+  edited: 1782146145.617
   actor: Sam
+  relationships:
+    Assigned to: Sam
