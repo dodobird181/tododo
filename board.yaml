@@ -111,3 +111,11 @@ items:
   author_email: dodobird181@gmail.com
   assignee: dodobird181@gmail.com
   reporter: dodobird181@gmail.com
+- id: 525ad1acb7b4489a9fd4cdcee940a139
+  title: '[CLAUDE] fix history list view not displaying actions other than created
+    (i havent tested delete though)'
+  points: 0
+  description: all the field changes should be reflected!!!!
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
