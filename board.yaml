@@ -9,18 +9,6 @@ items:
   points: 0
   description: ''
   column: Done
-- id: 4f8c0dc089a34b9096d66f99bac7b133
-  title: wdawefawdawkdl;mwad
-  points: 0
-  description: ''
-  column: Done
-- id: b33c2fa950d34151a435e67829dc26f7
-  title: new tingy
-  points: 0
-  description: 'hellooooo
-
-    AWDKAWMDKAWD'
-  column: Done
 - id: 4602d6a917c54ba3a7de57c5b0b1d2d1
   title: awdawd
   points: 0
@@ -38,3 +26,15 @@ items:
   points: 0
   description: ''
   column: Doing
+- id: 4f8c0dc089a34b9096d66f99bac7b133
+  title: wdawefawdawkdl;mwad
+  points: 0
+  description: ''
+  column: Todo
+- id: b33c2fa950d34151a435e67829dc26f7
+  title: new tingy
+  points: 0
+  description: 'hellooooo
+
+    AWDKAWMDKAWD'
+  column: The FORBIDDEN Column
