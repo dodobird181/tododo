@@ -49,10 +49,15 @@ items:
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
   points: 0
-  description: ''
+  description: 'i want cooler themes inspired by vscode themes, or Arch terminal themes
+
+
+    each of the four default themes provided should be visually different / distinct
+    from each other so people get the idea relatively quickly and are inspired to
+    make their own themes!!!'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
-  edited: 1782145605.205
+  edited: 1782145716.577
   actor: Sam
