@@ -211,10 +211,11 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
-  edited: 1782148865.832
+  edited: 1782157846.029
   moved: 1782148853.679
   moved_to: Done
-  actor: Sam
+  actor: dodobird181
+  due: awdawd
 - id: c5e95c7f2e3d47feaf2471fb0f237dd6
   title: '[CLAUDE] please make the collaborator name / author name / actor name the
     GITHUB username (e.g., dodobird181)'
@@ -308,7 +309,7 @@ items:
 
 
     Default should be similar to the existing layouts of expanded and collapsed.'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
