@@ -14,7 +14,7 @@ items:
 - id: seed0004
   title: Set up tododo
   points: 1
-  column: Doing
+  column: Todo
 - id: seed0001
   title: Drag me into another column
   points: 1
