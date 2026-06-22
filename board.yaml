@@ -225,7 +225,7 @@ items:
   description: and when they do, their name should show up in the commit to tell that
     it was them and then we display this information like we display the other blame
     information related to timestamps!
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782108156.247
+  updated: 1782108156.428
