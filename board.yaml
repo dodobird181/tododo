@@ -176,10 +176,10 @@ items:
 
     the display should also say WHO did the do-oing, for example "Marked as done 10
     minutes ago by turukano123"'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782132995.027
+  updated: 1782132995.158
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
