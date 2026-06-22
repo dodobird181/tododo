@@ -14,6 +14,7 @@ items:
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
   column: Done
+  updated: 1782105785.251
 - id: 100d5f0dd03f421b84263ab1361686ee
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
@@ -117,7 +118,7 @@ items:
   title: '[CLAUDE] the columns should be minimizable'
   points: 0
   description: ''
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
 - id: dc47ad8c3ebc4e539cff0276ede87cfb
