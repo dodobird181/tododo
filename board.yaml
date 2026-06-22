@@ -365,3 +365,13 @@ items:
   created: 1782156606.779
   edited: 1782156606.779
   actor: dodobird181
+- id: b3cc0ab343024b39b5ed0bc5f053cc50
+  title: '[CLAUDE] only ESC should close the item layout editor view'
+  points: 0
+  description: closing it with CTRL + I interferes with typing.
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782157977.269
+  edited: 1782157977.269
+  actor: dodobird181
