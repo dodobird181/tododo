@@ -24,11 +24,6 @@ items:
   points: 2
   description: ''
   column: FARTS AND PEE
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Done
 - id: seed0004
   title: Set up tododo
   points: 1
@@ -49,3 +44,8 @@ items:
 
     SAM WAS HERE'
   column: FARTS AND PEE
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
+  description: ''
+  column: Doing
