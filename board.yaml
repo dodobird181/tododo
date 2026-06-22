@@ -210,3 +210,16 @@ items:
   created: 1782151082.75
   edited: 1782151082.75
   actor: Sam
+- id: bdca4e4150b8491b860c94fcacb3971f
+  title: '[CLAUDE] CTRL + F should fuzzy-search the items and return a list of matching
+    items (by most relevant first)'
+  points: 0
+  description: the list of items should basically be rendered in a similar way to
+    columns, using the same higing / showing  display login as a ragular column would
+    have, except it's in a popup modal
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782151214.065
+  edited: 1782151214.065
+  actor: Sam
