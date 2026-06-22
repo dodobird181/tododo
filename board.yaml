@@ -58,7 +58,7 @@ items:
     each of the four default themes provided should be visually different / distinct
     from each other so people get the idea relatively quickly and are inspired to
     make their own themes!!!'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
@@ -75,7 +75,7 @@ items:
 
     if no maximized column is available, deselect all columns (uysing arrow keys or
     clicking will just select columns again and move around)'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
@@ -93,4 +93,17 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782146529.362
   edited: 1782146529.362
+  actor: Sam
+- id: ff2b79af5b774620804046bc4aaab48c
+  title: '[CLAUDE] fix ascii rendering for arrow keys in hints'
+  points: 0
+  description: 'they are rendering as empty boxes right now.
+
+
+    worst case use RIGHT/LEFT Arrow Keys'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782146593.55
+  edited: 1782146593.55
   actor: Sam
