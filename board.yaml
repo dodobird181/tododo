@@ -55,12 +55,14 @@ items:
 - id: 52e7cd99b7064379812c00015db1493a
   title: '[Claude] Refactor relationship concept'
   points: 0
-  description: ''
+  description: "1. relationships and collaborators should be removed. use author instead\
+    \ of collaborator.\n2. the following fields should be added and must only reference\
+    \ keys from a board's authors top-level key:\n    - awddwa\n    - awd awd"
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782163122.327
-  edited: 1782163122.327
+  edited: 1782163752.319
   moved: 1782163672.106
   moved_to: Todo
   viewed: 1782163380.205
