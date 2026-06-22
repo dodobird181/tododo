@@ -175,18 +175,6 @@ items:
   created: 1782149199.312
   edited: 1782149199.312
   actor: Sam
-- id: c5e95c7f2e3d47feaf2471fb0f237dd6
-  title: '[CLAUDE] please make the collaborator name / author name / actor name the
-    GITHUB username (e.g., dodobird181)'
-  points: 0
-  description: this should be unique, rather than real NAmes / first names / emails
-    (which can change in github preferences)
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782150864.502
-  edited: 1782150864.502
-  actor: Sam
 - id: 47ac3c1954b24659925830f401e4c3ae
   title: '[CLAUDE] display the current board name in the top bar (in large text)'
   points: 0
@@ -212,6 +200,18 @@ items:
   edited: 1782148865.832
   moved: 1782148853.679
   moved_to: Todo
+  actor: Sam
+- id: c5e95c7f2e3d47feaf2471fb0f237dd6
+  title: '[CLAUDE] please make the collaborator name / author name / actor name the
+    GITHUB username (e.g., dodobird181)'
+  points: 0
+  description: this should be unique, rather than real NAmes / first names / emails
+    (which can change in github preferences)
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782150864.502
+  edited: 1782150864.502
   actor: Sam
 - id: bdca4e4150b8491b860c94fcacb3971f
   title: '[CLAUDE] CTRL + F should fuzzy-search the items and return a list of matching
