@@ -136,35 +136,6 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107726.244
-- id: 57f8db36280d4df8be45f39f013b57a0
-  title: '[CLAUDE] delete updated and add different datetime fields'
-  points: 0
-  description: '1. last edited
-
-    2. last moved
-
-    3. created
-
-
-    display strings should read like "marked ''Done'' less than a minute ago" for
-    column moves, and "last edited 2 hours 15 minutes ago", and "created 2 days ago"
-    <-- new behaviour,  if it''s more than a week ago, then say the date.
-
-
-    also see if there is a way to tag commits with the item ID such that we can derive
-    all this metadata from the git commit history, rather than having to store it
-    at all in board.yaml
-
-
-    cheers!!!!!!!
-
-
-    the display should also say WHO did the do-oing, for example "Marked as done 10
-    minutes ago by turukano123"'
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  updated: 1782107736.871
 - id: dc47ad8c3ebc4e539cff0276ede87cfb
   title: '[CLAUDE] git avatar image should be pulled from git'
   points: 0
@@ -197,6 +168,35 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107482.794
+- id: 57f8db36280d4df8be45f39f013b57a0
+  title: '[CLAUDE] delete updated and add different datetime fields'
+  points: 0
+  description: '1. last edited
+
+    2. last moved
+
+    3. created
+
+
+    display strings should read like "marked ''Done'' less than a minute ago" for
+    column moves, and "last edited 2 hours 15 minutes ago", and "created 2 days ago"
+    <-- new behaviour,  if it''s more than a week ago, then say the date.
+
+
+    also see if there is a way to tag commits with the item ID such that we can derive
+    all this metadata from the git commit history, rather than having to store it
+    at all in board.yaml
+
+
+    cheers!!!!!!!
+
+
+    the display should also say WHO did the do-oing, for example "Marked as done 10
+    minutes ago by turukano123"'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107813.927
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
