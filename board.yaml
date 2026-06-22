@@ -131,3 +131,23 @@ items:
   created: 1782148103.902
   edited: 1782148103.902
   actor: Sam
+- id: fc5ee209f4174028b1701303bfe81c5b
+  title: '[CLAUDE] tweak the board switch view'
+  points: 0
+  description: 'currently, on first load, cursor is in the search box AND the latest
+    board edited (frst in the list) is selected.
+
+
+    I want to change the behaviour of the first DOWN ARROW press. Right now, when
+    it''s pressed, the FIRST board in the list is re-selected (since it is already
+    selected by default.)
+
+
+    Instead of this, I want the first DOWN ARROW press to select the SECOND item in
+    the list'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782148633.133
+  edited: 1782148633.133
+  actor: Sam
