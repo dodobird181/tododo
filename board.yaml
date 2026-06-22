@@ -54,13 +54,6 @@ items:
   column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-- id: 4977cd413cd44c3bb428c46e54223c3c
-  title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
-  points: 0
-  description: users should only edit the item layout in their settings.yaml files.
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -88,6 +81,13 @@ items:
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
   description: and of course default settings as well.
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+- id: 4977cd413cd44c3bb428c46e54223c3c
+  title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
+  points: 0
+  description: users should only edit the item layout in their settings.yaml files.
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
