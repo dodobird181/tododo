@@ -40,13 +40,13 @@ items:
   points: 0
   description: should be on first commit. the users can manually remove people if
     they want fromt he YAML
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
   edited: 1782145571.061
-  moved: 1782148853.576
-  moved_to: Doing
+  moved: 1782148853.679
+  moved_to: Todo
   actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
