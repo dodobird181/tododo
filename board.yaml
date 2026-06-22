@@ -18,7 +18,7 @@ items:
     - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
 
     - [ ] Keep maximization behaviour the same'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782144992.07
@@ -33,4 +33,15 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782145250.217
   edited: 1782145266.3
+  actor: Sam
+- id: 422185a48a044a8487a7e772098bdc36
+  title: '# [CLAUDE] automatically add the current github user / committer to collaborators
+    inside'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782145529.017
+  edited: 1782145529.017
   actor: Sam
