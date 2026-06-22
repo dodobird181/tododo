@@ -95,17 +95,17 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-- id: 3d926282b32e4db3b37f0113eb141c2c
-  title: '[CLAUDE] add scrollbar to commad pallet'
-  points: 0
-  description: similar to the keybindings view!
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
   description: users should only edit the item layout in their settings.yaml files.
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+- id: 3d926282b32e4db3b37f0113eb141c2c
+  title: '[CLAUDE] add scrollbar to commad pallet'
+  points: 0
+  description: similar to the keybindings view!
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
