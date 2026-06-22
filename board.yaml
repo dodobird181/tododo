@@ -253,8 +253,9 @@ items:
   title: '[CLAUDE] create a local workspace.yaml file to track which columns are minimized
     between saves'
   points: 0
-  description: ''
+  description: when a column is deleted, the workspace file should be updated to remove
+    any references to the deleted column
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782108420.939
+  updated: 1782108450.323
