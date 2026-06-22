@@ -94,7 +94,8 @@ items:
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
-  description: "```\ncolumns:\n- Todo\n- Doing\n- Done\nauthors:\n  dodobird181@gmail.com:\n\
+  description: "in the items, it should just be \"author\": dodobird181@gmail.com.\n\
+    \n```\ncolumns:\n- Todo\n- Doing\n- Done\nauthors:\n  dodobird181@gmail.com:\n\
     \    name: Sam\n    github: dodobird181\nitems:\n- id: db80cafe5faa49c584fe80e7fdf66842\n\
     \  title: Test item\n  points: 0\n  description: adawdawdwd\n  column: Todo\n\
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
