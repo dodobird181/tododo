@@ -147,10 +147,10 @@ items:
 
     the display should also say WHO did the do-oing, for example "Marked as done 10
     minutes ago by turukano123"'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107692.169
+  updated: 1782107692.763
 - id: dc47ad8c3ebc4e539cff0276ede87cfb
   title: '[CLAUDE] git avatar image should be pulled from git'
   points: 0
