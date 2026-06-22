@@ -241,11 +241,10 @@ items:
 - id: 069280a9563b470da096488e8bf0ebf9
   title: '[CLAUDE]'
   points: 0
-  description: should be on first commit. the users can manually remove people if
-    they want fromt he YAML
+  description: ''
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152514.008
-  edited: 1782152620.69
+  edited: 1782152659.422
   actor: Sam
