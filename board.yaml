@@ -7,9 +7,12 @@ columns:
 authors:
   dodobird181@gmail.com:
     name: Sam
+    github: dodobird181
 relationships:
 - Assigned to
 - Reporter
+collaborators:
+- dodobird181
 items:
 - id: f32b7e772206494185dbcf228e88e9e7
   title: '[CLAUDE] mark the current board in the workspace'
@@ -305,13 +308,13 @@ items:
 
 
     Default should be similar to the existing layouts of expanded and collapsed.'
-  column: Ideas
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
   edited: 1782155620.465
-  moved: 1782156497.335
-  moved_to: Ideas
+  moved: 1782156536.753
+  moved_to: Todo
   actor: Sam
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
