@@ -9,6 +9,11 @@ items:
   points: 2
   description: ''
   column: Done
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  description: ''
+  column: FARTS AND PEE
 - id: 21d150c9ea204363b32b22faa448b998
   title: foobar
   points: 13
@@ -37,8 +42,3 @@ items:
   points: 3
   description: ''
   column: Done
-- id: seed0001
-  title: Drag me into another column
-  points: 1
-  description: ''
-  column: FARTS AND PEE
