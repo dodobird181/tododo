@@ -4,13 +4,6 @@ columns:
 - The FORBIDDEN Column
 - Done
 items:
-- id: b33c2fa950d34151a435e67829dc26f7
-  title: new tingy
-  points: 0
-  description: 'hellooooo
-
-    AWDKAWMDKAWD'
-  column: Doing
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
@@ -36,3 +29,10 @@ items:
   points: 0
   description: ''
   column: Done
+- id: b33c2fa950d34151a435e67829dc26f7
+  title: new tingy
+  points: 0
+  description: 'hellooooo
+
+    AWDKAWMDKAWD'
+  column: The FORBIDDEN Column
