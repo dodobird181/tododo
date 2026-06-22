@@ -463,10 +463,10 @@ items:
 - id: f32b7e772206494185dbcf228e88e9e7
   title: '[CLAUDE] mark the current board in the workspace'
   points: 0
-  description: ''
+  description: and on app startup open to that board, not always boarddddd.yaml
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145250.217
-  edited: 1782145250.217
+  edited: 1782145266.3
   actor: Sam
