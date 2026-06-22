@@ -3,16 +3,6 @@ columns:
 - Doing
 - Done
 items:
-- id: 1eebeb876edb45dda66d103d073e2c05
-  title: test
-  points: 0
-  description: ''
-  column: Done
-- id: c4255272d8fc415e833b572b6509d2ac
-  title: Sam Pooped
-  points: 0
-  description: awdawdwad
-  column: Todo
 - id: 720a37d4e05a40ddbf69e774a92621f4
   title: THIS UI IS SOOOO SEXY HOLY FUCK
   points: 0
@@ -20,4 +10,4 @@ items:
 
 
     CALL A DOCTOR'
-  column: Todo
+  column: Doing
