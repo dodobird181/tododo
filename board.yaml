@@ -24,11 +24,6 @@ items:
   points: 0
   description: ''
   column: Todo
-- id: 4304595df3244a7686c06f7ad393cabf
-  title: SAM IS HOT
-  points: 0
-  description: ''
-  column: Done
 - id: b33c2fa950d34151a435e67829dc26f7
   title: new tingy
   points: 0
@@ -36,3 +31,8 @@ items:
 
     AWDKAWMDKAWD'
   column: The FORBIDDEN Column
+- id: 4304595df3244a7686c06f7ad393cabf
+  title: SAM IS HOT
+  points: 0
+  description: ''
+  column: Doing
