@@ -37,11 +37,6 @@ items:
   points: 1
   description: ''
   column: Doing
-- id: fb12f1b44c184584a63ac6d851ca1155
-  title: joey poop
-  points: 0
-  description: hey thats stinky dont poo in my tododo!!!
-  column: FARTS AND PEE
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
@@ -51,9 +46,4 @@ items:
   title: foobar
   points: 13
   description: ''
-  column: Done
-- id: fb12f1b44c184584a63ac6d851ca1155
-  title: joey poop
-  points: 0
-  description: hey thats stinky dont poo in my tododo!!!
   column: Done
