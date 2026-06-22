@@ -1,11 +1,16 @@
 columns:
 - Todo
 - Doing
-- I farted
-- AND PEED MY PANTS
 - Done
 - Hidden
 items:
+- id: b33c2fa950d34151a435e67829dc26f7
+  title: new tingy
+  points: 0
+  description: 'hellooooo
+
+    AWDKAWMDKAWD'
+  column: Done
 - id: 4304595df3244a7686c06f7ad393cabf
   title: '[CLAUDE] UP/DOWN Arrows move up and down lines'
   points: 0
@@ -16,13 +21,6 @@ items:
     in the description, up moves to the line directly above (and if it''s the first
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
-  column: Done
-- id: b33c2fa950d34151a435e67829dc26f7
-  title: new tingy
-  points: 0
-  description: 'hellooooo
-
-    AWDKAWMDKAWD'
   column: Done
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
@@ -124,13 +122,13 @@ items:
     if the time is less than 24 hours, output one of the following, "X minutes ago",
     "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
     minute intervals)'
-  column: Todo
+  column: Done
 - id: 00afe206dcf24d9a8f40e2bb7f6c19bb
   title: '[CLAUDE] description in edit view should be 2x taller and overflow with
     scroll bar'
   points: 0
   description: ''
-  column: Todo
+  column: Doing
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
