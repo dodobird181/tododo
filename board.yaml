@@ -76,12 +76,18 @@ items:
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
-  description: ''
+  description: 'this involves autofilling the duedate in as the current date (written
+    in the specified strftime format inside settings.yaml) and allowing the RIGHT
+    and LEFT arrows to increment / deincrement the due date (cannot go before the
+    current date...)
+
+
+    Holding SHIFT while doing'
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782164278.643
-  edited: 1782165344.725
+  edited: 1782165470.388
   moved: 1782165321.628
   moved_to: Ideas
   actor: dodobird181
