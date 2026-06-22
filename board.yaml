@@ -80,7 +80,7 @@ items:
   description: make this a separate keybinding for the confirm action
   column: Done
 - id: b2472359c4a44409912c752e391d4708
-  title: '[CLAUDE] awdawd'
+  title: '[CLAUDE] Clicking description or title in edit view should focus them'
   points: 0
-  description: awdawd
+  description: ''
   column: Todo
