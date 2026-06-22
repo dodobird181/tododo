@@ -34,20 +34,6 @@ items:
   created: 1782145250.217
   edited: 1782145266.3
   actor: Sam
-- id: 422185a48a044a8487a7e772098bdc36
-  title: '[CLAUDE] automatically add the current github user / committer to collaborators
-    in the yaml board files'
-  points: 0
-  description: should be on first commit. the users can manually remove people if
-    they want fromt he YAML
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782145529.017
-  edited: 1782145571.061
-  moved: 1782148853.679
-  moved_to: Todo
-  actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
   points: 0
@@ -163,4 +149,18 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782148788.325
   edited: 1782148788.325
+  actor: Sam
+- id: 422185a48a044a8487a7e772098bdc36
+  title: '[CLAUDE] automatically add the current github user / committer to collaborators
+    in the yaml board files'
+  points: 0
+  description: should be on first commit. the users can manually remove people if
+    they want fromt he YAML
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782145529.017
+  edited: 1782145571.061
+  moved: 1782148853.679
+  moved_to: Todo
   actor: Sam
