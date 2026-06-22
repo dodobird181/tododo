@@ -13,14 +13,14 @@ items:
   points: 2
   description: ''
   column: Done
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Todo
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
+  description: ''
+  column: Todo
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
   description: ''
   column: Todo
 - id: seed0004
