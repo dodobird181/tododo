@@ -279,12 +279,16 @@ items:
     has a single 100% column. (this is streamlit inspired declarative UI)
 
 
-    there should be a UI available in the program (opened wiuth)'
+    there should be a UI available in the program (opened with CTRL + I) which allows
+    for editing the grid layout and which fields map to which cells.
+
+
+    Default should be similar to the existing layouts of expanded and collapsed.'
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
-  edited: 1782154295.721
+  edited: 1782155620.465
   actor: Sam
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
