@@ -49,8 +49,9 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152830.294
-  edited: 1782152830.294
-  actor: Sam
+  edited: 1782163608.454
+  actor: dodobird181
+  due: in 2 days
 - id: 52e7cd99b7064379812c00015db1493a
   title: '[Claude] Refactor relationship concept'
   points: 0
