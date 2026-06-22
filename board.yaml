@@ -39,7 +39,7 @@ items:
     awdawdawd'
   column: Done
 - id: 100d5f0dd03f421b84263ab1361686ee
-  title: '[CLAUDE]'
+  title: '[CLAUDE] up and down arrow fix for editing description'
   points: 0
   description: 'Make up and down arrow not havethe same behaviour as TAB in the edit
     dialogue for the description.
