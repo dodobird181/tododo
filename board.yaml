@@ -15,11 +15,11 @@ items:
   title: Hit the command key to open operations
   points: 2
   column: Todo
-- id: seed0001
-  title: Drag me into another column
-  points: 1
-  column: Todo
 - id: 0f9bfb9fd56c4ec89e22239902da0a82
   title: FOobar badaepwdfawkd
   points: 0
   column: Todo
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  column: Doing
