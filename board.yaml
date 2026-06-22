@@ -196,10 +196,10 @@ items:
   points: 0
   description: why is there auth logic in avatat.py? we shouldn't need auth to grab
     their profile photo / image
-  column: Done
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133048.245
+  updated: 1782133049.845
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
