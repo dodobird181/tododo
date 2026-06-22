@@ -3,10 +3,6 @@ columns:
 - Doing
 - Done
 items:
-- id: 0f9bfb9fd56c4ec89e22239902da0a82
-  title: FOobar badaepwdfawkd
-  points: 12
-  column: Todo
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
