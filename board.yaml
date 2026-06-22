@@ -61,7 +61,7 @@ items:
 
     2. also the keybindings loist is getting long enough that functional groups (via
     YAML indentation) should be added and incorporated into the display'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782147478.802
@@ -205,11 +205,13 @@ items:
   title: '[CLAUDE] display the current board name in the top bar (in large text)'
   points: 0
   description: ''
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151082.75
   edited: 1782151082.75
+  moved: 1782151924.674
+  moved_to: Doing
   actor: Sam
 - id: bdca4e4150b8491b860c94fcacb3971f
   title: '[CLAUDE] CTRL + F should fuzzy-search the items and return a list of matching
