@@ -82,12 +82,22 @@ items:
     current date...)
 
 
-    Holding SHIFT while doing'
+    Holding SHIFT while using RIGHT and LEFT will increment by a week instead of a
+    single day.
+
+
+    the UI should display a two lines of text on top of each other indicating what
+    is happning, 1. the relative time e.g., "3 days from now," "6 weeks from now,"
+    "3 months from now," etc.
+
+
+    the default settings should transorm days into weeks at more than 30 days and
+    weeks into months at more than 8 weeks, if that makes sense heh...'
   column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782164278.643
-  edited: 1782165470.388
+  edited: 1782165696.684
   moved: 1782165321.628
   moved_to: Ideas
   actor: dodobird181
