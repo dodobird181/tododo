@@ -102,7 +102,7 @@ items:
   title: '[CLAUDE] Holdijng shift and moving up or down should select items'
   points: 0
   description: items can then be collectively moved and deleted
-  column: Doing
+  column: Done
 - id: 9b19aae67df541f18b095e36e84b9806
   title: '[CLAUDE] all items should have a timestamp of when they were last moved
     / edited and this should show up in the display'
@@ -121,4 +121,10 @@ items:
     if the time is less than 24 hours, output one of the following, "X minutes ago",
     "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
     minute intervals)'
+  column: Todo
+- id: 00afe206dcf24d9a8f40e2bb7f6c19bb
+  title: '[CLAUDE] description in edit view should be 2x taller and overflow with
+    scroll bar'
+  points: 0
+  description: ''
   column: Todo
