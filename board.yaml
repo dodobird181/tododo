@@ -26,11 +26,6 @@ items:
 
     AWDKAWMDKAWD'
   column: Todo
-- id: 4602d6a917c54ba3a7de57c5b0b1d2d1
-  title: awdawd
-  points: 0
-  description: ''
-  column: Done
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
@@ -38,3 +33,8 @@ items:
 
     awdawdawd'
   column: Done
+- id: 4602d6a917c54ba3a7de57c5b0b1d2d1
+  title: awdawd
+  points: 0
+  description: ''
+  column: The FORBIDDEN Column
