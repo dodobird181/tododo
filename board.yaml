@@ -47,3 +47,14 @@ items:
 
     the behaviour should be to move up and down inside the actual description text...'
   column: Todo
+- id: 612a6fb39f3c49749e14a66a5019b4b1
+  title: '[CLAUDE] fix right and left arrow not moving the cursor'
+  points: 0
+  description: 'when editing text in the app, the right and left arrorws should ALWAYS
+    move the cursor right and left inside the text box
+
+
+    1. when holdijng down, or;
+
+    2. when hittijng the right or left key once.'
+  column: Todo
