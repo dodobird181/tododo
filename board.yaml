@@ -255,7 +255,7 @@ items:
   points: 0
   description: when a column is deleted, the workspace file should be updated to remove
     any references to the deleted column
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782132292.217
+  updated: 1782132292.718
