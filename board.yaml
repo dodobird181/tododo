@@ -115,13 +115,13 @@ items:
 
 
     worst case use RIGHT/LEFT Arrow Keys (as text instead of ascii)'
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146593.55
   edited: 1782146603.839
-  moved: 1782148117.419
-  moved_to: Doing
+  moved: 1782148119.227
+  moved_to: Todo
   actor: Sam
 - id: 203260ec27f54c7ebd3b3d60ad4d6dc7
   title: '[CLAUDE] move untracked yaml files into userdata folder'
