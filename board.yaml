@@ -187,3 +187,15 @@ items:
   created: 1782149199.312
   edited: 1782149199.312
   actor: Sam
+- id: c5e95c7f2e3d47feaf2471fb0f237dd6
+  title: '[CLAUDE] please make the collaborator name / author name / actor name the
+    GITHUB username (e.g., dodobird181)'
+  points: 0
+  description: this should be unique, rather than real NAmes / first names / emails
+    (which can change in github preferences)
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782150864.502
+  edited: 1782150864.502
+  actor: Sam
