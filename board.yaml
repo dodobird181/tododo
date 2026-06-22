@@ -1,49 +1,10 @@
-columns:
-- Todo
-- Doing
-- FARTS AND PEE
-- Done
+columns: []
 items:
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
   description: ''
   column: FARTS AND PEE
-- id: b14529dea497452199a4d1b411dd9ff1
-  title: SAM IS COOL
-  points: 0
-  description: HEHEHEHE
-  column: Todo
-- id: seed0002
-  title: Hit the command key to open operations
-  points: 2
-  description: ''
-  column: Done
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Done
-- id: seed0004
-  title: Set up tododo
-  points: 1
-  description: ''
-  column: Todo
-- id: 449ee787806f4bd4b52854ad6e9cda02
-  title: JOEY
-  points: 5
-  description: 'POOPOO AND FARTS
-
-    awd
-
-    awdawdawd
-
-    awdawd
-
-    * awdawd
-
-    SAM WAS HERE'
-  column: Todo
 - id: seed0001
   title: Drag me into another columnawdawd
   points: 1
