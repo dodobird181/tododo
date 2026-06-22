@@ -1,5 +1,6 @@
 poetry.lock
 .claude
+.codegraph
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -226,3 +227,14 @@ board.yaml.tmp
 
 # tododo: personal settings (auto-generated from default_settings.yaml)
 settings.yaml
+
+# tododo: local view state (minimized columns, etc.)
+workspace.yaml
+
+# themes: keep the bundled themes version-controlled, ignore the active copy
+# and any user-added themes dropped into the folder.
+themes/*
+!themes/default_theme.yaml
+!themes/midnight.yaml
+!themes/solarized.yaml
+!themes/forest.yaml
