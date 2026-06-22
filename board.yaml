@@ -247,12 +247,12 @@ items:
     - control pallet view (for the selected item name / title)
 
 
-    -'
+    - try and find other places across the codebase...'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152514.008
-  edited: 1782152888.204
+  edited: 1782152941.002
   actor: Sam
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
