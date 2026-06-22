@@ -61,7 +61,7 @@ items:
 
     2. also the keybindings loist is getting long enough that functional groups (via
     YAML indentation) should be added and incorporated into the display'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782147478.802
@@ -151,7 +151,7 @@ items:
 
     if no maximized column is available, deselect all columns (uysing arrow keys or
     clicking will just select columns again and move around)'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
@@ -183,7 +183,7 @@ items:
 
 
     add a new optional field to items called due date to support the UI feature'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782149199.312
@@ -223,4 +223,15 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782151214.065
   edited: 1782151214.065
+  actor: Sam
+- id: 68b98b2152dc4f1f8faa1b8365dd05bf
+  title: '[CLAUDE] the key shortcut for setting due dates should be CTRL + W by default'
+  points: 0
+  description: and also the keybinding should be added to the default keybindings
+    and the keybindings.yaml for this current project
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782151732.534
+  edited: 1782151732.534
   actor: Sam
