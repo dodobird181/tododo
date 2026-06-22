@@ -14,11 +14,13 @@ items:
   title: '[CLAUDE] mark the current board in the workspace'
   points: 0
   description: and on app startup open to that board, not always boarddddd.yaml
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145250.217
   edited: 1782145266.3
+  moved: 1782148945.727
+  moved_to: Hidden
   actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
@@ -29,11 +31,13 @@ items:
     each of the four default themes provided should be visually different / distinct
     from each other so people get the idea relatively quickly and are inspired to
     make their own themes!!!'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
   edited: 1782148176.177
+  moved: 1782148945.727
+  moved_to: Hidden
   actor: Sam
 - id: 2011c8bc17f343bb9720f208a77fd0e3
   title: '[CLAUDE] add copy/paste functionality to items'
@@ -161,9 +165,11 @@ items:
     - [ ] clicking elsewhere in the entire column header shouoldn''t minimize.
 
     - [ ] Keep maximization behaviour the same'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782144992.07
   edited: 1782144992.07
+  moved: 1782148945.727
+  moved_to: Hidden
   actor: Sam
