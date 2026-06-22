@@ -367,3 +367,13 @@ items:
   moved: 1782161488.233
   moved_to: Done
   actor: dodobird181
+- id: 52e7cd99b7064379812c00015db1493a
+  title: '[Claude] Refactor relationship concept'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782163122.327
+  edited: 1782163122.327
+  actor: dodobird181
