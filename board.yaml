@@ -108,11 +108,6 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-- id: 100d5f0dd03f421b84263ab1361686ee
-  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
-  points: 0
-  description: in all editable text boxes
-  column: Todo
 - id: 4edf41a82f864d178a5293f84eefb7ff
   title: '[CLAUDE] the columns should be minimizable'
   points: 0
@@ -120,3 +115,8 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
+- id: 100d5f0dd03f421b84263ab1361686ee
+  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
+  points: 0
+  description: in all editable text boxes
+  column: Todo
