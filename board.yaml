@@ -229,3 +229,14 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782108156.875
+- id: 076880a7422a449cabcfdda54408b4f0
+  title: '[CLAUDE] remove github webhook'
+  points: 0
+  description: 'from settings and the implementation of an http server
+
+
+    im just gojnn ause the exponential bavckoff'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782108186.882
