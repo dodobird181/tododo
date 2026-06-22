@@ -1,0 +1,8 @@
+columns:
+- Todo
+- Doing
+- Done
+relationships:
+- Assigned to
+- Reporter
+items: []
