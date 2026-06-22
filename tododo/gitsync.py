@@ -33,12 +33,16 @@ TICK_SECONDS = 1
 
 class GitSync:
     def __init__(self, repo_root: Path, tracked_file: Path, merge_option: str = "theirs",
-                 push_interval: float = 2.0, poll_interval: float = 2.0):
+                 push_interval: float = 2.0, poll_interval: float = 2.0,
+                 poll_backoff_max: float = 300.0):
         self.repo_root = Path(repo_root)
         self.tracked_file = Path(tracked_file)
         self.merge_option = merge_option if merge_option in ("ours", "theirs") else "theirs"
         self.push_interval = max(0.5, float(push_interval))
         self.poll_interval = max(0.5, float(poll_interval))
+        self.poll_backoff_max = max(self.poll_interval, float(poll_backoff_max))
+        # Current (possibly backed-off) gap between idle fetches.
+        self._cur_poll = self.poll_interval
         try:
             self._rel = str(self.tracked_file.relative_to(self.repo_root))
         except ValueError:
@@ -80,6 +84,19 @@ class GitSync:
         if self._enabled:
             self._fetch_now.set()
 
+    def identity(self) -> tuple[str, str]:
+        """The configured git user (name, email); cached, best-effort."""
+        cached = getattr(self, "_identity", None)
+        if cached is None:
+            try:
+                name = self._git("config", "user.name").stdout.strip()
+                email = self._git("config", "user.email").stdout.strip()
+            except Exception:
+                name, email = "", ""
+            cached = (name, email)
+            self._identity = cached
+        return cached
+
     def last_fetch_label(self) -> str:
         with self._lock:
             ts = self.last_fetch
@@ -120,15 +137,15 @@ class GitSync:
         self._git("commit", "-m", message)
         return True
 
-    def _pull(self) -> None:
-        """Fetch and reconcile remote changes."""
+    def _pull(self) -> bool:
+        """Fetch and reconcile remote changes. Returns True if the remote was ahead."""
         before = self._file_mtime()
         self._git("fetch", "--quiet")
         with self._lock:
             self.last_fetch = time.time()
         ahead = self._git("rev-list", "--count", "HEAD..@{u}").stdout.strip()
         if not ahead or ahead == "0":
-            return  # already up to date
+            return False  # already up to date
         our_ahead = self._git("rev-list", "--count", "@{u}..HEAD").stdout.strip()
         if our_ahead in ("", "0"):
             # No local commits: a plain fast-forward, no conflicts possible.
@@ -139,8 +156,9 @@ class GitSync:
                 self._set_status("git: pulled remote changes")
             else:
                 self._set_status("git: needs manual merge")
-            return
+            return True
         self._strategy_merge(before)
+        return True
 
     def _strategy_merge(self, before: float) -> None:
         """Diverged history: let git merge with the configured -X option."""
@@ -201,6 +219,7 @@ class GitSync:
                     with self._git_lock:
                         self._pull()
                     last_poll = now
+                    self._cur_poll = self.poll_interval  # activity -> reset backoff
                 elif self._dirty.is_set() and now - last_push >= self.push_interval:
                     # Batched push: send all commits accumulated since last push.
                     self._dirty.clear()
@@ -209,12 +228,19 @@ class GitSync:
                         self._push()
                     last_push = now
                     last_poll = now
-                elif now - last_poll >= self.poll_interval:
+                    self._cur_poll = self.poll_interval  # activity -> reset backoff
+                elif now - last_poll >= self._cur_poll:
                     with self._git_lock:
-                        self._pull()
+                        pulled = self._pull()
                     last_poll = now
+                    # Exponential backoff while idle: nothing remote AND nothing to
+                    # push. Reset to the base interval the moment there's activity.
+                    if pulled or self._dirty.is_set():
+                        self._cur_poll = self.poll_interval
+                    else:
+                        self._cur_poll = min(self._cur_poll * 2, self.poll_backoff_max)
             except subprocess.TimeoutExpired:
                 self._set_status("git: timeout")
             except Exception as exc:
                 self._set_status(f"git: error {exc}")
-            self._stop.wait(min(TICK_SECONDS, self.poll_interval, self.push_interval))
+            self._stop.wait(min(TICK_SECONDS, self.push_interval))

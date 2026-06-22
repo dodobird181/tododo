@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,16 +18,32 @@ class Item:
     column: str
     points: int = 0
     description: str = ""
+    # Git identity of whoever created the item (for avatars). Optional so legacy
+    # items stay clean; only serialized when set.
+    author: str = ""
+    author_email: str = ""
+    # Unix timestamp of the last create/edit/move; 0 means unknown.
+    updated: float = 0.0
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
+    def touch(self) -> None:
+        self.updated = time.time()
+
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id": self.id,
             "title": self.title,
             "points": self.points,
             "description": self.description,
             "column": self.column,
         }
+        if self.author:
+            d["author"] = self.author
+        if self.author_email:
+            d["author_email"] = self.author_email
+        if self.updated:
+            d["updated"] = round(self.updated, 3)
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> "Item":
@@ -35,6 +52,9 @@ class Item:
             title=str(d.get("title", "")),
             points=int(d.get("points", 0) or 0),
             description=str(d.get("description", "") or ""),
+            author=str(d.get("author", "") or ""),
+            author_email=str(d.get("author_email", "") or ""),
+            updated=float(d.get("updated", 0) or 0),
             column=str(d.get("column", DEFAULT_COLUMNS[0])),
         )
 
@@ -92,9 +112,10 @@ class Board:
     # --- mutations -------------------------------------------------------
 
     def create(self, title: str, column: str | None = None, points: int = 0,
-               description: str = "") -> Item:
+               description: str = "", author: str = "", author_email: str = "") -> Item:
         item = Item(title=title, column=column or self.columns[0], points=points,
-                    description=description)
+                    description=description, author=author, author_email=author_email)
+        item.touch()
         self.items.append(item)
         return item
 
@@ -103,8 +124,9 @@ class Board:
 
     def move_to_column(self, item_id: str, column: str) -> None:
         item = self.find(item_id)
-        if item and column in self.columns:
+        if item and column in self.columns and item.column != column:
             item.column = column
+            item.touch()
 
     def move_relative(self, item_id: str, delta: int) -> None:
         """Shift an item delta columns left (-1) or right (+1)."""
@@ -113,7 +135,9 @@ class Board:
             return
         idx = self.columns.index(item.column)
         new_idx = max(0, min(len(self.columns) - 1, idx + delta))
-        item.column = self.columns[new_idx]
+        if new_idx != idx:
+            item.column = self.columns[new_idx]
+            item.touch()
 
     def move_within_column(self, item_id: str, delta: int) -> bool:
         """Shift an item up (-1) or down (+1) among its column siblings.
@@ -138,6 +162,7 @@ class Board:
             return
         self.items.remove(item)
         item.column = column
+        item.touch()
         # Rebuild list preserving order, inserting at the requested slot.
         col_items = [it for it in self.items if it.column == column]
         position = max(0, min(len(col_items), position))

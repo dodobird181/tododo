@@ -7,6 +7,23 @@
 #   all      -> every item shows its description, always expanded
 descriptions: selected
 
+# Show a small git-author avatar circle on the left of each card. The avatar is a
+# coloured monogram of whoever created the item; hover it to see name / email.
+git_avatars: true
+# Try to load a real avatar image (Gravatar, by the author's email) and fall back
+# to the coloured monogram when there is no image or no network.
+avatar_images: true
+
+# Show each item's last-updated time (created / edited / moved):
+#   selected -> only on the focused card (default)
+#   all      -> on every card
+timestamps: selected
+# How the absolute time is rendered once it is older than 24h. A normal strftime
+# string plus the custom token {th} for the ordinal day (1st, 2nd, ...). Within
+# 24h a relative phrase is shown instead ("X minutes ago", "2 hours and 15
+# minutes ago"). Note %-I (no-leading-zero hour) and %Z (tz name) are GNU/Linux.
+timestamp_format: "%B {th}, %Y at %-I:%M %p (%Z)"
+
 # How concurrent-edit conflicts are auto-resolved when syncing with git:
 #   incoming -> the remote side wins on conflicting changes (git merge -X theirs)
 #   current  -> your local side wins on conflicting changes (git merge -X ours)
@@ -16,12 +33,19 @@ merge_conflicts: incoming
 
 # Edits commit immediately but pushes are batched: at most one push every this
 # many seconds, bundling all commits made in between.
-push_interval: 2
+push_interval: 5
 
 # How often (seconds) to poll the remote in the background for others' changes.
 # Lower = more responsive, more git fetches. The webhook below avoids polling
 # entirely if you can expose a port.
-poll_interval: 2
+poll_interval: 1
+
+# When polls keep finding nothing new AND there are no unpushed local commits,
+# the fetch interval backs off exponentially (2 -> 4 -> 8 ...) up to this cap (s),
+# then resets to poll_interval as soon as there is activity. Only the cap is
+# configurable; the backoff itself is always on. Set equal to poll_interval to
+# effectively disable backoff.
+poll_backoff_max: 300
 
 # Webhook receiver: when enabled, the app runs a tiny HTTP server. POST to it
 # (e.g. from a GitHub push webhook) and it fetches/merges immediately instead of

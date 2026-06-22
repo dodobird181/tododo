@@ -21,6 +21,11 @@ DEFAULTS = {
     "merge_conflicts": "incoming",   # "incoming" (-X theirs) or "current" (-X ours)
     "push_interval": 2,              # seconds between batched pushes
     "poll_interval": 2,              # seconds between background fetches for remote changes
+    "poll_backoff_max": 300,         # cap (s) for exponential fetch backoff when idle
+    "git_avatars": True,             # show a git-author avatar circle on each card
+    "avatar_images": True,           # try to load a real Gravatar image (else monogram)
+    "timestamps": "selected",        # show last-updated time: "selected" or "all"
+    "timestamp_format": "%B {th}, %Y at %-I:%M %p (%Z)",  # strftime + {th} ordinal day
     "webhook_enabled": False,        # listen for push notifications -> instant fetch
     "webhook_port": 8765,            # port the webhook receiver binds to
     "webhook_secret": "",            # optional shared secret (X-Hub-Signature-256)
@@ -54,6 +59,21 @@ class Settings:
     def descriptions_always(self) -> bool:
         return str(self.values.get("descriptions", "selected")).lower() == "all"
 
+    @property
+    def git_avatars(self) -> bool:
+        return bool(self.values.get("git_avatars", True))
+
+    @property
+    def avatar_images(self) -> bool:
+        return bool(self.values.get("avatar_images", True))
+
+    @property
+    def timestamps_always(self) -> bool:
+        return str(self.values.get("timestamps", "selected")).lower() == "all"
+
+    def timestamp_format(self) -> str:
+        return str(self.values.get("timestamp_format") or "%B {th}, %Y at %-I:%M %p (%Z)")
+
     def merge_option(self) -> str:
         """git merge -X option: 'theirs' for incoming-wins, 'ours' for current-wins."""
         return "ours" if str(self.values.get("merge_conflicts", "incoming")).lower() == "current" \
@@ -70,6 +90,12 @@ class Settings:
             return max(0.5, float(self.values.get("poll_interval", 2)))
         except (TypeError, ValueError):
             return 2.0
+
+    def poll_backoff_max(self) -> float:
+        try:
+            return max(self.poll_interval(), float(self.values.get("poll_backoff_max", 300)))
+        except (TypeError, ValueError):
+            return 300.0
 
     @property
     def webhook_enabled(self) -> bool:

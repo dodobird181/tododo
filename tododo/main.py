@@ -23,7 +23,8 @@ def main() -> None:
     settings = Settings.load()
     git = GitSync(ROOT, BOARD_PATH, merge_option=settings.merge_option(),
                   push_interval=settings.push_interval(),
-                  poll_interval=settings.poll_interval())
+                  poll_interval=settings.poll_interval(),
+                  poll_backoff_max=settings.poll_backoff_max())
     git.start()
 
     webhook = None
