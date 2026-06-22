@@ -389,17 +389,22 @@ items:
 - id: 4c43b0e911074c8d8eee876b1d367d87
   title: '[CLAUDE] Overhaul the board move / switch view'
   points: 0
-  description: '1. The primary view should be a list of all boards (by most recently
-    opened.) You can store when a board was opened in the workspace.yaml file under
-    the correct board.
-
-
-    2.'
+  description: "1. The primary view should be a list of all boards (by most recently\
+    \ opened.) You can store when a board was opened in the workspace.yaml file under\
+    \ the correct board.\n\n2. The board move view should also have a text search\
+    \ box that does a narrowing search on the list of available board names.\n   \
+    \ 1. When the view opens, the cursor should automatically be inside this search\
+    \ box.\n    2. When the down arrow is used inside the search box, it will move\
+    \ down to select the boards in the list below.\n    3. when typing inside the\
+    \ search box, the list of boards should narrow corresponding with the search query\
+    \ and the first item in the list (if any) should automatically be selected as\
+    \ you're typing (so that by pressing ENTER you open that board.)\n   4. the current\
+    \ board should be hidden from the boards view"
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135739.203
-  edited: 1782135739.203
+  edited: 1782136060.943
   actor: Sam
 - id: 2c5e08d64dad4bb792b6d6e777969ff9
   title: '[CLAUDE] Markdown soft-rendering should workm inside the description editor
