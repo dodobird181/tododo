@@ -77,10 +77,12 @@ items:
   title: '[CLAUDE]'
   points: 0
   description: ''
-  column: Todo
+  column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782164278.643
   edited: 1782164278.643
+  moved: 1782165321.628
+  moved_to: Ideas
   actor: dodobird181
   creator: dodobird181@gmail.com
