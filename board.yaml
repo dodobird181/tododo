@@ -377,9 +377,11 @@ items:
   title: awdawd
   points: 0
   description: ''
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135459.596
   edited: 1782135459.596
+  moved: 1782135460.209
+  moved_to: Todo
   actor: Sam
