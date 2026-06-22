@@ -1,0 +1,8 @@
+# Default settings (version-controlled).
+# On startup, if settings.yaml does not exist it is generated from this file.
+# Edit settings.yaml (gitignored) for your personal preferences.
+
+# How item descriptions are displayed on cards:
+#   selected -> only the currently selected item shows its description (default)
+#   all      -> every item shows its description, always expanded
+descriptions: selected

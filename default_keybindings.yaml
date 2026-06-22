@@ -1,0 +1,27 @@
+# Default keybindings (version-controlled).
+# On startup, if keybindings.yaml does not exist it is generated from this file.
+# Edit keybindings.yaml (gitignored) for your personal preferences, or use the
+# in-app KEYBINDINGS editor.
+#
+# Values are pygame key names without the "K_" prefix (case-insensitive).
+# See: https://www.pygame.org/docs/ref/key.html
+#
+# The command palette opens with CTRL + <open_palette>. Every action can also be
+# triggered directly by holding CTRL and pressing its key (e.g. CTRL+C creates).
+
+# Open the command palette (held together with CTRL).
+open_palette: space
+
+# Palette actions (used as CTRL+<key>, or pressed alone while the palette is open)
+create: c         # create a new item
+delete: d         # delete selected item (asks for confirmation)
+move_left: left   # move selected item one column left
+move_right: right # move selected item one column right
+move_up: up       # move selected item up within its column
+move_down: down   # move selected item down within its column
+point: p          # assign a point value to the selected item
+keybindings: k    # open the keybindings editor
+
+# Confirmation / text dialogs
+confirm: return
+cancel: escape
