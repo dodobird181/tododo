@@ -211,3 +211,11 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107373.194
+- id: 12d197d142894e82a04ee62905d6887a
+  title: '[CLAUDE] can create new board with CTRL + B'
+  points: 0
+  description: should be a separate file...
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107853.218
