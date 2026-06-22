@@ -47,12 +47,13 @@ items:
 
 
     i have changed the default bindings for creating new items, dont worry'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146529.362
   edited: 1782146529.362
-  moved_to: Done
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 26c1c1ec1c7d4b46a18ea9edd44a3f10
   title: '[CLAUDE] keybindings view should scroll'
@@ -62,11 +63,13 @@ items:
 
     2. also the keybindings loist is getting long enough that functional groups (via
     YAML indentation) should be added and incorporated into the display'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782147478.802
   edited: 1782147478.802
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: ff2b79af5b774620804046bc4aaab48c
   title: '[CLAUDE] fix ascii rendering for arrow keys in hints'
@@ -75,14 +78,14 @@ items:
 
 
     worst case use RIGHT/LEFT Arrow Keys (as text instead of ascii)'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146593.55
   edited: 1782148657.639
-  moved: 1782148119.227
-  moved_to: Done
-  actor: Claude
+  moved: 1782155997.645
+  moved_to: Hidden
+  actor: Sam
 - id: 203260ec27f54c7ebd3b3d60ad4d6dc7
   title: '[CLAUDE] move untracked yaml files into userdata folder'
   points: 0
@@ -91,11 +94,13 @@ items:
 
 
     should auto-create the directory if one does not exist on initial project start'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782148103.902
   edited: 1782148103.902
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: fc5ee209f4174028b1701303bfe81c5b
   title: '[CLAUDE] tweak the board switch view'
@@ -111,23 +116,26 @@ items:
 
     Instead of this, I want the first DOWN ARROW press to select the SECOND item in
     the list'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782148633.133
   edited: 1782148633.133
-  moved_to: Done
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 0834562156a54a72b3858facd0d1b816
   title: '[CLAUDE] if there is no difference when opening he edit view to saving it,
     then don''t mark the item as Last edited by ___ at X.'
   points: 0
   description: instead add a new tracking timestamp for "viewed"
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782148788.325
   edited: 1782148788.325
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 8292f6d72eb24fb193eb5fa40417d9fc
   title: '[CLAUDE] when minimizing a column, select a maximized column (CLAUDE I DONT
@@ -138,13 +146,13 @@ items:
 
     if no maximized column is available, deselect all columns (uysing arrow keys or
     clicking will just select columns again and move around)'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
   edited: 1782148933.998
-  moved: 1782148898.507
-  moved_to: Todo
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 26050e3affcf4104bf4089bade5fa6be
   title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
@@ -170,23 +178,25 @@ items:
 
 
     add a new optional field to items called due date to support the UI feature'
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782149199.312
   edited: 1782149199.312
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 47ac3c1954b24659925830f401e4c3ae
   title: '[CLAUDE] display the current board name in the top bar (in large text)'
   points: 0
   description: ''
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151082.75
   edited: 1782151082.75
-  moved: 1782151924.851
-  moved_to: Done
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 422185a48a044a8487a7e772098bdc36
   title: '[CLAUDE] automatically add the current github user / committer to collaborators
@@ -194,7 +204,7 @@ items:
   points: 0
   description: should be on first commit. the users can manually remove people if
     they want fromt he YAML
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
@@ -208,11 +218,13 @@ items:
   points: 0
   description: this should be unique, rather than real NAmes / first names / emails
     (which can change in github preferences)
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782150864.502
   edited: 1782150864.502
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: bdca4e4150b8491b860c94fcacb3971f
   title: '[CLAUDE] CTRL + F should fuzzy-search the items and return a list of matching
@@ -221,22 +233,26 @@ items:
   description: the list of items should basically be rendered in a similar way to
     columns, using the same higing / showing  display login as a ragular column would
     have, except it's in a popup modal
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151214.065
   edited: 1782151214.065
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 68b98b2152dc4f1f8faa1b8365dd05bf
   title: '[CLAUDE] the key shortcut for setting due dates should be CTRL + W by default'
   points: 0
   description: and also the keybinding should be added to the default keybindings
     and the keybindings.yaml for this current project
-  column: Done
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782151732.534
   edited: 1782151732.534
+  moved: 1782155997.645
+  moved_to: Hidden
   actor: Sam
 - id: 069280a9563b470da096488e8bf0ebf9
   title: '[CLAUDE] clean up line-wrapping across the codebase'
