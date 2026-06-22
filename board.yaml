@@ -365,24 +365,39 @@ items:
   points: 0
   description: the cursor should just highlight the column title. this is primarily
     so that it is eay to create new items in empty columns
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135367.544
   edited: 1782135367.544
-  moved: 1782135403.83
-  moved_to: Doing
+  moved: 1782135597.603
+  moved_to: Done
   actor: Claude
 - id: 5a2e1ff435ff47e69256fa22a14c706d
   title: '[CLAUDE] switching boards should be M while creating a new board should
     be B'
   points: 0
   description: ''
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135459.596
   edited: 1782135539.507
-  moved: 1782135460.209
-  moved_to: Todo
+  moved: 1782135651.788
+  moved_to: Done
+  actor: Claude
+- id: 4c43b0e911074c8d8eee876b1d367d87
+  title: '[CLAUDE] Overhaul the board move / switch view'
+  points: 0
+  description: '1. The primary view should be a list of all boards (by most recently
+    opened.) You can store when a board was opened in the workspace.yaml file under
+    the correct board.
+
+
+    2.'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782135739.203
+  edited: 1782135739.203
   actor: Sam
