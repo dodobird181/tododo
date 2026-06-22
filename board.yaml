@@ -291,3 +291,21 @@ items:
   created: 1782152830.294
   edited: 1782152830.294
   actor: Sam
+- id: c8d6711da77247c7a20ba6085df160a9
+  title: '[CLAUDE] Unified Item Display'
+  points: 0
+  description: 'TODO
+
+
+    items are displayed the same in columns, in the edit view, and in the search function.
+    theyt have two modes, expanded and collapsed. The user can define in YAML what
+    should be displayed in each of these modes.
+
+
+    There should also be an editor for these modes'
+  column: Ideas
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782153019.195
+  edited: 1782153019.195
+  actor: Sam
