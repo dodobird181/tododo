@@ -21,5 +21,5 @@ items:
   column: Todo
 - id: 21d150c9ea204363b32b22faa448b998
   title: foobar
-  points: 0
+  points: 1
   column: Todo
