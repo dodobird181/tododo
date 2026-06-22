@@ -84,13 +84,6 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-- id: 1ccfe433cfe344fca9a2becaa0995256
-  title: '[CLAUDE] set a max description height in settings.yaml'
-  points: 2
-  description: and of course default settings as well.
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
