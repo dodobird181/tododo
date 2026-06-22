@@ -177,11 +177,12 @@ items:
 - id: d8048d54962042c5842daf46f05d6b82
   title: '[CLAUDE] Make sure github avatar is pulled correctly from github'
   points: 0
-  description: ''
+  description: right now it's just the initials of the github user, it should actually
+    pull their github profile photo and display that instead
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107450.227
+  updated: 1782107482.794
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
