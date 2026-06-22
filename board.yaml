@@ -107,5 +107,18 @@ items:
   title: '[CLAUDE] all items should have a timestamp of when they were last moved
     / edited and this should show up in the display'
   points: 0
-  description: add a setting for this item
+  description: 'add a setting for enabling the timestamp to be visible by default
+    or only when selected
+
+
+    the default setting is only when selected
+
+
+    also add a setting with a strftime string, default strftime string should output
+    in the following format: "July 1st, 2026 at 8:00 AM (EST)"
+
+
+    if the time is less than 24 hours, output one of the following, "X minutes ago",
+    "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
+    minute intervals)'
   column: Todo
