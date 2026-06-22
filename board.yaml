@@ -35,6 +35,11 @@ items:
 
     2. when hittijng the right or left key once.'
   column: Done
+- id: 100d5f0dd03f421b84263ab1361686ee
+  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
+  points: 0
+  description: in all editable text boxes
+  column: Done
 - id: 4602d6a917c54ba3a7de57c5b0b1d2d1
   title: awdawd
   points: 0
@@ -50,11 +55,6 @@ items:
   points: 0
   description: ''
   column: Done
-- id: 100d5f0dd03f421b84263ab1361686ee
-  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
-  points: 0
-  description: in all editable text boxes
-  column: Todo
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
