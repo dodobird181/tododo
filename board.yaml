@@ -9,11 +9,6 @@ items:
   points: 1
   description: ''
   column: Doing
-- id: seed0003
-  title: Edits auto-commit and push to git
-  points: 3
-  description: ''
-  column: Done
 - id: b14529dea497452199a4d1b411dd9ff1
   title: SAM IS COOL
   points: 0
@@ -48,4 +43,9 @@ items:
     * awdawd
 
     SAM WAS HERE'
+  column: FARTS AND PEE
+- id: seed0003
+  title: Edits auto-commit and push to git
+  points: 3
+  description: ''
   column: FARTS AND PEE
