@@ -62,8 +62,8 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
-  edited: 1782146181.511
+  edited: 1782146181.721
   actor: Sam
   relationships:
     Reporter: Joey
-    Assigned to: Sam
+    Assigned to: Joey
