@@ -21,7 +21,7 @@ items:
     there are no local commits that haven't been pushed, we can do an exponential
     backoff... limiting it at 5 mins. The limit should be configurable but exponential
     backoff should not
-  column: Doing
+  column: Done
 - id: 612a6fb39f3c49749e14a66a5019b4b1
   title: '[CLAUDE] fix right and left arrow not moving the cursor'
   points: 0
@@ -32,7 +32,7 @@ items:
     1. when holdijng down, or;
 
     2. when hittijng the right or left key once.'
-  column: Doing
+  column: Done
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
@@ -119,4 +119,4 @@ items:
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
   description: in all editable text boxes
-  column: Doing
+  column: Done
