@@ -42,13 +42,13 @@ items:
   points: 2
   description: ''
   column: FARTS AND PEE
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: FARTS AND PEE
 - id: fb12f1b44c184584a63ac6d851ca1155
   title: joey poop
   points: 0
   description: hey thats stinky dont poo in my tododo!!!
   column: Doing
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
+  description: ''
+  column: FARTS AND PEE
