@@ -100,10 +100,10 @@ items:
   description: 'they are rendering as empty boxes right now.
 
 
-    worst case use RIGHT/LEFT Arrow Keys'
+    worst case use RIGHT/LEFT Arrow Keys (as text instead of ascii)'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146593.55
-  edited: 1782146593.55
+  edited: 1782146603.839
   actor: Sam
