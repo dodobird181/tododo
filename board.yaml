@@ -83,4 +83,9 @@ items:
   title: '[CLAUDE] Clicking description or title in edit view should focus them'
   points: 0
   description: ''
+  column: Doing
+- id: 371cdb58bd2b49fba5cd4a3c62f01f52
+  title: '[CLAUDE] change hint at bottom of edit view'
+  points: 0
+  description: 'hint should read: "TAB switch *CTRL + Enter save * ESC"'
   column: Todo
