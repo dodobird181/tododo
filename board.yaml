@@ -16,11 +16,6 @@ items:
   points: 0
   description: ''
   column: Todo
-- id: 9b76ef69a5d849bd8c0691181c54fc1c
-  title: aefjnaewkjdnawjodnaw
-  points: 0
-  description: ''
-  column: The FORBIDDEN Column
 - id: 4304595df3244a7686c06f7ad393cabf
   title: SAM IS HOT
   points: 0
@@ -37,4 +32,9 @@ items:
   description: 'hellooooo
 
     AWDKAWMDKAWD'
+  column: Doing
+- id: 9b76ef69a5d849bd8c0691181c54fc1c
+  title: aefjnaewkjdnawjodnaw
+  points: 0
+  description: ''
   column: Doing
