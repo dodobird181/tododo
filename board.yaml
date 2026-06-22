@@ -84,6 +84,13 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
+- id: 4977cd413cd44c3bb428c46e54223c3c
+  title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
+  points: 0
+  description: users should only edit the item layout in their settings.yaml files.
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
@@ -92,13 +99,6 @@ items:
     \    name: Sam\n    github: dodobird181\nitems:\n- id: db80cafe5faa49c584fe80e7fdf66842\n\
     \  title: Test item\n  points: 0\n  description: adawdawdwd\n  column: Todo\n\
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-- id: 4977cd413cd44c3bb428c46e54223c3c
-  title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
-  points: 0
-  description: users should only edit the item layout in their settings.yaml files.
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
