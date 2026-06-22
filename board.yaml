@@ -1,12 +1,10 @@
-columns: []
+columns:
+- Todo
+- Doing
+- Done
 items:
-- id: seed0003
-  title: Edits auto-commit and push to git
-  points: 3
+- id: 1eebeb876edb45dda66d103d073e2c05
+  title: test
+  points: 0
   description: ''
-  column: FARTS AND PEE
-- id: seed0001
-  title: Drag me into another columnawdawd
-  points: 1
-  description: ''
-  column: Doing
+  column: Todo
