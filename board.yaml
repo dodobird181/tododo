@@ -35,7 +35,7 @@ items:
   edited: 1782145266.3
   actor: Sam
 - id: 422185a48a044a8487a7e772098bdc36
-  title: '# [CLAUDE] automatically add the current github user / committer to collaborators
+  title: '[CLAUDE] automatically add the current github user / committer to collaborators
     inside'
   points: 0
   description: ''
@@ -43,5 +43,5 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
-  edited: 1782145529.017
+  edited: 1782145535.144
   actor: Sam
