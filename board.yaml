@@ -258,27 +258,6 @@ items:
   moved: 1782155997.645
   moved_to: Hidden
   actor: Sam
-- id: 069280a9563b470da096488e8bf0ebf9
-  title: '[CLAUDE] clean up line-wrapping across the codebase'
-  points: 0
-  description: 'there are a few places where line wrapping can be improved
-
-
-    - control pallet view (for the selected item name / title)
-
-
-    - on items themselves
-
-
-    - try and find other places across the codebase...'
-  column: Ideas
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782152514.008
-  edited: 1782155679.433
-  moved: 1782155681.232
-  moved_to: Ideas
-  actor: Sam
 - id: c8d6711da77247c7a20ba6085df160a9
   title: '[CLAUDE] Unified Item Display'
   points: 0
@@ -369,7 +348,7 @@ items:
   title: '[CLAUDE] only ESC should close the item layout editor view'
   points: 0
   description: closing it with CTRL + I interferes with typing.
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782157977.269
@@ -380,9 +359,11 @@ items:
   points: 0
   description: it currently doesn't wrap when there are more than one column in a
     row, and also i believe on the borders of the card in general
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782158029.196
   edited: 1782158029.196
+  moved: 1782161488.233
+  moved_to: Done
   actor: dodobird181
