@@ -105,7 +105,7 @@ items:
     scroll bar'
   points: 0
   description: ''
-  column: Doing
+  column: Done
 - id: efa9d4ea66dc4bb2bb51037ea9565b92
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
@@ -117,6 +117,17 @@ items:
   title: '[CLAUDE] the columns should be minimizable'
   points: 0
   description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+- id: dc47ad8c3ebc4e539cff0276ede87cfb
+  title: '[CLAUDE] git avatar image should be pulled from git'
+  points: 0
+  description: 'you can probably use this URL, although im not sure how you derive
+    it from the github account / username / email.
+
+
+    https://avatars.githubusercontent.com/u/53889741?v=4'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
