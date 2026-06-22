@@ -148,17 +148,6 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107726.244
-- id: 5d8831a7bfb74d8a96457d2b5a060ff3
-  title: '[CLAUDE] add concept of "relationships" for items'
-  points: 0
-  description: these should be stored in board.yaml under each item as a new field,
-    where the key is one of the items in the "relationships" top-level key (defaults
-    are "Assigned to"  and "Reporter",) and the value is a github user from the list
-    of collaborators (also a new toplevel key, probably the github username)
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  updated: 1782107442.508
 - id: 57f8db36280d4df8be45f39f013b57a0
   title: '[CLAUDE] delete updated and add different datetime fields'
   points: 0
@@ -187,7 +176,18 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107818.219
+  updated: 1782107819.079
+- id: 5d8831a7bfb74d8a96457d2b5a060ff3
+  title: '[CLAUDE] add concept of "relationships" for items'
+  points: 0
+  description: these should be stored in board.yaml under each item as a new field,
+    where the key is one of the items in the "relationships" top-level key (defaults
+    are "Assigned to"  and "Reporter",) and the value is a github user from the list
+    of collaborators (also a new toplevel key, probably the github username)
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107442.508
 - id: d8048d54962042c5842daf46f05d6b82
   title: '[CLAUDE] Make sure github avatar is pulled correctly from github'
   points: 0
