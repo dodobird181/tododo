@@ -240,3 +240,12 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782108186.882
+- id: 86324d59d86b452bb10690cbd6c8a63b
+  title: '[CLAUDE] when a selected item is in a minimized column, tempoarily maximize
+    it'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782108320.9
