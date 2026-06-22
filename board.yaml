@@ -37,11 +37,6 @@ items:
   points: 1
   description: ''
   column: Doing
-- id: seed0002
-  title: Hit the command key to open operations
-  points: 2
-  description: ''
-  column: FARTS AND PEE
 - id: fb12f1b44c184584a63ac6d851ca1155
   title: joey poop
   points: 0
@@ -52,3 +47,8 @@ items:
   points: 13
   description: ''
   column: FARTS AND PEE
+- id: seed0002
+  title: Hit the command key to open operations
+  points: 2
+  description: ''
+  column: Doing
