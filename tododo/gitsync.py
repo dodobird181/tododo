@@ -27,23 +27,25 @@ from pathlib import Path
 
 from .board import Board
 
-# Sync loop tick. Pushes happen at most this often (bundling commits).
-PUSH_INTERVAL_SECONDS = 1
-# When there are no local changes, fetch remote at least this often.
-POLL_INTERVAL_SECONDS = 120
+# How often the sync loop wakes to check for work.
+TICK_SECONDS = 1
 
 
 class GitSync:
-    def __init__(self, repo_root: Path, tracked_file: Path, merge_option: str = "theirs"):
+    def __init__(self, repo_root: Path, tracked_file: Path, merge_option: str = "theirs",
+                 push_interval: float = 2.0, poll_interval: float = 2.0):
         self.repo_root = Path(repo_root)
         self.tracked_file = Path(tracked_file)
         self.merge_option = merge_option if merge_option in ("ours", "theirs") else "theirs"
+        self.push_interval = max(0.5, float(push_interval))
+        self.poll_interval = max(0.5, float(poll_interval))
         try:
             self._rel = str(self.tracked_file.relative_to(self.repo_root))
         except ValueError:
             self._rel = self.tracked_file.name
         self._jobs: "queue.Queue[str | None]" = queue.Queue()
         self._dirty = threading.Event()      # unpushed local commits exist
+        self._fetch_now = threading.Event()  # external request for an immediate fetch
         self._stop = threading.Event()
         self._lock = threading.Lock()        # guards self.status / self.last_fetch
         self._git_lock = threading.Lock()    # serializes git subprocess calls
@@ -72,6 +74,11 @@ class GitSync:
         """Queue a commit for the latest board state (push happens, bundled, soon)."""
         if self._enabled:
             self._jobs.put(message)
+
+    def request_sync(self) -> None:
+        """Ask the sync loop to fetch+merge right away (e.g. from a webhook)."""
+        if self._enabled:
+            self._fetch_now.set()
 
     def last_fetch_label(self) -> str:
         with self._lock:
@@ -184,16 +191,25 @@ class GitSync:
 
     def _sync_loop(self) -> None:
         last_poll = 0.0
+        last_push = 0.0
         while not self._stop.is_set():
             now = time.monotonic()
             try:
-                if self._dirty.is_set():
+                if self._fetch_now.is_set():
+                    # Immediate fetch requested (webhook): pull right away.
+                    self._fetch_now.clear()
+                    with self._git_lock:
+                        self._pull()
+                    last_poll = now
+                elif self._dirty.is_set() and now - last_push >= self.push_interval:
+                    # Batched push: send all commits accumulated since last push.
                     self._dirty.clear()
                     self._set_status("git: pushing…")
                     with self._git_lock:
                         self._push()
+                    last_push = now
                     last_poll = now
-                elif now - last_poll >= POLL_INTERVAL_SECONDS:
+                elif now - last_poll >= self.poll_interval:
                     with self._git_lock:
                         self._pull()
                     last_poll = now
@@ -201,4 +217,4 @@ class GitSync:
                 self._set_status("git: timeout")
             except Exception as exc:
                 self._set_status(f"git: error {exc}")
-            self._stop.wait(PUSH_INTERVAL_SECONDS)
+            self._stop.wait(min(TICK_SECONDS, self.poll_interval, self.push_interval))

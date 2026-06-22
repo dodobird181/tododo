@@ -46,24 +46,55 @@ it is selected (default); `all` keeps every description expanded.
 
 ## Git sync
 
-- Each edit commits immediately; pushes are bundled and throttled to at most once
-  per second, always fetching + merging remote changes first (pull before push).
-- When idle, the repo is fetched every ~2 minutes; the board reloads live when the
-  file changes. The status bar shows the last-fetch time.
+- Each edit commits immediately; pushes are **batched** — at most one push every
+  `push_interval` seconds (default 2), bundling all commits made in between, always
+  fetching + merging remote changes first (pull before push).
+- The remote is polled for others' changes every `poll_interval` seconds
+  (default 2); the board reloads live when the file changes. The status bar shows
+  the last-fetch time.
 - A `pre-push` git hook (installed on startup) also fetches before any push.
+
+### Fetch instantly on a new commit (webhook)
+
+A local git hook can't fire when *someone else* pushes — that's a remote event —
+so the app can optionally run a small HTTP receiver. A POST to it triggers an
+immediate fetch+merge instead of waiting for the periodic poll.
+
+Enable it in `settings.yaml`:
+
+```yaml
+webhook_enabled: true
+webhook_port: 8765
+webhook_secret: 'some-shared-secret'   # optional but recommended
+```
+
+Then make the port reachable by the sender and point a webhook at it:
+
+1. Expose it — on a laptop, a tunnel works: `cloudflared tunnel --url http://localhost:8765`
+   (or `ngrok http 8765`). On a public host, just open the port.
+2. In your GitHub repo: **Settings → Webhooks → Add webhook**, Payload URL =
+   the exposed URL, Content type = `application/json`, Secret = the same
+   `webhook_secret`, events = *Just the push event*.
+
+Now every push from anyone triggers your local app to fetch within a second. A
+`GET` to the URL returns `200` for a quick liveness check.
 
 ### Concurrent edits
 
-Edits from multiple people are reconciled with a **semantic 3-way merge by item
-id** (`tododo/merge.py`) rather than git's line-by-line text merge:
+Edits from multiple people are reconciled by git, and the sync never blocks on a
+conflict. Non-conflicting changes (different items, additions, reordering) merge
+automatically. When two people change the *same* lines, git auto-resolves using
+the `merge_conflicts` setting:
 
-- Edits to *different* items, additions, and reordering merge automatically — no
-  conflict.
-- Only a genuine **same-item collision** (both sides edited the same item, or one
-  edited while the other deleted it, or the same id was added differently) pauses
-  to ask. An in-app dialog shows **current vs incoming** field-by-field; press
-  **C** keep current, **I** take incoming, **B** keep both, or **Esc** to cancel
-  the merge. Your choices are committed as the merge and pushed.
+- `incoming` (default) — the remote side wins (`git merge -X theirs`)
+- `current` — your local side wins (`git merge -X ours`)
 
-This means you can almost never lose work to a race, and you never hand-edit git
-conflict markers.
+Because the merge is line-based, the board is parse-validated and de-duplicated
+after every merge (`Board.load` drops duplicate ids); if a merge produces
+something git genuinely can't resolve, sync backs off and shows `git: needs
+manual merge` in the status bar rather than committing a broken board.
+
+Tradeoff: on a true same-line conflict one side's edit is dropped silently per the
+setting — there is no per-item dialog. Keeping each item's YAML block multi-line
+(the default `Board.save` format) keeps edits to different items far enough apart
+that they merge cleanly.

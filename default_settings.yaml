@@ -13,3 +13,21 @@ descriptions: selected
 # Non-conflicting changes always merge normally. A merge git still can't resolve
 # falls back to a manual fix (shown in the status bar).
 merge_conflicts: incoming
+
+# Edits commit immediately but pushes are batched: at most one push every this
+# many seconds, bundling all commits made in between.
+push_interval: 2
+
+# How often (seconds) to poll the remote in the background for others' changes.
+# Lower = more responsive, more git fetches. The webhook below avoids polling
+# entirely if you can expose a port.
+poll_interval: 2
+
+# Webhook receiver: when enabled, the app runs a tiny HTTP server. POST to it
+# (e.g. from a GitHub push webhook) and it fetches/merges immediately instead of
+# waiting for the periodic poll. The endpoint must be reachable by the sender —
+# for GitHub that means exposing the port via a tunnel (cloudflared/ngrok) or a
+# public host. See README for setup.
+webhook_enabled: false
+webhook_port: 8765
+webhook_secret: ''   # if set, requests must carry a matching X-Hub-Signature-256

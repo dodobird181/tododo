@@ -19,6 +19,11 @@ USER_PATH = ROOT / "settings.yaml"
 DEFAULTS = {
     "descriptions": "selected",      # "selected" or "all"
     "merge_conflicts": "incoming",   # "incoming" (-X theirs) or "current" (-X ours)
+    "push_interval": 2,              # seconds between batched pushes
+    "poll_interval": 2,              # seconds between background fetches for remote changes
+    "webhook_enabled": False,        # listen for push notifications -> instant fetch
+    "webhook_port": 8765,            # port the webhook receiver binds to
+    "webhook_secret": "",            # optional shared secret (X-Hub-Signature-256)
 }
 
 
@@ -53,3 +58,28 @@ class Settings:
         """git merge -X option: 'theirs' for incoming-wins, 'ours' for current-wins."""
         return "ours" if str(self.values.get("merge_conflicts", "incoming")).lower() == "current" \
             else "theirs"
+
+    def push_interval(self) -> float:
+        try:
+            return max(0.5, float(self.values.get("push_interval", 2)))
+        except (TypeError, ValueError):
+            return 2.0
+
+    def poll_interval(self) -> float:
+        try:
+            return max(0.5, float(self.values.get("poll_interval", 2)))
+        except (TypeError, ValueError):
+            return 2.0
+
+    @property
+    def webhook_enabled(self) -> bool:
+        return bool(self.values.get("webhook_enabled", False))
+
+    def webhook_port(self) -> int:
+        try:
+            return int(self.values.get("webhook_port", 8765))
+        except (TypeError, ValueError):
+            return 8765
+
+    def webhook_secret(self) -> str:
+        return str(self.values.get("webhook_secret", "") or "")
