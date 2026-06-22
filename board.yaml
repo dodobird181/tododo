@@ -58,7 +58,7 @@ items:
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
   description: users should only edit the item layout in their settings.yaml files.
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
