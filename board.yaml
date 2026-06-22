@@ -21,7 +21,15 @@ items:
 - id: 449ee787806f4bd4b52854ad6e9cda02
   title: JOEY
   points: 5
-  description: POOPOO AND FARTS
+  description: 'POOPOO AND FARTS
+
+    awd
+
+    awdawdawd
+
+    awdawd
+
+    * awdawd'
   column: Todo
 - id: seed0004
   title: Set up tododo
