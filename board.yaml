@@ -119,3 +119,18 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
+- id: 8b757a752e9d44e1a307a7633c535ae8
+  title: '[CLAUDE] add assignee profile pic / avatar to the cards.'
+  points: 0
+  description: '1. the creator is no longer shown in the UI (except for history view).
+
+
+    2. the asignee''s profile pic replaces the creator right now (i believe it''s
+    the creator''s pick that is on the top left of the item when it is collapsed and
+    expanded.)
+
+
+    3. when an item is only collapsed'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
