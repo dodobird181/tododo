@@ -151,7 +151,8 @@ items:
   moved_to: Todo
   actor: Sam
 - id: 8292f6d72eb24fb193eb5fa40417d9fc
-  title: '[CLAUDE] when minimizing a column, select a maximized column'
+  title: '[CLAUDE] when minimizing a column, select a maximized column (CLAUDE I DONT
+    THINK YOU DID THIS EITHER! Please take another look)'
   points: 0
   description: 'so the user gets feedback immediately about the minimization.
 
@@ -162,7 +163,7 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
-  edited: 1782146372.771
+  edited: 1782148933.998
   moved: 1782148898.507
   moved_to: Todo
   actor: Sam
