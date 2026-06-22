@@ -71,10 +71,10 @@ items:
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
-  description: ''
+  description: users should only edit the item layout in their settings.yaml files.
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782163909.484
-  edited: 1782163909.484
+  edited: 1782163923.792
   actor: dodobird181
