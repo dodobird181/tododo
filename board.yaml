@@ -94,19 +94,6 @@ items:
   created: 1782146529.362
   edited: 1782146529.362
   actor: Sam
-- id: ff2b79af5b774620804046bc4aaab48c
-  title: '[CLAUDE] fix ascii rendering for arrow keys in hints'
-  points: 0
-  description: 'they are rendering as empty boxes right now.
-
-
-    worst case use RIGHT/LEFT Arrow Keys (as text instead of ascii)'
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782146593.55
-  edited: 1782146603.839
-  actor: Sam
 - id: 26c1c1ec1c7d4b46a18ea9edd44a3f10
   title: '[CLAUDE] keybindings view should scroll'
   points: 0
@@ -120,4 +107,17 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782147478.802
   edited: 1782147478.802
+  actor: Sam
+- id: ff2b79af5b774620804046bc4aaab48c
+  title: '[CLAUDE] fix ascii rendering for arrow keys in hints'
+  points: 0
+  description: 'they are rendering as empty boxes right now.
+
+
+    worst case use RIGHT/LEFT Arrow Keys (as text instead of ascii)'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782146593.55
+  edited: 1782146603.839
   actor: Sam
