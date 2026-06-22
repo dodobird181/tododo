@@ -5,22 +5,18 @@ columns:
 authors:
   dodobird181@gmail.com:
     name: Sam
-relationships:
-- Assigned to
-- Reporter
-collaborators:
-- Sam
+    github: dodobird181
 items:
 - id: 997b4332b6354c348c185416235cc20b
   title: TEst item
   points: 0
   description: awdawd
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134197.413
   edited: 1782151772.917
-  moved: 1782158226.563
-  moved_to: Todo
+  moved: 1782164286.086
+  moved_to: Doing
   actor: Sam
   due: '2026-07-04'
