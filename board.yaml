@@ -335,13 +335,13 @@ items:
 
     the default shortcut or switching boards should be CTRL + B (right now doesn''t
     appear in the command pallette menu)'
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134585.545
   edited: 1782134662.356
-  moved: 1782134883.602
-  moved_to: Done
+  moved: 1782134905.033
+  moved_to: Doing
   actor: Sam
 - id: 66d486c8abbd49e9aedb69b469899fb8
   title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
