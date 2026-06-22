@@ -13,6 +13,11 @@ items:
   points: 2
   description: ''
   column: Done
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  description: ''
+  column: Todo
 - id: seed0004
   title: Set up tododo
   points: 1
@@ -21,10 +26,5 @@ items:
 - id: 21d150c9ea204363b32b22faa448b998
   title: foobar
   points: 13
-  description: ''
-  column: Todo
-- id: seed0001
-  title: Drag me into another column
-  points: 1
   description: ''
   column: Todo
