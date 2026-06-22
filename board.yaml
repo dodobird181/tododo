@@ -178,3 +178,17 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782107271.815
+- id: afb5253dac53425baf38d888fa8526d7
+  title: '[CLAUDE] add a a new command for viewing an item''s YAML'
+  points: 0
+  description: '1. default should be "CTRL + y"
+
+    2. this command should appear in the hint text below the description in the edit
+    view.
+
+    3. this command should be triggerable from edi view, as well as the main window
+    (when an item is selected)'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782107373.194
