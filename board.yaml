@@ -159,10 +159,10 @@ items:
 
 
     https://avatars.githubusercontent.com/u/53889741?v=4'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107554.122
+  updated: 1782107554.315
 - id: 5d8831a7bfb74d8a96457d2b5a060ff3
   title: '[CLAUDE] add concept of "relationships" for items'
   points: 0
