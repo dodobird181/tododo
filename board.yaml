@@ -57,13 +57,13 @@ items:
 
     if no maximized column is available, deselect all columns (uysing arrow keys or
     clicking will just select columns again and move around)'
-  column: Doing
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146372.771
   edited: 1782146372.771
-  moved: 1782148898.406
-  moved_to: Doing
+  moved: 1782148898.507
+  moved_to: Todo
   actor: Sam
 - id: 2011c8bc17f343bb9720f208a77fd0e3
   title: '[CLAUDE] add copy/paste functionality to items'
