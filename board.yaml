@@ -173,3 +173,17 @@ items:
   moved: 1782148945.727
   moved_to: Hidden
   actor: Sam
+- id: 254b4bdede3742d98d70f4ef580fbbfd
+  title: '[CLAUDE] Add a new shortcut CTRL + D for adding a "due date" to items'
+  points: 0
+  description: 'available in the item edit view and also the board columns view (when
+    an item is selected)
+
+
+    add a new optional field to items called due date to support the UI feature'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782149199.312
+  edited: 1782149199.312
+  actor: Sam
