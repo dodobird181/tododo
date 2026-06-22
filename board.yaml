@@ -97,9 +97,9 @@ items:
 
 
     mousing over git avatar should show git username / email'
-  column: Todo
+  column: Doing
 - id: b9924b0769eb40c89afc4c589bcc025f
-  title: '[CLAUDE]'
+  title: '[CLAUDE] Holdijng shift and moving up or down should select items'
   points: 0
-  description: ''
+  description: items can then be collectively moved and deleted
   column: Todo
