@@ -14,11 +14,6 @@ items:
   points: 0
   description: ''
   column: Done
-- id: 9b76ef69a5d849bd8c0691181c54fc1c
-  title: aefjnaewkjdnawjodnaw
-  points: 0
-  description: ''
-  column: Done
 - id: b33c2fa950d34151a435e67829dc26f7
   title: new tingy
   points: 0
@@ -38,3 +33,8 @@ items:
 
     awdawdawd'
   column: Done
+- id: 9b76ef69a5d849bd8c0691181c54fc1c
+  title: aefjnaewkjdnawjodnaw
+  points: 0
+  description: ''
+  column: Doing
