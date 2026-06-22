@@ -9,9 +9,6 @@ authors:
 relationships:
 - Assigned to
 - Reporter
-collaborators:
-- Sam
-- Joey
 items:
 - id: 26050e3affcf4104bf4089bade5fa6be
   title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
@@ -62,10 +59,9 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145605.205
-  edited: 1782146182.337
+  edited: 1782148174.341
   actor: Sam
   relationships:
-    Reporter: Joey
     Assigned to: Sam
 - id: 8292f6d72eb24fb193eb5fa40417d9fc
   title: '[CLAUDE] when minimizing a column, select a maximized column'
