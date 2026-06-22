@@ -59,12 +59,22 @@ items:
     \ of collaborator.\n2. the following fields should be added and must only reference\
     \ keys from a board's authors top-level key:\n    - creator\n    - assignee\n\
     \    - reporter"
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782163122.327
   edited: 1782163873.901
-  moved: 1782163672.106
-  moved_to: Todo
+  moved: 1782163894.334
+  moved_to: Doing
   viewed: 1782163380.205
+  actor: dodobird181
+- id: 4977cd413cd44c3bb428c46e54223c3c
+  title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782163909.484
+  edited: 1782163909.484
   actor: dodobird181
