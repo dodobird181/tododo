@@ -3,6 +3,11 @@ columns:
 - Doing
 - Done
 items:
+- id: seed0001
+  title: Drag me into another column
+  points: 1
+  description: ''
+  column: Doing
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
@@ -13,11 +18,6 @@ items:
   points: 2
   description: ''
   column: Done
-- id: seed0001
-  title: Drag me into another column
-  points: 1
-  description: ''
-  column: Todo
 - id: seed0004
   title: Set up tododo
   points: 1
