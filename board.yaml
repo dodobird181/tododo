@@ -16,6 +16,17 @@ items:
 
     AWDKAWMDKAWD'
   column: Done
+- id: 612a6fb39f3c49749e14a66a5019b4b1
+  title: '[CLAUDE] fix right and left arrow not moving the cursor'
+  points: 0
+  description: 'when editing text in the app, the right and left arrorws should ALWAYS
+    move the cursor right and left inside the text box
+
+
+    1. when holdijng down, or;
+
+    2. when hittijng the right or left key once.'
+  column: Done
 - id: 4602d6a917c54ba3a7de57c5b0b1d2d1
   title: awdawd
   points: 0
@@ -47,17 +58,6 @@ items:
 
     awdawdawd'
   column: Done
-- id: 612a6fb39f3c49749e14a66a5019b4b1
-  title: '[CLAUDE] fix right and left arrow not moving the cursor'
-  points: 0
-  description: 'when editing text in the app, the right and left arrorws should ALWAYS
-    move the cursor right and left inside the text box
-
-
-    1. when holdijng down, or;
-
-    2. when hittijng the right or left key once.'
-  column: Todo
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
   points: 0
