@@ -95,6 +95,11 @@ items:
     "less than a minute ago", "2 hours and 15 minutes ago" (with granularity of 15
     minute intervals)'
   column: Done
+- id: 100d5f0dd03f421b84263ab1361686ee
+  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
+  points: 0
+  description: in all editable text boxes
+  column: Doing
 - id: 00afe206dcf24d9a8f40e2bb7f6c19bb
   title: '[CLAUDE] description in edit view should be 2x taller and overflow with
     scroll bar'
@@ -115,8 +120,3 @@ items:
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-- id: 100d5f0dd03f421b84263ab1361686ee
-  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
-  points: 0
-  description: in all editable text boxes
-  column: Doing
