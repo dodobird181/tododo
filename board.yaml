@@ -4,11 +4,6 @@ columns:
 - FARTS AND PEE
 - Done
 items:
-- id: seed0001
-  title: Drag me into another columnawdawd
-  points: 1
-  description: ''
-  column: Done
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
@@ -49,3 +44,8 @@ items:
 
     SAM WAS HERE'
   column: Todo
+- id: seed0001
+  title: Drag me into another columnawdawd
+  points: 1
+  description: ''
+  column: Doing
