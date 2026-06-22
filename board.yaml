@@ -121,3 +121,17 @@ items:
   created: 1782146593.55
   edited: 1782146603.839
   actor: Sam
+- id: 203260ec27f54c7ebd3b3d60ad4d6dc7
+  title: '[CLAUDE] move untracked yaml files into userdata folder'
+  points: 0
+  description: '`keybindings.yaml`, `settings.yaml`, and `workspace.yaml` files should
+    go into a directory called `userdata` in the project.
+
+
+    should auto-create the directory if one does not exist on initial project start'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782148103.902
+  edited: 1782148103.902
+  actor: Sam
