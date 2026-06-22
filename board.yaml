@@ -97,9 +97,15 @@ items:
 
 
     mousing over git avatar should show git username / email'
-  column: Doing
+  column: Done
 - id: b9924b0769eb40c89afc4c589bcc025f
   title: '[CLAUDE] Holdijng shift and moving up or down should select items'
   points: 0
   description: items can then be collectively moved and deleted
+  column: Doing
+- id: 9b19aae67df541f18b095e36e84b9806
+  title: '[CLAUDE] all items should have a timestamp of when they were last moved
+    / edited and this should show up in the display'
+  points: 0
+  description: add a setting for this item
   column: Todo
