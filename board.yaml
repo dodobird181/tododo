@@ -207,13 +207,13 @@ items:
   points: 0
   description: should be on first commit. the users can manually remove people if
     they want fromt he YAML
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
   edited: 1782157846.029
-  moved: 1782163440.452
-  moved_to: Doing
+  moved: 1782163440.633
+  moved_to: Done
   actor: dodobird181
   due: awdawd
 - id: c5e95c7f2e3d47feaf2471fb0f237dd6
@@ -288,13 +288,13 @@ items:
 
 
     Default should be similar to the existing layouts of expanded and collapsed.'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
   edited: 1782155620.465
-  moved: 1782163440.452
-  moved_to: Doing
+  moved: 1782163440.633
+  moved_to: Done
   actor: dodobird181
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -338,38 +338,38 @@ items:
     over of github profile photo'
   points: 0
   description: thanks!!
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782156606.779
   edited: 1782156606.779
-  moved: 1782163440.452
-  moved_to: Doing
+  moved: 1782163440.633
+  moved_to: Done
   actor: dodobird181
 - id: b3cc0ab343024b39b5ed0bc5f053cc50
   title: '[CLAUDE] only ESC should close the item layout editor view'
   points: 0
   description: closing it with CTRL + I interferes with typing.
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782157977.269
   edited: 1782157977.269
-  moved: 1782163440.452
-  moved_to: Doing
+  moved: 1782163440.633
+  moved_to: Done
   actor: dodobird181
 - id: 182a9c7eacf04d33bab74d757fa3d40d
   title: '[CLAUDE] line-wrapping should be respected in the item layout'
   points: 0
   description: it currently doesn't wrap when there are more than one column in a
     row, and also i believe on the borders of the card in general
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782158029.196
   edited: 1782158029.196
-  moved: 1782163440.452
-  moved_to: Doing
+  moved: 1782163440.633
+  moved_to: Done
   actor: dodobird181
 - id: 52e7cd99b7064379812c00015db1493a
   title: '[Claude] Refactor relationship concept'
