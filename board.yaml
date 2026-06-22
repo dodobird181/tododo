@@ -353,3 +353,14 @@ items:
   created: 1782152830.294
   edited: 1782152830.294
   actor: Sam
+- id: d150748427ef4189b5560ce457d00389
+  title: '[CLAUDE] also please show the github user''s name, e.g., "Sam" on mouse
+    over of github profile photo'
+  points: 0
+  description: thanks!!
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782156606.779
+  edited: 1782156606.779
+  actor: dodobird181
