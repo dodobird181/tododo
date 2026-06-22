@@ -24,7 +24,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-PATH = ROOT / "workspace.yaml"
+USERDATA = ROOT / "userdata"
+PATH = USERDATA / "workspace.yaml"
+_LEGACY_PATH = ROOT / "workspace.yaml"  # pre-migration location
 
 
 class Workspace:
@@ -39,6 +41,10 @@ class Workspace:
 
     @classmethod
     def load(cls) -> "Workspace":
+        USERDATA.mkdir(exist_ok=True)
+        # Migrate legacy workspace.yaml from repo root to userdata/ on first load.
+        if _LEGACY_PATH.exists() and not PATH.exists():
+            _LEGACY_PATH.rename(PATH)
         data = {}
         if PATH.exists():
             try:
@@ -96,6 +102,7 @@ class Workspace:
         if self.current:
             data["current"] = self.current
         data["boards"] = boards
+        USERDATA.mkdir(exist_ok=True)
         tmp = PATH.with_suffix(".yaml.tmp")
         tmp.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
         tmp.replace(PATH)

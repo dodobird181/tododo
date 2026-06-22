@@ -14,8 +14,10 @@ import pygame
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+USERDATA = ROOT / "userdata"
 DEFAULT_PATH = ROOT / "default_keybindings.yaml"
-USER_PATH = ROOT / "keybindings.yaml"
+USER_PATH = USERDATA / "keybindings.yaml"
+_LEGACY_USER_PATH = ROOT / "keybindings.yaml"
 
 # Logical actions the app cares about.
 ACTIONS = [
@@ -34,6 +36,8 @@ ACTIONS = [
     "relationships",
     "select_column",
     "themes",
+    "due_date",
+    "search",
     "confirm",
     "cancel",
 ]
@@ -45,6 +49,10 @@ class Keybindings:
 
     @classmethod
     def load(cls) -> "Keybindings":
+        USERDATA.mkdir(exist_ok=True)
+        # Migrate legacy keybindings.yaml from repo root to userdata/ on first load.
+        if _LEGACY_USER_PATH.exists() and not USER_PATH.exists():
+            _LEGACY_USER_PATH.rename(USER_PATH)
         if not USER_PATH.exists():
             if DEFAULT_PATH.exists():
                 shutil.copyfile(DEFAULT_PATH, USER_PATH)

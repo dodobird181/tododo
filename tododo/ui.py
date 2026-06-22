@@ -392,6 +392,7 @@ class App:
     RELATIONSHIPS = "relationships"
     SWITCH_BOARD = "switch_board"
     THEME = "theme"
+    SEARCH = "search"
 
     def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
         pygame.init()
@@ -474,6 +475,12 @@ class App:
         # keybindings editor state
         self.kb_index = 0
         self.kb_capturing = False
+        self.kb_scroll = 0  # vertical scroll offset in pixels
+        # search modal state
+        self.search_query: EditBuffer | None = None
+        self.search_index = 0
+        self.search_scroll = 0
+        self.search_results: list[Item] = []
         # relationships editor state
         self.rel_index = 0
 
@@ -541,8 +548,16 @@ class App:
         return self.board.find(self.selected_id) if self.selected_id else None
 
     def _actor(self) -> str:
-        """Display name credited with the current action (the git identity)."""
-        return self.git.identity()[0] or "someone"
+        """Display name credited with the current action.
+
+        Prefers the GitHub username (unique, stable) over the git display name.
+        """
+        name, email = self.git.identity()
+        if email:
+            gh = self.board.authors.get(email, {}).get("github")
+            if gh:
+                return gh
+        return name or "someone"
 
     def _board_key(self) -> str:
         """Workspace namespace key for the current board (its file stem)."""
@@ -651,6 +666,10 @@ class App:
                     and self.keys.matches("view_yaml", event.key) and self.selected()):
                 self.open_yaml(self.selected(), self.EDIT)
                 return
+            if (event.type == pygame.KEYDOWN and (event.mod & pygame.KMOD_CTRL)
+                    and self.keys.matches("due_date", event.key) and self.selected()):
+                self.start_due_date()
+                return
             if self.editor and self.editor.handle(event):
                 self.editor = None
                 self.mode = self.NORMAL
@@ -668,7 +687,16 @@ class App:
             self.handle_confirm(event)
             return
         if self.mode == self.KEYBINDINGS:
-            self.handle_keybindings(event)
+            if event.type == pygame.MOUSEWHEEL:
+                self.kb_scroll = max(0, self.kb_scroll - event.y * self.font.get_linesize())
+            else:
+                self.handle_keybindings(event)
+            return
+        if self.mode == self.SEARCH:
+            if event.type == pygame.MOUSEWHEEL:
+                self.search_scroll = max(0, self.search_scroll - event.y * self.font.get_linesize())
+            else:
+                self.handle_search(event)
             return
         if self.mode == self.RELATIONSHIPS:
             self.handle_relationships(event)
@@ -699,6 +727,14 @@ class App:
                     return
                 if event.key == pygame.K_v:
                     self.paste_items()
+                    return
+                # CTRL+W sets a due date on the selected item.
+                if self.keys.matches("due_date", event.key) and self.selected():
+                    self.start_due_date()
+                    return
+                # CTRL+F opens fuzzy item search.
+                if self.keys.matches("search", event.key):
+                    self.start_search()
                     return
                 # CTRL+<open_palette> opens the palette; CTRL+<action> runs it directly.
                 if self.keys.matches("open_palette", event.key):
@@ -781,15 +817,16 @@ class App:
         now minimized, deselect everything (arrows/clicks re-enter normally)."""
         cols = self.board.columns
         candidates = [c for c in cols if c not in self.minimized]
-        self.selected_id = None
         self._clear_multi()
         if not candidates:
+            self.selected_id = None
             self.focused_col = None
             return
         idx = cols.index(name)
         # Nearest by column distance; ties resolve to the column on the right.
-        self.focused_col = min(candidates, key=lambda c: (abs(cols.index(c) - idx),
-                                                          -(cols.index(c) > idx)))
+        nearest = min(candidates, key=lambda c: (abs(cols.index(c) - idx),
+                                                 -(cols.index(c) > idx)))
+        self._focus(nearest, 0)
 
     def on_mouse_motion(self, pos) -> None:
         if self.drag_item:
@@ -922,11 +959,21 @@ class App:
 
     # --- palette / actions ----------------------------------------------
 
+    # Keybinding groups: list of (group_label, [action, ...]) in display order.
+    KB_GROUPS = [
+        ("Palette", ["open_palette"]),
+        ("Items", ["create", "delete", "point", "relationships", "select_column", "due_date"]),
+        ("Movement", ["move_left", "move_right", "move_up", "move_down"]),
+        ("Views", ["keybindings", "view_yaml", "themes", "new_board", "switch_board", "search"]),
+        ("Dialogs", ["confirm", "cancel"]),
+    ]
+
     # Actions triggerable via the palette or CTRL+<key>.
     COMMAND_ACTIONS = [
         "create", "delete", "move_left", "move_right",
         "move_up", "move_down", "point", "relationships",
         "new_board", "switch_board", "themes", "keybindings",
+        "due_date", "search",
     ]
 
     def action_for_key(self, key: int) -> str | None:
@@ -965,6 +1012,13 @@ class App:
             self.mode = self.KEYBINDINGS
             self.kb_index = 0
             self.kb_capturing = False
+        elif action == "due_date":
+            if self.selected():
+                self.start_due_date()
+            else:
+                self.notify("no item selected")
+        elif action == "search":
+            self.start_search()
 
     def handle_palette(self, event) -> None:
         if event.type != pygame.KEYDOWN:
@@ -1252,6 +1306,143 @@ class App:
             self.th_themes = self._theme_list()
             self.th_index = 0
 
+    # --- fuzzy item search -----------------------------------------------
+
+    def _search_score(self, item: Item, q: str) -> int:
+        """Higher score = better match. 0 means no match."""
+        title_l = item.title.lower()
+        desc_l = item.description.lower()
+        if q in title_l:
+            # Exact prefix wins, then anywhere in title, then description.
+            return 3 if title_l.startswith(q) else 2
+        if q in desc_l:
+            return 1
+        # Fuzzy: all chars of q appear in title in order.
+        ti = 0
+        for ch in q:
+            ti = title_l.find(ch, ti)
+            if ti == -1:
+                break
+            ti += 1
+        else:
+            return 1
+        return 0
+
+    def _search_results(self) -> list[Item]:
+        if not self.search_query:
+            return []
+        q = self.search_query.text.strip().lower()
+        if not q:
+            return list(self.board.items)
+        scored = [(self._search_score(it, q), it) for it in self.board.items]
+        scored = [(s, it) for s, it in scored if s > 0]
+        scored.sort(key=lambda x: -x[0])
+        return [it for _, it in scored]
+
+    def start_search(self) -> None:
+        self.search_query = EditBuffer("")
+        self.search_index = 0
+        self.search_scroll = 0
+        self.search_results = self._search_results()
+        self.mode = self.SEARCH
+
+    def handle_search(self, event) -> None:
+        if event.type != pygame.KEYDOWN:
+            return
+        if self.keys.matches("cancel", event.key) or self.keys.matches("search", event.key):
+            self.mode = self.NORMAL
+            return
+        results = self.search_results
+        if self.keys.matches("confirm", event.key) and results:
+            item = results[self.search_index]
+            self.selected_id = item.id
+            self.focused_col = None
+            self._clear_multi()
+            self.mode = self.NORMAL
+            return
+        if event.key == pygame.K_DOWN and results:
+            self.search_index = min(len(results) - 1, self.search_index + 1)
+            return
+        if event.key == pygame.K_UP and results:
+            self.search_index = max(0, self.search_index - 1)
+            return
+        # Everything else edits the query.
+        if not self.search_query:
+            return
+        if event.key == pygame.K_BACKSPACE:
+            self.search_query.backspace()
+        elif event.unicode and event.unicode.isprintable():
+            self.search_query.insert(event.unicode)
+        self.search_results = self._search_results()
+        self.search_index = 0
+        self.search_scroll = 0
+
+    def draw_search(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 680, 520)
+        title_surf = self.font_lg.render("Search items", True, TEXT)
+        self.screen.blit(title_surf, (rect.x + 24, rect.y + 18))
+        sub = self.font_sm.render("type · UP/DOWN select · ENTER jump · ESC close", True, MUTED)
+        self.screen.blit(sub, (rect.x + 24, rect.y + 54))
+
+        # Search box.
+        box = pygame.Rect(rect.x + 24, rect.y + 82, rect.w - 48, 38)
+        pygame.draw.rect(self.screen, BG, box, border_radius=6)
+        pygame.draw.rect(self.screen, ACCENT, box, width=2, border_radius=6)
+        blink = (pygame.time.get_ticks() // 500) % 2 == 0
+        if self.search_query is not None:
+            self.draw_editable(self.font, box, self.search_query, blink)
+        if self.search_query is None or not self.search_query.text:
+            ph = self.font.render("Search…", True, MUTED)
+            self.screen.blit(ph, (box.x + 12, box.y + box.h // 2 - ph.get_height() // 2))
+
+        # Results.
+        results = self.search_results
+        body = pygame.Rect(rect.x + 12, box.bottom + 8, rect.w - 24, rect.h - 112 - 38)
+        row_h = 56
+        content_h = len(results) * row_h
+        self.search_scroll = max(0, min(self.search_scroll, max(0, content_h - body.h)))
+
+        # Keep selected row in view.
+        sel_top = self.search_index * row_h
+        if sel_top < self.search_scroll:
+            self.search_scroll = sel_top
+        elif sel_top + row_h > self.search_scroll + body.h:
+            self.search_scroll = sel_top + row_h - body.h
+
+        prev_clip = self.screen.get_clip()
+        self.screen.set_clip(body.clip(prev_clip) if prev_clip else body)
+        if not results:
+            msg = "no results" if (self.search_query and self.search_query.text) else "no items"
+            self.screen.blit(self.font.render(msg, True, MUTED), (rect.x + 24, body.y + 10))
+        y = body.y - self.search_scroll
+        for i, item in enumerate(results):
+            if body.y <= y + row_h and y < body.bottom:
+                selected = i == self.search_index
+                if selected:
+                    hl = pygame.Rect(rect.x + 12, y + 2, rect.w - 24, row_h - 4)
+                    pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
+                    pygame.draw.rect(self.screen, ACCENT, hl, width=1, border_radius=6)
+                name_surf = self.font.render(item.title, True, ACCENT if selected else TEXT)
+                self.screen.blit(name_surf, (rect.x + 24, y + 8))
+                col_surf = self.font_sm.render(item.column, True, MUTED)
+                self.screen.blit(col_surf, (rect.right - col_surf.get_width() - 24, y + 8))
+                if item.description:
+                    desc = item.description.replace("\n", " ")[:80]
+                    desc_surf = self.font_sm.render(desc, True, MUTED)
+                    self.screen.blit(desc_surf, (rect.x + 24, y + 8 + self.font.get_linesize()))
+            y += row_h
+        self.screen.set_clip(prev_clip)
+
+        # Scrollbar.
+        if content_h > body.h:
+            track_h = body.h - 4
+            thumb_h = max(20, int(track_h * body.h / content_h))
+            thumb_y = body.y + 2 + int((track_h - thumb_h) * self.search_scroll
+                                        / max(1, content_h - body.h))
+            pygame.draw.rect(self.screen, MUTED, (rect.right - 10, thumb_y, 4, thumb_h),
+                             border_radius=2)
+
     def _open_board(self, name: str, create: bool) -> None:
         # Keep it a sibling .yaml file (no path traversal); add the extension.
         stem = Path(name).name
@@ -1317,6 +1508,23 @@ class App:
                                     initial=str(item.points), numeric=True)
         self.mode = self.TEXT
 
+    def start_due_date(self) -> None:
+        item = self.selected()
+        if not item:
+            return
+
+        def submit(text: str) -> None:
+            text = text.strip()
+            # Accept empty string to clear the due date.
+            item.due = text
+            item.mark_edited(self._actor())
+            label = text or "cleared"
+            self.persist(f"due date '{item.title}' = {label}")
+        self.text_input = TextInput(
+            f"Due date for '{item.title}' (YYYY-MM-DD, blank to clear):",
+            submit, initial=item.due)
+        self.mode = self.TEXT
+
     def do_move(self, delta: int) -> None:
         sel = self.selection()
         if not sel:
@@ -1357,12 +1565,17 @@ class App:
 
     # --- keybindings editor ---------------------------------------------
 
+    def _kb_actions_flat(self) -> list[str]:
+        """Actions in the same order as KB_GROUPS (used by keybindings editor)."""
+        return [a for _, acts in self.KB_GROUPS for a in acts]
+
     def handle_keybindings(self, event) -> None:
         if event.type != pygame.KEYDOWN:
             return
+        flat = self._kb_actions_flat()
         if self.kb_capturing:
             # Capture the next key as the new binding for the selected action.
-            action = ACTIONS[self.kb_index]
+            action = flat[self.kb_index]
             self.keys.mapping[action] = code_to_key_name(event.key)
             self.kb_capturing = False
             self.keys.save()
@@ -1374,9 +1587,9 @@ class App:
             self._watch_mtime["keybindings"] = self._mtime(KB_USER_PATH)
             self.mode = self.PALETTE
         elif event.key == pygame.K_UP:
-            self.kb_index = (self.kb_index - 1) % len(ACTIONS)
+            self.kb_index = (self.kb_index - 1) % len(flat)
         elif event.key == pygame.K_DOWN:
-            self.kb_index = (self.kb_index + 1) % len(ACTIONS)
+            self.kb_index = (self.kb_index + 1) % len(flat)
         elif event.key == pygame.K_RETURN:
             self.kb_capturing = True
 
@@ -1410,6 +1623,8 @@ class App:
             self.draw_switch_board(w, h)
         elif self.mode == self.THEME:
             self.draw_themes(w, h)
+        elif self.mode == self.SEARCH:
+            self.draw_search(w, h)
 
         self.draw_toast(w, h)
         pygame.display.flip()
@@ -1418,13 +1633,17 @@ class App:
         pygame.draw.rect(self.screen, COL_HEADER, (0, 0, w, TOPBAR_H))
         title = self.font_lg.render("tododo", True, TEXT)
         self.screen.blit(title, (16, TOPBAR_H // 2 - title.get_height() // 2))
+        board_name = self.font_lg.render(self._board_key(), True, ACCENT)
+        self.screen.blit(board_name, (16 + title.get_width() + 14,
+                                      TOPBAR_H // 2 - board_name.get_height() // 2))
         total = sum(it.points for it in self.board.items)
         palette_key = self.keys.label("open_palette") or "SPACE"
+        left_edge = 16 + title.get_width() + 14 + board_name.get_width() + 20
         hint = self.font_sm.render(
             f"{len(self.board.items)} items · {total} pts   ·   "
             f"CTRL+{palette_key}: commands   ·   arrows: navigate   ·   drag to move",
             True, MUTED)
-        self.screen.blit(hint, (160, TOPBAR_H // 2 - hint.get_height() // 2))
+        self.screen.blit(hint, (left_edge, TOPBAR_H // 2 - hint.get_height() // 2))
 
     MIN_COL_W = 46  # width of a minimized column
 
@@ -1617,8 +1836,9 @@ class App:
 
         rel_text = " · ".join(f"{rel} @{who}" for rel, who in item.relationships.items() if who)
         rel_h = self.font_sm.get_linesize() + 4 if rel_text else 0
+        due_h = self.font_sm.get_linesize() + 4 if item.due else 0
 
-        card_h = max(CARD_MIN_H, text_h + desc_h + ts_h + rel_h + 2 * CARD_PAD)
+        card_h = max(CARD_MIN_H, text_h + desc_h + ts_h + rel_h + due_h + 2 * CARD_PAD)
         rect = pygame.Rect(x, y, w, card_h)
         if floating:
             color = CARD_BG_DRAG
@@ -1652,6 +1872,11 @@ class App:
         if rel_text:
             ty += 4 + (self.font_sm.get_linesize() if ts_text else 0)
             self.screen.blit(self.font_sm.render(rel_text, True, ACCENT), (text_x, ty))
+
+        if item.due:
+            ty += 4 + (self.font_sm.get_linesize() if (ts_text or rel_text) else 0)
+            due_surf = self.font_sm.render(f"Due: {item.due}", True, DANGER)
+            self.screen.blit(due_surf, (text_x, ty))
 
         # points badge
         if item.points:
@@ -1777,6 +2002,7 @@ class App:
             ("switch_board", "Switch board"),
             ("themes", "Switch colour theme"),
             ("keybindings", "Edit keybindings"),
+            ("due_date", "Set due date (CTRL+D)"),
         ]
         y = rect.y + 84
         for action, desc in rows:
@@ -2091,24 +2317,74 @@ class App:
     def draw_keybindings(self, w: int, h: int) -> None:
         self.dim(w, h)
         rect = self.panel(w, h, 520, 520)
-        title = self.font_lg.render("Keybindings", True, TEXT)
+        title = self.font_lg.render("Edit Keybindings", True, TEXT)
         self.screen.blit(title, (rect.x + 24, rect.y + 18))
-        sub = self.font_sm.render("UP/DOWN select · ENTER rebind · ESC save+close", True, MUTED)
+        sub = self.font_sm.render("UP/DOWN select · ENTER rebind · scroll · ESC save+close", True, MUTED)
         self.screen.blit(sub, (rect.x + 24, rect.y + 54))
-        y = rect.y + 90
-        for i, action in enumerate(ACTIONS):
-            selected = i == self.kb_index
-            if selected:
-                hl = pygame.Rect(rect.x + 12, y - 4, rect.w - 24, 32)
-                pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
-            name = self.font.render(action, True, TEXT)
-            self.screen.blit(name, (rect.x + 24, y))
-            if selected and self.kb_capturing:
-                val = self.font.render("press a key…", True, ACCENT)
-            else:
-                val = self.font.render(self.keys.mapping.get(action, ""), True, BADGE)
-            self.screen.blit(val, (rect.right - val.get_width() - 24, y))
-            y += 36
+
+        GROUP_H = 28   # height of a group-header row
+        ROW_H   = 36   # height of an action row
+
+        # Compute total content height so we can clamp scroll.
+        total_h = sum(GROUP_H + len(acts) * ROW_H for _, acts in self.KB_GROUPS)
+        body = pygame.Rect(rect.x + 12, rect.y + 82, rect.w - 24, rect.h - 112)
+        view_h = body.h
+        self.kb_scroll = max(0, min(self.kb_scroll, max(0, total_h - view_h)))
+
+        # Keep the selected action in view.
+        sel_y = 0
+        action_pos = 0
+        for grp_label, acts in self.KB_GROUPS:
+            sel_y_g = sel_y + GROUP_H
+            for a in acts:
+                if action_pos == self.kb_index:
+                    if sel_y_g < self.kb_scroll:
+                        self.kb_scroll = sel_y_g
+                    elif sel_y_g + ROW_H > self.kb_scroll + view_h:
+                        self.kb_scroll = sel_y_g + ROW_H - view_h
+                sel_y_g += ROW_H
+                action_pos += 1
+            sel_y += GROUP_H + len(acts) * ROW_H
+
+        prev_clip = self.screen.get_clip()
+        self.screen.set_clip(body.clip(prev_clip) if prev_clip else body)
+
+        y = body.y - self.kb_scroll
+        action_pos = 0
+        for grp_label, acts in self.KB_GROUPS:
+            # Group header.
+            if body.y <= y + GROUP_H and y < body.bottom:
+                grp_surf = self.font_sm.render(grp_label.upper(), True, MUTED)
+                self.screen.blit(grp_surf, (rect.x + 24, y + 8))
+                pygame.draw.line(self.screen, MUTED,
+                                 (rect.x + 24 + grp_surf.get_width() + 8, y + GROUP_H // 2),
+                                 (rect.right - 24, y + GROUP_H // 2))
+            y += GROUP_H
+            for action in acts:
+                if body.y <= y + ROW_H and y < body.bottom:
+                    selected = action_pos == self.kb_index
+                    if selected:
+                        hl = pygame.Rect(rect.x + 12, y - 2, rect.w - 24, ROW_H - 4)
+                        pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
+                    name_surf = self.font.render(action, True, TEXT)
+                    self.screen.blit(name_surf, (rect.x + 24, y + (ROW_H - self.font.get_linesize()) // 2))
+                    if selected and self.kb_capturing:
+                        val = self.font.render("press a key…", True, ACCENT)
+                    else:
+                        val = self.font.render(self.keys.mapping.get(action, ""), True, BADGE)
+                    self.screen.blit(val, (rect.right - val.get_width() - 24,
+                                          y + (ROW_H - self.font.get_linesize()) // 2))
+                y += ROW_H
+                action_pos += 1
+
+        self.screen.set_clip(prev_clip)
+
+        # Scrollbar.
+        if total_h > view_h:
+            track_h = body.h - 4
+            thumb_h = max(20, int(track_h * view_h / total_h))
+            thumb_y = body.y + 2 + int((track_h - thumb_h) * self.kb_scroll / max(1, total_h - view_h))
+            pygame.draw.rect(self.screen, MUTED, (rect.right - 10, thumb_y, 4, thumb_h), border_radius=2)
 
     # --- relationships editor -------------------------------------------
 

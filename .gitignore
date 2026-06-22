@@ -221,14 +221,12 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# tododo: personal keybindings (auto-generated from default_keybindings.yaml)
-keybindings.yaml
+# tododo: user-local files live in userdata/ (auto-generated / machine-specific)
+userdata/
 board.yaml.tmp
-
-# tododo: personal settings (auto-generated from default_settings.yaml)
+# Legacy root-level paths (kept for old clones that haven't migrated yet).
+keybindings.yaml
 settings.yaml
-
-# tododo: local view state (minimized columns, etc.)
 workspace.yaml
 
 # themes: keep the bundled themes version-controlled, ignore the active copy

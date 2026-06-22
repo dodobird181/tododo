@@ -27,6 +27,8 @@ switch_board: b   # switch to an existing board file (CTRL+M)
 relationships: r  # edit the selected item's relationships (CTRL+R)
 select_column: a  # select every item in the focused item's column (CTRL+A)
 themes: t         # open the colour theme switcher (CTRL+T)
+due_date: w       # set a due date on the selected item (CTRL+W)
+search: f         # fuzzy-search items (CTRL+F)
 
 # Confirmation / text dialogs
 confirm: return
