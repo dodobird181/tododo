@@ -28,6 +28,12 @@ ACTIONS = [
     "move_down",
     "point",
     "keybindings",
+    "view_yaml",
+    "new_board",
+    "switch_board",
+    "relationships",
+    "select_column",
+    "themes",
     "confirm",
     "cancel",
 ]

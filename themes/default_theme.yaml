@@ -1,0 +1,23 @@
+# Default theme — Tokyo Night (version-controlled). On first run this is copied
+# to current_theme.yaml (gitignored), which is the theme the app actually uses.
+# Pick another theme in-app via the theme switcher; drop your own *.yaml here.
+bg: [26, 27, 38]
+col_bg: [31, 33, 48]
+col_header: [41, 46, 66]
+card_bg: [45, 50, 74]
+card_bg_sel: [54, 68, 120]
+card_bg_drag: [74, 92, 150]
+text: [192, 202, 245]
+muted: [120, 124, 153]
+accent: [122, 162, 247]
+badge: [158, 206, 106]
+overlay: [13, 13, 20, 215]
+danger: [247, 118, 142]
+code: [224, 175, 104]
+selection: [40, 52, 87]
+column_colors:
+  - [122, 162, 247]
+  - [224, 175, 104]
+  - [158, 206, 106]
+  - [187, 154, 247]
+  - [125, 207, 255]

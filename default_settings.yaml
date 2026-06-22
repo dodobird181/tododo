@@ -10,8 +10,9 @@ descriptions: selected
 # Show a small git-author avatar circle on the left of each card. The avatar is a
 # coloured monogram of whoever created the item; hover it to see name / email.
 git_avatars: true
-# Try to load a real avatar image (Gravatar, by the author's email) and fall back
-# to the coloured monogram when there is no image or no network.
+# Try to load each author's real GitHub profile photo (resolved from their commit
+# email via GitHub, cached into the board's authors: registry). Falls back to the
+# coloured monogram when there is no match or no network.
 avatar_images: true
 
 # Show each item's last-updated time (created / edited / moved):
@@ -36,8 +37,8 @@ merge_conflicts: incoming
 push_interval: 5
 
 # How often (seconds) to poll the remote in the background for others' changes.
-# Lower = more responsive, more git fetches. The webhook below avoids polling
-# entirely if you can expose a port.
+# Lower = more responsive, more git fetches. Exponential backoff (below) keeps
+# idle polling cheap, so a low value here is fine.
 poll_interval: 1
 
 # When polls keep finding nothing new AND there are no unpushed local commits,
@@ -46,12 +47,3 @@ poll_interval: 1
 # configurable; the backoff itself is always on. Set equal to poll_interval to
 # effectively disable backoff.
 poll_backoff_max: 300
-
-# Webhook receiver: when enabled, the app runs a tiny HTTP server. POST to it
-# (e.g. from a GitHub push webhook) and it fetches/merges immediately instead of
-# waiting for the periodic poll. The endpoint must be reachable by the sender —
-# for GitHub that means exposing the port via a tunnel (cloudflared/ngrok) or a
-# public host. See README for setup.
-webhook_enabled: false
-webhook_port: 8765
-webhook_secret: ''   # if set, requests must carry a matching X-Hub-Signature-256

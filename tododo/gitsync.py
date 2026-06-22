@@ -80,9 +80,19 @@ class GitSync:
             self._jobs.put(message)
 
     def request_sync(self) -> None:
-        """Ask the sync loop to fetch+merge right away (e.g. from a webhook)."""
+        """Ask the sync loop to fetch+merge right away (bypassing the poll backoff)."""
         if self._enabled:
             self._fetch_now.set()
+
+    def set_tracked_file(self, path: Path) -> None:
+        """Point sync at a different board file (used when switching boards)."""
+        path = Path(path)
+        with self._git_lock:
+            self.tracked_file = path
+            try:
+                self._rel = str(path.relative_to(self.repo_root))
+            except ValueError:
+                self._rel = path.name
 
     def identity(self) -> tuple[str, str]:
         """The configured git user (name, email); cached, best-effort."""
@@ -214,7 +224,7 @@ class GitSync:
             now = time.monotonic()
             try:
                 if self._fetch_now.is_set():
-                    # Immediate fetch requested (webhook): pull right away.
+                    # Immediate fetch requested: pull right away.
                     self._fetch_now.clear()
                     with self._git_lock:
                         self._pull()

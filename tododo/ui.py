@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from pathlib import Path
 
 import pygame
+import yaml
 
-from . import avatars, clipboard, markdown, timefmt
+from . import avatars, clipboard, markdown, theme, timefmt, workspace
 from .board import Board, Item
 from .keybindings import ACTIONS, Keybindings, code_to_key_name
 from .keybindings import USER_PATH as KB_USER_PATH
@@ -45,6 +47,29 @@ CODE = (224, 196, 140)
 SELECTION = (74, 110, 165)
 
 COLUMN_COLORS = [(110, 168, 254), (240, 196, 110), (96, 200, 160), (200, 130, 240), (240, 140, 170)]
+
+
+def apply_theme(colors: dict) -> None:
+    """Swap the active palette by overwriting the module-level colour globals.
+
+    Every render reads these by name at call time, so reassigning them here
+    re-skins the whole UI without touching call sites."""
+    g = globals()
+    g["BG"] = colors["bg"]
+    g["COL_BG"] = colors["col_bg"]
+    g["COL_HEADER"] = colors["col_header"]
+    g["CARD_BG"] = colors["card_bg"]
+    g["CARD_BG_SEL"] = colors["card_bg_sel"]
+    g["CARD_BG_DRAG"] = colors["card_bg_drag"]
+    g["TEXT"] = colors["text"]
+    g["MUTED"] = colors["muted"]
+    g["ACCENT"] = colors["accent"]
+    g["BADGE"] = colors["badge"]
+    g["OVERLAY"] = colors["overlay"]
+    g["DANGER"] = colors["danger"]
+    g["CODE"] = colors["code"]
+    g["SELECTION"] = colors["selection"]
+    g["COLUMN_COLORS"] = colors["column_colors"]
 
 
 @dataclass
@@ -363,6 +388,10 @@ class App:
     EDIT = "edit"
     CONFIRM = "confirm"
     KEYBINDINGS = "keybindings"
+    VIEW_YAML = "view_yaml"
+    RELATIONSHIPS = "relationships"
+    SWITCH_BOARD = "switch_board"
+    THEME = "theme"
 
     def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
         pygame.init()
@@ -374,10 +403,14 @@ class App:
         self.font = pygame.font.Font(None, 24)
         self.font_sm = pygame.font.Font(None, 20)
         self.font_lg = pygame.font.Font(None, 34)
-        # Markdown fonts for rendering item descriptions (Obsidian-style).
-        self.md = markdown.MarkdownFonts(20, TEXT, MUTED, CODE, ACCENT)
-        # Background fetcher for real avatar images (Gravatar by email).
+        apply_theme(theme.load_current())  # active palette before any colours are read
+        self._build_md_fonts()
+        # Background fetcher for real avatar images (GitHub, by author email).
         self.avatars = avatars.AvatarStore()
+        self._authors_dirty = False  # board.authors changed -> persist soon
+        # Background fetcher for real avatar images (GitHub, by author email).
+        self.avatars = avatars.AvatarStore()
+        self._authors_dirty = False  # board.authors changed -> persist soon
 
         self.board = board
         self.keys = keys
@@ -386,16 +419,35 @@ class App:
 
         self.mode = self.NORMAL
         self.selected_id: str | None = None
+        # When no item is selected, the cursor can rest on an (often empty)
+        # column — its title is highlighted, and Create targets it.
+        self.focused_col: str | None = None
         # Multi-selection (shift+up/down): set of item ids for collective ops,
         # with sel_anchor_id marking where the range selection started.
         self.multi: set[str] = set()
         self.sel_anchor_id: str | None = None
 
-        # Column display state (session only): per-column scroll + minimized set.
+        # Column display state: per-column scroll (session only) + minimized set,
+        # the latter persisted per-machine in the gitignored workspace.yaml.
         self.col_scroll: dict[str, int] = {}
-        self.minimized: set[str] = set()
+        self.workspace = workspace.Workspace.load()
+        self.minimized = self.workspace.minimized(self._board_key())
+        self.minimized &= set(self.board.columns)  # drop stale columns
+        self.workspace.touch_opened(self._board_key())  # record this session's open
+        self.workspace.save(self._board_key(), self.board.columns)
         self._col_toggle_rects: dict[str, pygame.Rect] = {}
         self.running = True
+        # Board-switch modal state.
+        self.sb_query: EditBuffer | None = None
+        self.sb_index = 0
+        self.sb_focus = "search"  # "search" | "list"
+        self.sb_boards: list[str] = []
+        # Theme-switch modal state (mirrors the board-switch view).
+        self.th_query: EditBuffer | None = None
+        self.th_index = 0
+        self.th_focus = "search"
+        self.th_themes: list[str] = []
+        self._theme_cache: dict[str, dict] = {}  # name -> colours (for swatches)
 
         # drag state. A click sets a *candidate*; it only becomes a real drag
         # (pulled out of its column, drawn floating) once the mouse moves past a
@@ -412,12 +464,18 @@ class App:
         self.confirm: Confirm | None = None
         # Field boxes from the last editor render, for click-to-focus hit-testing.
         self._editor_boxes: list[pygame.Rect] = []
+        # YAML viewer state.
+        self._yaml_buf: EditBuffer | None = None
+        self._yaml_scroll = 0
+        self._yaml_return = self.NORMAL
         # Avatar circles from the last render, for hover tooltips: (rect, label).
         self._avatar_hits: list[tuple[pygame.Rect, str]] = []
 
         # keybindings editor state
         self.kb_index = 0
         self.kb_capturing = False
+        # relationships editor state
+        self.rel_index = 0
 
         # cached card rects from last render, for hit-testing
         self.card_rects: list[CardRect] = []
@@ -431,6 +489,7 @@ class App:
             "board": self.board.path,
             "settings": SETTINGS_USER_PATH,
             "keybindings": KB_USER_PATH,
+            "theme": theme.CURRENT_PATH,
         }
         self._watch_mtime = {k: self._mtime(p) for k, p in self._watch.items()}
         self._last_watch = 0
@@ -450,13 +509,52 @@ class App:
 
     def persist(self, message: str) -> None:
         """Save board to disk and queue a git push."""
+        self._ensure_self_collaborator()
         self.board.save()
         # Record our own write so the file watcher doesn't treat it as external.
         self._watch_mtime["board"] = self._mtime(self.board.path)
         self.git.push_change(message)
 
+    def _ensure_self_collaborator(self) -> None:
+        """On the local user's first commit to a board, add them to the
+        version-controlled ``collaborators`` list. One-shot per board per machine
+        (tracked in workspace.yaml) so removing oneself from the YAML later sticks
+        and isn't undone on the next commit."""
+        key = self._board_key()
+        if self.workspace.self_added(key):
+            return
+        name, email = self.git.identity()
+        if email:
+            self.board.register_author(email, name)
+        # Prefer a resolved GitHub login (what collaborators normally are); fall
+        # back to the git display name when the login isn't known yet.
+        rec = self.board.authors.get(email, {}) if email else {}
+        handle = rec.get("github") or name
+        if not handle:
+            return  # no identity available yet — try again on the next commit
+        if handle.lower() not in {c.lower() for c in self.board.collaborators}:
+            self.board.collaborators.append(handle)
+        self.workspace.mark_self_added(key)
+        self.workspace.save(key, self.board.columns)
+
     def selected(self) -> Item | None:
         return self.board.find(self.selected_id) if self.selected_id else None
+
+    def _actor(self) -> str:
+        """Display name credited with the current action (the git identity)."""
+        return self.git.identity()[0] or "someone"
+
+    def _board_key(self) -> str:
+        """Workspace namespace key for the current board (its file stem)."""
+        return self.board.path.stem
+
+    def _build_md_fonts(self) -> None:
+        """(Re)build markdown fonts, which bake in the current theme colours."""
+        self.md = markdown.MarkdownFonts(20, TEXT, MUTED, CODE, ACCENT)
+        self._md_bold = pygame.font.Font(None, 24)
+        self._md_bold.set_bold(True)
+        self._md_italic = pygame.font.Font(None, 24)
+        self._md_italic.set_italic(True)
 
     # --- main loop -------------------------------------------------------
 
@@ -469,6 +567,10 @@ class App:
                 self.git.board_changed.clear()
                 self.reload_board()
             self.check_file_reloads()
+            # Persist newly-registered authors / resolved avatars (version control).
+            if self._authors_dirty:
+                self._authors_dirty = False
+                self.persist("update authors")
             self.render()
             self.clock.tick(60)
         self.git.stop()
@@ -478,8 +580,16 @@ class App:
         self.board = Board.load(self.board.path)
         if self.selected_id and not self.board.find(self.selected_id):
             self.selected_id = None
+        if self.focused_col not in self.board.columns:
+            self.focused_col = None
         # Drop any multi-selected ids that no longer exist.
         self.multi = {i for i in self.multi if self.board.find(i)}
+        # A column may have been deleted elsewhere: drop it from the persisted
+        # minimized set (save() prunes against the current columns).
+        before = set(self.minimized)
+        self.minimized &= set(self.board.columns)
+        if self.minimized != before:
+            self.workspace.save(self._board_key(), self.board.columns)
         self._watch_mtime["board"] = self._mtime(self.board.path)
         self.notify("board reloaded")
 
@@ -509,6 +619,11 @@ class App:
         elif key == "keybindings":
             self.keys = Keybindings.load()
             self.notify("keybindings reloaded")
+        elif key == "theme":
+            apply_theme(theme.load_current())
+            self._build_md_fonts()
+            self._theme_cache.clear()
+            self.notify("theme reloaded")
 
     # --- event handling --------------------------------------------------
 
@@ -532,15 +647,31 @@ class App:
             if event.type == pygame.MOUSEWHEEL:
                 self.editor_scroll(event.y)
                 return
+            if (event.type == pygame.KEYDOWN and (event.mod & pygame.KMOD_CTRL)
+                    and self.keys.matches("view_yaml", event.key) and self.selected()):
+                self.open_yaml(self.selected(), self.EDIT)
+                return
             if self.editor and self.editor.handle(event):
                 self.editor = None
                 self.mode = self.NORMAL
+            return
+        if self.mode == self.VIEW_YAML:
+            self.handle_yaml(event)
+            return
+        if self.mode == self.SWITCH_BOARD:
+            self.handle_switch_board(event)
+            return
+        if self.mode == self.THEME:
+            self.handle_themes(event)
             return
         if self.mode == self.CONFIRM:
             self.handle_confirm(event)
             return
         if self.mode == self.KEYBINDINGS:
             self.handle_keybindings(event)
+            return
+        if self.mode == self.RELATIONSHIPS:
+            self.handle_relationships(event)
             return
         if self.mode == self.PALETTE:
             self.handle_palette(event)
@@ -553,6 +684,21 @@ class App:
                 # CTRL+Enter opens the selected item, just like a plain Enter.
                 if self.keys.matches("confirm", event.key) and self.selected():
                     self.start_edit()
+                    return
+                # CTRL+Y views the selected item's raw YAML.
+                if self.keys.matches("view_yaml", event.key) and self.selected():
+                    self.open_yaml(self.selected(), self.NORMAL)
+                    return
+                # CTRL+A selects every item in the focused item's column.
+                if self.keys.matches("select_column", event.key) and self.selected():
+                    self.select_column()
+                    return
+                # CTRL+C / CTRL+V copy and paste items (via the system clipboard).
+                if event.key == pygame.K_c:
+                    self.copy_selection()
+                    return
+                if event.key == pygame.K_v:
+                    self.paste_items()
                     return
                 # CTRL+<open_palette> opens the palette; CTRL+<action> runs it directly.
                 if self.keys.matches("open_palette", event.key):
@@ -605,10 +751,18 @@ class App:
         # Clicking a column header (or a minimized bar) toggles minimize.
         for name, trect in self._col_toggle_rects.items():
             if trect.collidepoint(pos):
-                self.minimized.discard(name) if name in self.minimized else self.minimized.add(name)
+                if name in self.minimized:
+                    self.minimized.discard(name)
+                else:
+                    self.minimized.add(name)
+                    self._focus_after_minimize(name)
+                self.workspace.save(self._board_key(), self.board.columns)
                 return
         item = self.card_at(pos)
         self.selected_id = item.id if item else None
+        # Clicking empty space inside a column focuses that column (its title),
+        # so a new item can be created there even when it has no cards yet.
+        self.focused_col = None if item else self.column_at(pos)
         self._clear_multi()  # a click is a single selection
         self.mouse_down_pos = pos
         self.drag_item = None
@@ -620,6 +774,22 @@ class App:
                     self.drag_offset = (pos[0] - cr.rect.x, pos[1] - cr.rect.y)
                     self.drag_pos = pos
                     break
+
+    def _focus_after_minimize(self, name: str) -> None:
+        """After minimizing ``name``, move the cursor onto the nearest column that
+        is still maximized so the collapse is felt immediately. If every column is
+        now minimized, deselect everything (arrows/clicks re-enter normally)."""
+        cols = self.board.columns
+        candidates = [c for c in cols if c not in self.minimized]
+        self.selected_id = None
+        self._clear_multi()
+        if not candidates:
+            self.focused_col = None
+            return
+        idx = cols.index(name)
+        # Nearest by column distance; ties resolve to the column on the right.
+        self.focused_col = min(candidates, key=lambda c: (abs(cols.index(c) - idx),
+                                                          -(cols.index(c) > idx)))
 
     def on_mouse_motion(self, pos) -> None:
         if self.drag_item:
@@ -642,7 +812,7 @@ class App:
         if target_col is None:
             return
         position = self.drop_position(target_col, pos, dragging_id=item.id)
-        self.board.reorder(item.id, target_col, position)
+        self.board.reorder(item.id, target_col, position, self._actor())
         self.persist(f"move '{item.title}' to {target_col}")
 
     def drop_position(self, column: str, pos, dragging_id: str) -> int:
@@ -669,6 +839,18 @@ class App:
         lo, hi = min(a, b), max(a, b)
         self.multi = set(ids[lo:hi + 1])
 
+    def select_column(self) -> None:
+        """Select every item in the focused item's column (CTRL+A)."""
+        item = self.selected()
+        if not item:
+            return
+        ids = [it.id for it in self.board.items_in(item.column)]
+        if not ids:
+            return
+        self.multi = set(ids)
+        self.sel_anchor_id = item.id
+        self.notify(f"selected {len(ids)} in '{item.column}'")
+
     def selection(self) -> list[Item]:
         """Items targeted by collective actions (multi-selection, else the focus)."""
         if self.multi:
@@ -681,56 +863,70 @@ class App:
 
     # --- keyboard navigation --------------------------------------------
 
+    def _focus(self, column: str, row: int) -> None:
+        """Land the cursor in a column: select an item if it has any, else the
+        (empty) column's title."""
+        items = self.board.items_in(column)
+        if items:
+            self.selected_id = items[min(row, len(items) - 1)].id
+            self.focused_col = None
+        else:
+            self.selected_id = None
+            self.focused_col = column
+
     def navigate(self, key: int, shift: bool = False) -> None:
         cols = self.board.columns
         if not cols:
             return
         item = self.selected()
-        # No selection yet: land on the first item we can find.
-        if not item:
+        # Resolve the current column from the selected item or the focused column.
+        if item:
+            cur_col = item.column
+        elif self.focused_col in cols:
+            cur_col = self.focused_col
+        else:
+            # Nothing focused yet: land on the first column with items, else col 0.
             for c in cols:
-                col_items = self.board.items_in(c)
-                if col_items:
-                    self.selected_id = col_items[0].id
+                if self.board.items_in(c):
+                    self._focus(c, 0)
                     self._clear_multi()
                     return
+            self._focus(cols[0], 0)
+            self._clear_multi()
             return
 
-        col_idx = cols.index(item.column)
-        col_items = self.board.items_in(item.column)
-        row = col_items.index(item)
+        col_idx = cols.index(cur_col)
+        col_items = self.board.items_in(cur_col)
+        row = col_items.index(item) if item else 0
 
         if key in (pygame.K_UP, pygame.K_DOWN):
+            if not col_items:
+                return  # empty focused column: nothing to move between
             step = -1 if key == pygame.K_UP else 1
-            if shift:
+            if shift and item:
                 # Extend a selection within the column (clamp, don't wrap).
                 if self.sel_anchor_id is None:
                     self.sel_anchor_id = item.id
                 new_row = max(0, min(len(col_items) - 1, row + step))
                 self.selected_id = col_items[new_row].id
-                self._select_range(item.column)
+                self._select_range(cur_col)
             else:
                 new_row = (row + step) % len(col_items)  # cycle within column
                 self.selected_id = col_items[new_row].id
                 self._clear_multi()
-        else:  # left / right
+        else:  # left / right — step to the adjacent column, empty or not
             self._clear_multi()
             step = -1 if key == pygame.K_LEFT else 1
-            # Cycle across columns, skipping empty ones; keep a similar row.
-            for offset in range(1, len(cols) + 1):
-                target = cols[(col_idx + step * offset) % len(cols)]
-                target_items = self.board.items_in(target)
-                if target_items:
-                    new_row = min(row, len(target_items) - 1)
-                    self.selected_id = target_items[new_row].id
-                    return
+            target = cols[(col_idx + step) % len(cols)]
+            self._focus(target, row)
 
     # --- palette / actions ----------------------------------------------
 
     # Actions triggerable via the palette or CTRL+<key>.
     COMMAND_ACTIONS = [
         "create", "delete", "move_left", "move_right",
-        "move_up", "move_down", "point", "keybindings",
+        "move_up", "move_down", "point", "relationships",
+        "new_board", "switch_board", "themes", "keybindings",
     ]
 
     def action_for_key(self, key: int) -> str | None:
@@ -746,6 +942,17 @@ class App:
             self.start_delete()
         elif action == "point":
             self.start_point()
+        elif action == "relationships":
+            if self.selected():
+                self.start_relationships()
+            else:
+                self.notify("no item selected")
+        elif action == "new_board":
+            self.start_new_board()
+        elif action == "switch_board":
+            self.start_switch_board()
+        elif action == "themes":
+            self.start_themes()
         elif action == "move_left":
             self.do_move(-1)
         elif action == "move_right":
@@ -769,8 +976,80 @@ class App:
         if action:
             self.perform_action(action)
 
+    # --- copy / paste ----------------------------------------------------
+
+    def _copy_payload(self, item: Item) -> dict:
+        """The portable subset of an item (no ids/timestamps/blame)."""
+        d: dict = {"title": item.title, "points": item.points,
+                   "description": item.description}
+        if item.due:
+            d["due"] = item.due
+        rels = {k: v for k, v in item.relationships.items() if v}
+        if rels:
+            d["relationships"] = rels
+        return d
+
+    def copy_selection(self) -> None:
+        """Copy the selected item(s) to the clipboard as YAML (CTRL+C)."""
+        items = self.selection()
+        if not items:
+            self.notify("no item selected")
+            return
+        payload = [self._copy_payload(it) for it in items]
+        clipboard.copy(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True))
+        self.notify(f"copied {len(items)} item(s)")
+
+    def paste_items(self) -> None:
+        """Create item(s) from clipboard YAML into the current column (CTRL+V)."""
+        text = clipboard.paste()
+        try:
+            data = yaml.safe_load(text) if text else None
+        except yaml.YAMLError:
+            data = None
+        if isinstance(data, dict):
+            data = [data]
+        if not isinstance(data, list):
+            self.notify("clipboard isn't an item")
+            return
+        if self.selected():
+            col = self.selected().column
+        elif self.focused_col in self.board.columns:
+            col = self.focused_col
+        else:
+            col = self.board.columns[0]
+        name, email = self.git.identity()
+        created: list[Item] = []
+        for entry in data:
+            if not isinstance(entry, dict):
+                continue
+            title = str(entry.get("title", "")).strip()
+            if not title:
+                continue
+            item = self.board.create(title, column=col,
+                                     points=int(entry.get("points", 0) or 0),
+                                     description=str(entry.get("description", "") or ""),
+                                     author=name, author_email=email, actor=self._actor())
+            item.due = str(entry.get("due", "") or "")
+            rels = entry.get("relationships")
+            if isinstance(rels, dict):
+                item.relationships = {str(k): str(v) for k, v in rels.items() if v}
+            created.append(item)
+        if not created:
+            self.notify("clipboard isn't an item")
+            return
+        self.board.register_author(email, name)
+        self.selected_id = created[-1].id
+        self.focused_col = None
+        self.persist(f"paste {len(created)} item(s)")
+        self.notify(f"pasted {len(created)} item(s)")
+
     def start_create(self) -> None:
-        col = self.selected().column if self.selected() else self.board.columns[0]
+        if self.selected():
+            col = self.selected().column
+        elif self.focused_col in self.board.columns:
+            col = self.focused_col  # create into the focused (often empty) column
+        else:
+            col = self.board.columns[0]
 
         name, email = self.git.identity()
 
@@ -778,8 +1057,10 @@ class App:
             title = title.strip()
             if title:
                 item = self.board.create(title, column=col, description=description.strip(),
-                                         author=name, author_email=email)
+                                         author=name, author_email=email, actor=self._actor())
+                self.board.register_author(email, name)  # track contributor in version control
                 self.selected_id = item.id
+                self.focused_col = None
                 self.persist(f"create '{title}'")
         self.editor = ItemEditor(f"New item in '{col}'", submit)
         self.mode = self.EDIT
@@ -789,15 +1070,215 @@ class App:
         if not item:
             return
 
+        orig_title, orig_desc = item.title, item.description
+
         def submit(title: str, description: str) -> None:
             title = title.strip()
-            if title:
-                item.title = title
-                item.description = description.strip()
-                item.touch()
-                self.persist(f"edit '{title}'")
+            if not title:
+                return
+            description = description.strip()
+            # Opening and saving with no change isn't an edit — record a "viewed"
+            # timestamp instead of bumping "last edited by".
+            if title == orig_title and description == orig_desc:
+                item.mark_viewed()
+                self.persist(f"view '{title}'")
+                return
+            item.title = title
+            item.description = description
+            item.mark_edited(self._actor())
+            self.persist(f"edit '{title}'")
         self.editor = ItemEditor("Edit item", submit, title=item.title, description=item.description)
         self.mode = self.EDIT
+
+    def open_yaml(self, item: Item, return_mode: str) -> None:
+        text = yaml.safe_dump(item.to_dict(), sort_keys=False, allow_unicode=True)
+        self._yaml_buf = EditBuffer(text)
+        self._yaml_scroll = 0
+        self._yaml_return = return_mode
+        self.mode = self.VIEW_YAML
+
+    def handle_yaml(self, event) -> None:
+        if event.type == pygame.MOUSEWHEEL:
+            self._yaml_scroll = max(0, self._yaml_scroll - event.y * self.font.get_linesize())
+            return
+        if event.type != pygame.KEYDOWN:
+            return
+        if self.keys.matches("cancel", event.key) or self.keys.matches("view_yaml", event.key):
+            self.mode = self._yaml_return
+
+    def _board_files(self) -> list[str]:
+        """Stems of the board YAML files that sit alongside the current board.
+
+        Excludes the app's own config files (settings/keybindings/workspace and
+        the version-controlled ``default_*`` templates).
+        """
+        skip = {"settings", "keybindings", "workspace",
+                "default_settings", "default_keybindings"}
+        boards = sorted(p.stem for p in self.board.path.parent.glob("*.yaml")
+                        if p.stem not in skip)
+        return boards
+
+    def start_new_board(self) -> None:
+        """Prompt for a name and create a brand-new board file (CTRL+M)."""
+        def submit(text: str) -> None:
+            name = text.strip()
+            if name:
+                self._open_board(name, create=True)
+        self.text_input = TextInput("New board file name:", submit, initial="")
+        self.mode = self.TEXT
+
+    def _switch_board_list(self) -> list[str]:
+        """Available boards (current excluded) ordered most-recently-opened first.
+
+        Boards never opened (no recorded timestamp) sort after opened ones, then
+        alphabetically. The optional search query narrows by case-insensitive
+        substring.
+        """
+        cur = self._board_key()
+        boards = [b for b in self._board_files() if b != cur]
+        q = (self.sb_query.text.strip().lower() if self.sb_query else "")
+        if q:
+            boards = [b for b in boards if q in b.lower()]
+        boards.sort(key=lambda b: (-self.workspace.opened(b), b.lower()))
+        return boards
+
+    def start_switch_board(self) -> None:
+        """Open the searchable board-switch view (CTRL+M)."""
+        self.sb_query = EditBuffer("")
+        self.sb_index = 0
+        self.sb_focus = "search"
+        self.sb_boards = self._switch_board_list()
+        self.mode = self.SWITCH_BOARD
+
+    def handle_switch_board(self, event) -> None:
+        if event.type != pygame.KEYDOWN:
+            return
+        if self.keys.matches("cancel", event.key):
+            self.mode = self.NORMAL
+            return
+        boards = self.sb_boards
+        if self.keys.matches("confirm", event.key):  # ENTER opens the selection
+            if boards:
+                self._open_board(boards[self.sb_index], create=False)
+                self.mode = self.NORMAL
+            return
+        if event.key == pygame.K_DOWN:
+            if self.sb_focus == "search":
+                # The first board is already highlighted by default, so the first
+                # DOWN should land on the *second* item (when there is one).
+                self.sb_focus = "list"
+                self.sb_index = 1 if len(boards) > 1 else 0
+            elif boards:
+                self.sb_index = min(len(boards) - 1, self.sb_index + 1)
+            return
+        if event.key == pygame.K_UP:
+            if self.sb_focus == "list":
+                if self.sb_index <= 0:
+                    self.sb_focus = "search"
+                else:
+                    self.sb_index -= 1
+            return
+        # Anything else edits the search query (and refocuses the search box).
+        before = self.sb_query.text
+        if event.key == pygame.K_BACKSPACE:
+            self.sb_query.backspace()
+        elif event.unicode and event.unicode.isprintable():
+            self.sb_query.insert(event.unicode)
+        if self.sb_query.text != before:
+            self.sb_focus = "search"
+            self.sb_boards = self._switch_board_list()
+            self.sb_index = 0  # auto-select first match as you type
+
+    # --- theme switcher (mirrors the board-switch view) ------------------
+
+    def _theme_list(self) -> list[str]:
+        names = theme.list_themes()
+        q = (self.th_query.text.strip().lower() if self.th_query else "")
+        if q:
+            names = [n for n in names if q in n.lower()]
+        return names
+
+    def start_themes(self) -> None:
+        """Open the searchable colour-theme switcher (CTRL+T)."""
+        self.th_query = EditBuffer("")
+        self.th_index = 0
+        self.th_focus = "search"
+        self.th_themes = self._theme_list()
+        self.mode = self.THEME
+
+    def _apply_named_theme(self, name: str) -> None:
+        colors = theme.apply_named(name)
+        if colors is None:
+            self.notify(f"no theme '{name}'")
+            return
+        apply_theme(colors)
+        self._build_md_fonts()  # markdown fonts bake in colours; rebuild them
+        self._watch_mtime["theme"] = self._mtime(theme.CURRENT_PATH)
+        self.notify(f"theme: {name}")
+
+    def handle_themes(self, event) -> None:
+        if event.type != pygame.KEYDOWN:
+            return
+        if self.keys.matches("cancel", event.key):
+            self.mode = self.NORMAL
+            return
+        names = self.th_themes
+        if self.keys.matches("confirm", event.key):
+            if names:
+                self._apply_named_theme(names[self.th_index])
+                self.mode = self.NORMAL
+            return
+        if event.key == pygame.K_DOWN:
+            if self.th_focus == "search":
+                self.th_focus = "list"
+                self.th_index = 0
+            elif names:
+                self.th_index = min(len(names) - 1, self.th_index + 1)
+            return
+        if event.key == pygame.K_UP:
+            if self.th_focus == "list":
+                if self.th_index <= 0:
+                    self.th_focus = "search"
+                else:
+                    self.th_index -= 1
+            return
+        before = self.th_query.text
+        if event.key == pygame.K_BACKSPACE:
+            self.th_query.backspace()
+        elif event.unicode and event.unicode.isprintable():
+            self.th_query.insert(event.unicode)
+        if self.th_query.text != before:
+            self.th_focus = "search"
+            self.th_themes = self._theme_list()
+            self.th_index = 0
+
+    def _open_board(self, name: str, create: bool) -> None:
+        # Keep it a sibling .yaml file (no path traversal); add the extension.
+        stem = Path(name).name
+        if not stem.endswith(".yaml"):
+            stem += ".yaml"
+        path = self.board.path.parent / stem
+        if not path.exists() and not create:
+            self.notify(f"no board '{Path(stem).stem}' — use CTRL+M to create it")
+            return
+        existed = path.exists()
+        self.board = Board.load(path)  # creates a default board if missing
+        self.selected_id = None
+        self._clear_multi()
+        # Retarget git sync + the file watcher at the new board.
+        self.git.set_tracked_file(path)
+        self._watch["board"] = path
+        self._watch_mtime["board"] = self._mtime(path)
+        # Minimized columns are namespaced per board: load this board's own set.
+        self.minimized = self.workspace.minimized(self._board_key())
+        self.minimized &= set(self.board.columns)
+        self.workspace.touch_opened(self._board_key())  # bump recency for ordering
+        self.workspace.save(self._board_key(), self.board.columns)
+        if existed:
+            self.notify(f"switched to board '{self._board_key()}'")
+        else:
+            self.persist(f"create board '{stem}'")
+            self.notify(f"created board '{self._board_key()}'")
 
     def start_delete(self) -> None:
         sel = self.selection()
@@ -830,7 +1311,7 @@ class App:
                 item.points = int(text or 0)
             except ValueError:
                 item.points = 0
-            item.touch()
+            item.mark_edited(self._actor())
             self.persist(f"point '{item.title}' = {item.points}")
         self.text_input = TextInput(f"Points for '{item.title}':", submit,
                                     initial=str(item.points), numeric=True)
@@ -843,7 +1324,7 @@ class App:
             self.mode = self.NORMAL
             return
         for item in sel:
-            self.board.move_relative(item.id, delta)
+            self.board.move_relative(item.id, delta, self._actor())
         if len(sel) == 1:
             self.persist(f"move '{sel[0].title}' to {sel[0].column}")
         else:
@@ -856,7 +1337,7 @@ class App:
             self.notify("no item selected")
             self.mode = self.NORMAL
             return
-        if self.board.move_within_column(item.id, delta):
+        if self.board.move_within_column(item.id, delta, self._actor()):
             self.persist(f"reorder '{item.title}'")
         self.mode = self.NORMAL
 
@@ -921,6 +1402,14 @@ class App:
             self.draw_confirm(w, h)
         elif self.mode == self.KEYBINDINGS:
             self.draw_keybindings(w, h)
+        elif self.mode == self.VIEW_YAML:
+            self.draw_yaml(w, h)
+        elif self.mode == self.RELATIONSHIPS:
+            self.draw_relationships(w, h)
+        elif self.mode == self.SWITCH_BOARD:
+            self.draw_switch_board(w, h)
+        elif self.mode == self.THEME:
+            self.draw_themes(w, h)
 
         self.draw_toast(w, h)
         pygame.display.flip()
@@ -950,14 +1439,19 @@ class App:
         area_bottom = h - STATUSBAR_H - COL_GAP
         col_h = area_bottom - area_top
 
-        n_min = sum(1 for c in cols if c in self.minimized)
+        # A minimized column holding the focused item (or column) is temporarily maximized.
+        sel = self.selected()
+        sel_col = sel.column if sel else self.focused_col
+        is_min = {c: (c in self.minimized and c != sel_col) for c in cols}
+
+        n_min = sum(1 for c in cols if is_min[c])
         n_norm = max(1, len(cols) - n_min)
         total_gap = COL_GAP * (len(cols) + 1)
         norm_w = (w - total_gap - n_min * self.MIN_COL_W) / n_norm
 
         x = COL_GAP
         for i, col in enumerate(cols):
-            minimized = col in self.minimized
+            minimized = is_min[col]
             cw = self.MIN_COL_W if minimized else norm_w
             rect = pygame.Rect(int(x), area_top, int(cw), col_h)
             self.column_rects[col] = rect
@@ -986,14 +1480,30 @@ class App:
         header = pygame.Rect(rect.x, rect.y, rect.w, HEADER_H)
         pygame.draw.rect(self.screen, COL_HEADER, header, border_radius=10)
         pygame.draw.rect(self.screen, accent, (rect.x, rect.y, 6, HEADER_H), border_top_left_radius=10)
-        self._col_toggle_rects[name] = header  # click header to minimize
+
+        # The cursor can rest on a column itself (no item selected) — highlight
+        # the header so it's clear where a new item would be created.
+        focused = (self.focused_col == name and not self.selected())
+        if focused:
+            pygame.draw.rect(self.screen, ACCENT, header, width=2, border_radius=10)
+
+        # Minimize button: only this minus sign toggles minimize, not the whole
+        # header (clicking the header elsewhere just focuses the column).
+        btn = pygame.Rect(rect.right - HEADER_H, rect.y, HEADER_H, HEADER_H)
+        self._col_toggle_rects[name] = btn
+        hover = btn.collidepoint(pygame.mouse.get_pos())
+        if hover:
+            tint = tuple(min(255, c + 16) for c in COL_HEADER)
+            pygame.draw.rect(self.screen, tint, btn, border_top_right_radius=10)
+        bx, by = btn.center
+        pygame.draw.line(self.screen, TEXT if hover else MUTED, (bx - 7, by), (bx + 7, by), 2)
 
         items = self.board.items_in(name)
         pts = sum(it.points for it in items)
-        label = self.font.render(name, True, TEXT)
+        label = self.font.render(name, True, ACCENT if focused else TEXT)
         self.screen.blit(label, (rect.x + 16, rect.y + HEADER_H // 2 - label.get_height() // 2))
-        meta = self.font_sm.render(f"{pts} pts  —", True, MUTED)
-        self.screen.blit(meta, (rect.right - meta.get_width() - 12,
+        meta = self.font_sm.render(f"{pts} pts", True, MUTED)
+        self.screen.blit(meta, (btn.x - meta.get_width() - 8,
                                 rect.y + HEADER_H // 2 - meta.get_height() // 2))
 
         # Scrollable body, clipped to the column.
@@ -1051,11 +1561,33 @@ class App:
         return item.id == self.selected_id
 
     def show_timestamp(self, item: Item, floating: bool) -> bool:
-        if not item.updated:
+        if not item.last_active:
             return False
         if self.settings.timestamps_always:
             return True
         return item.id == self.selected_id
+
+    def blame_line(self, item: Item) -> str:
+        """A git-blame-style sentence for the item's most recent action.
+
+        e.g. "Marked 'Done' less than a minute ago by Sam",
+             "Last edited 2 hours ago by Sam", "Created 2 days ago by Sam".
+        """
+        fmt = self.settings.timestamp_format()
+        by = f" by {item.actor}" if item.actor else ""
+        # A bare view (opened + closed unchanged) isn't authored, so it carries no
+        # blame — but only wins if it's strictly the most recent action.
+        if item.viewed and item.viewed > max(item.moved, item.edited, item.created):
+            return f"Viewed {timefmt.ago(item.viewed, fmt)}"
+        # Pick whichever action happened most recently.
+        if item.moved and item.moved >= item.edited and item.moved >= item.created:
+            col = item.moved_to or item.column
+            return f"Marked '{col}' {timefmt.ago(item.moved, fmt)}{by}"
+        if item.edited and item.edited >= item.created:
+            return f"Last edited {timefmt.ago(item.edited, fmt)}{by}"
+        if item.created:
+            return f"Created {timefmt.ago(item.created, fmt)}{by}"
+        return ""
 
     def draw_card(self, item: Item, x: int, y: int, w: int, floating: bool = False) -> pygame.Rect:
         show_av = self.settings.git_avatars
@@ -1079,11 +1611,14 @@ class App:
         ts_text = ""
         ts_h = 0
         if self.show_timestamp(item, floating):
-            ts_text = timefmt.format_timestamp(item.updated, self.settings.timestamp_format())
+            ts_text = self.blame_line(item)
             if ts_text:
                 ts_h = self.font_sm.get_linesize() + 6
 
-        card_h = max(CARD_MIN_H, text_h + desc_h + ts_h + 2 * CARD_PAD)
+        rel_text = " · ".join(f"{rel} @{who}" for rel, who in item.relationships.items() if who)
+        rel_h = self.font_sm.get_linesize() + 4 if rel_text else 0
+
+        card_h = max(CARD_MIN_H, text_h + desc_h + ts_h + rel_h + 2 * CARD_PAD)
         rect = pygame.Rect(x, y, w, card_h)
         if floating:
             color = CARD_BG_DRAG
@@ -1114,6 +1649,10 @@ class App:
             ty += 6
             self.screen.blit(self.font_sm.render(ts_text, True, MUTED), (text_x, ty))
 
+        if rel_text:
+            ty += 4 + (self.font_sm.get_linesize() if ts_text else 0)
+            self.screen.blit(self.font_sm.render(rel_text, True, ACCENT), (text_x, ty))
+
         # points badge
         if item.points:
             badge = self.font_sm.render(str(item.points), True, (20, 24, 30))
@@ -1123,13 +1662,36 @@ class App:
             self.screen.blit(badge, (brect.x + 7, brect.y + 11 - badge.get_height() // 2))
         return rect
 
+    def _avatar_image(self, email: str, name: str, size: int):
+        """A circular GitHub avatar Surface for the email, or None (use monogram).
+
+        Registers the author and caches any resolved github login / avatar_url into
+        the version-controlled ``authors:`` registry so it is only looked up once.
+        """
+        if not (self.settings.avatar_images and email):
+            return None
+        if self.board.register_author(email, name):
+            self._authors_dirty = True
+        rec = self.board.authors.get(email, {})
+        url = rec.get("avatar_url")
+        if not url and rec.get("github"):
+            url = avatars.github_png_url(rec["github"], size * 2)
+        if not url:
+            resolved = self.avatars.resolve(email)
+            if resolved:
+                if self.board.set_author_meta(email, github=resolved.get("login"),
+                                              avatar_url=resolved.get("avatar_url")):
+                    self._authors_dirty = True
+                url = resolved.get("avatar_url")
+        return self.avatars.image(url, size) if url else None
+
     def _draw_avatar(self, item: Item, x: int, y: int, av_d: int, floating: bool) -> None:
         local_name, local_email = self.git.identity()
         name = item.author or local_name
         email = item.author_email or local_email
         r = av_d // 2
         cx, cy = x + CARD_PAD + r, y + CARD_PAD + r
-        img = self.avatars.get(email, av_d) if (self.settings.avatar_images and email) else None
+        img = self._avatar_image(email, name, av_d)
         if img:
             self.screen.blit(img, (cx - r, cy - r))
         else:
@@ -1138,7 +1700,9 @@ class App:
             initials = self.font_sm.render(_avatar_initials(name, email), True, (18, 22, 28))
             self.screen.blit(initials, (cx - initials.get_width() // 2, cy - initials.get_height() // 2))
         if not floating:
-            label = f"{name} <{email}>" if email else (name or "unknown")
+            gh = self.board.authors.get(email, {}).get("github")
+            who = f"@{gh}" if gh else (name or "unknown")
+            label = f"{who} <{email}>" if email else who
             self._avatar_hits.append((pygame.Rect(cx - r, cy - r, av_d, av_d), label))
 
     def draw_avatar_tooltip(self, w: int, h: int) -> None:
@@ -1192,7 +1756,7 @@ class App:
 
     def draw_palette(self, w: int, h: int) -> None:
         self.dim(w, h)
-        rect = self.panel(w, h, 480, 420)
+        rect = self.panel(w, h, 480, 560)
         title = self.font_lg.render("Commands", True, TEXT)
         self.screen.blit(title, (rect.x + 24, rect.y + 18))
         sel = self.selected()
@@ -1208,6 +1772,10 @@ class App:
             ("move_up", "Move selected up"),
             ("move_down", "Move selected down"),
             ("point", "Assign points"),
+            ("relationships", "Edit relationships"),
+            ("new_board", "Create new board"),
+            ("switch_board", "Switch board"),
+            ("themes", "Switch colour theme"),
             ("keybindings", "Edit keybindings"),
         ]
         y = rect.y + 84
@@ -1230,7 +1798,10 @@ class App:
             if box.collidepoint(pos):
                 self.editor.active = i
                 buf = self.editor.bufs[i]
-                buf.cursor = _offset_at(buf.text, self.font, box, pos, self.editor.scroll[i])
+                if i == self._EDITOR_MD_FIELD:  # description renders as soft markdown
+                    buf.cursor = self._md_offset_at(buf.text, box, pos, self.editor.scroll[i])
+                else:
+                    buf.cursor = _offset_at(buf.text, self.font, box, pos, self.editor.scroll[i])
                 buf.anchor = None
                 return
 
@@ -1309,6 +1880,144 @@ class App:
                              border_radius=2)
         return scroll
 
+    # --- in-place "soft" markdown rendering for the description editor -------
+    # Every character is kept (markers shown dimmed), and all fonts share one
+    # size, so the caret/selection offset math is identical to the plain path.
+
+    def _md_style_font(self, style: str):
+        if style in ("b", "h"):
+            return self._md_bold
+        if style == "i":
+            return self._md_italic
+        return self.font
+
+    def _md_style_color(self, style: str):
+        return {"marker": MUTED, "quote": MUTED, "code": CODE, "h": ACCENT}.get(style, TEXT)
+
+    def _md_prefix_widths(self, text: str, styles: list) -> list:
+        """Cumulative pixel widths so any slice width is pref[j] - pref[i]."""
+        pref = [0] * (len(text) + 1)
+        for k, ch in enumerate(text):
+            w = 0 if ch == "\n" else self._md_style_font(styles[k]).size(ch)[0]
+            pref[k + 1] = pref[k] + w
+        return pref
+
+    def _md_layout(self, text: str, pref: list, max_w: int) -> list:
+        """Word-wrap like _layout_offsets, but measuring with styled widths."""
+        rows: list = []
+        base = 0
+        for line in text.split("\n"):
+            if line == "":
+                rows.append(("", base))
+            else:
+                seg_start = 0
+                last_space = -1
+                i = 0
+                n = len(line)
+                while i < n:
+                    if (pref[base + i + 1] - pref[base + seg_start]) > max_w and i > seg_start:
+                        if last_space > seg_start:
+                            rows.append((line[seg_start:last_space + 1], base + seg_start))
+                            seg_start = last_space + 1
+                        else:
+                            rows.append((line[seg_start:i], base + seg_start))
+                            seg_start = i
+                        last_space = -1
+                        i = seg_start
+                        continue
+                    if line[i] == " ":
+                        last_space = i
+                    i += 1
+                rows.append((line[seg_start:], base + seg_start))
+            base += len(line) + 1
+        return rows or [("", 0)]
+
+    def _md_offset_at(self, text: str, box: pygame.Rect, pos, scroll: int) -> int:
+        styles = markdown.char_styles(text)
+        pref = self._md_prefix_widths(text, styles)
+        rows = self._md_layout(text, pref, box.w - 20)
+        lh = self.font.get_linesize()
+        x0, y0 = box.x + 10, box.y + 6 - scroll
+        row_idx = max(0, min(len(rows) - 1, int((pos[1] - y0) // lh)))
+        rowtext, start = rows[row_idx]
+        relx = pos[0] - x0
+        best_k, best_d = 0, float("inf")
+        for k in range(len(rowtext) + 1):
+            d = abs((pref[start + k] - pref[start]) - relx)
+            if d < best_d:
+                best_d, best_k = d, k
+            else:
+                break
+        return start + best_k
+
+    def draw_editable_md(self, box: pygame.Rect, buf: "EditBuffer", show_caret: bool,
+                         scroll: int = 0) -> int:
+        """Like draw_editable, but soft-renders the text as markdown in place."""
+        text = buf.text
+        styles = markdown.char_styles(text)
+        pref = self._md_prefix_widths(text, styles)
+        sel = buf.selection_range() if buf.has_selection() else None
+        rows = self._md_layout(text, pref, box.w - 20)
+        lh = self.font.get_linesize()
+        pad = 6
+        view_h = box.h - 2 * pad
+        content_h = len(rows) * lh
+
+        caret_row = 0
+        for idx, (rt, st) in enumerate(rows):
+            if st <= buf.cursor <= st + len(rt):
+                caret_row = idx
+                break
+        if show_caret:
+            if caret_row * lh < scroll:
+                scroll = caret_row * lh
+            elif (caret_row + 1) * lh > scroll + view_h:
+                scroll = (caret_row + 1) * lh - view_h
+        scroll = max(0, min(scroll, max(0, content_h - view_h)))
+
+        prev_clip = self.screen.get_clip()
+        self.screen.set_clip(box.clip(prev_clip) if prev_clip else box)
+        x = box.x + 10
+        y0 = box.y + pad - scroll
+        caret_drawn = False
+        for idx, (rowtext, start) in enumerate(rows):
+            y = y0 + idx * lh
+            if y + lh < box.y or y > box.bottom:
+                continue
+            end = start + len(rowtext)
+            if sel:
+                s, e = sel
+                rs, re = max(s, start), min(e, end)
+                if re > rs:
+                    pre = pref[rs] - pref[start]
+                    wsel = pref[re] - pref[rs]
+                    extra = 6 if e > end else 0
+                    pygame.draw.rect(self.screen, SELECTION, (x + pre, y, max(wsel, 2) + extra, lh))
+            # Blit each character with its own style font/colour.
+            for k in range(start, end):
+                ch = text[k]
+                if ch == " ":
+                    continue
+                font = self._md_style_font(styles[k])
+                color = self._md_style_color(styles[k])
+                self.screen.blit(font.render(ch, True, color), (x + (pref[k] - pref[start]), y))
+            if show_caret and not caret_drawn and start <= buf.cursor <= end:
+                cx = x + (pref[buf.cursor] - pref[start])
+                pygame.draw.line(self.screen, ACCENT, (cx, y + 2), (cx, y + lh - 2), 2)
+                caret_drawn = True
+        self.screen.set_clip(prev_clip)
+
+        if content_h > view_h:
+            track_h = box.h - 4
+            thumb_h = max(20, int(track_h * view_h / content_h))
+            denom = max(1, content_h - view_h)
+            thumb_y = box.y + 2 + int((track_h - thumb_h) * scroll / denom)
+            pygame.draw.rect(self.screen, COL_HEADER, (box.right - 6, box.y + 2, 4, track_h),
+                             border_radius=2)
+            pygame.draw.rect(self.screen, MUTED, (box.right - 6, thumb_y, 4, thumb_h),
+                             border_radius=2)
+        return scroll
+
     def draw_text_input(self, w: int, h: int) -> None:
         self.dim(w, h)
         rect = self.panel(w, h, 560, 180)
@@ -1320,11 +2029,12 @@ class App:
         pygame.draw.rect(self.screen, ACCENT, box, width=1, border_radius=6)
         blink = (pygame.time.get_ticks() // 500) % 2 == 0
         self.draw_editable(self.font, box, ti.buf, blink)
-        foot = self.font_sm.render("[ENTER] confirm   ·   SHIFT+←→ select   ·   [ESC] cancel", True, MUTED)
+        foot = self.font_sm.render("[ENTER] confirm   ·   SHIFT+LEFT/RIGHT select   ·   [ESC] cancel", True, MUTED)
         self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
 
     # Editor field box heights: a single-line title and a tall (scrollable) body.
     EDITOR_FIELD_HEIGHTS = [40, 300]
+    _EDITOR_MD_FIELD = 1  # the description field is soft-rendered as markdown
 
     def draw_editor(self, w: int, h: int) -> None:
         self.dim(w, h)
@@ -1344,11 +2054,28 @@ class App:
             pygame.draw.rect(self.screen, BG, box, border_radius=6)
             border = ACCENT if i == ed.active else MUTED
             pygame.draw.rect(self.screen, border, box, width=2 if i == ed.active else 1, border_radius=6)
-            ed.scroll[i] = self.draw_editable(self.font, box, ed.bufs[i],
-                                              blink and i == ed.active, ed.scroll[i])
+            caret = blink and i == ed.active
+            if i == self._EDITOR_MD_FIELD:
+                ed.scroll[i] = self.draw_editable_md(box, ed.bufs[i], caret, ed.scroll[i])
+            else:
+                ed.scroll[i] = self.draw_editable(self.font, box, ed.bufs[i], caret, ed.scroll[i])
             y += 22 + self.EDITOR_FIELD_HEIGHTS[i] + 16
 
-        foot = self.font_sm.render("TAB switch · CTRL+Enter save · ESC", True, MUTED)
+        foot = self.font_sm.render("TAB switch · CTRL+Enter save · CTRL+Y view YAML · ESC", True, MUTED)
+        self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
+
+    def draw_yaml(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 640, 480)
+        title = self.font_lg.render("Item YAML", True, TEXT)
+        self.screen.blit(title, (rect.x + 24, rect.y + 18))
+        box = pygame.Rect(rect.x + 20, rect.y + 64, rect.w - 40, rect.h - 110)
+        pygame.draw.rect(self.screen, BG, box, border_radius=6)
+        pygame.draw.rect(self.screen, MUTED, box, width=1, border_radius=6)
+        if self._yaml_buf is not None:
+            self._yaml_scroll = self.draw_editable(self.font_sm, box, self._yaml_buf,
+                                                   show_caret=False, scroll=self._yaml_scroll)
+        foot = self.font_sm.render("scroll to read   ·   [CTRL+Y / ESC] close", True, MUTED)
         self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
 
     def draw_confirm(self, w: int, h: int) -> None:
@@ -1366,7 +2093,7 @@ class App:
         rect = self.panel(w, h, 520, 520)
         title = self.font_lg.render("Keybindings", True, TEXT)
         self.screen.blit(title, (rect.x + 24, rect.y + 18))
-        sub = self.font_sm.render("↑/↓ select · ENTER rebind · ESC save+close", True, MUTED)
+        sub = self.font_sm.render("UP/DOWN select · ENTER rebind · ESC save+close", True, MUTED)
         self.screen.blit(sub, (rect.x + 24, rect.y + 54))
         y = rect.y + 90
         for i, action in enumerate(ACTIONS):
@@ -1382,6 +2109,178 @@ class App:
                 val = self.font.render(self.keys.mapping.get(action, ""), True, BADGE)
             self.screen.blit(val, (rect.right - val.get_width() - 24, y))
             y += 36
+
+    # --- relationships editor -------------------------------------------
+
+    def start_relationships(self) -> None:
+        item = self.selected()
+        if not item:
+            return
+        # Seed collaborators from known author github logins if the list is empty,
+        # so there's always something to assign on a fresh board.
+        if not self.board.collaborators:
+            seeded = sorted({rec.get("github") for rec in self.board.authors.values()
+                             if rec.get("github")})
+            if seeded:
+                self.board.collaborators = seeded
+        self.rel_index = 0
+        self.mode = self.RELATIONSHIPS
+
+    def handle_relationships(self, event) -> None:
+        if event.type != pygame.KEYDOWN:
+            return
+        if self.keys.matches("cancel", event.key) or self.keys.matches("relationships", event.key):
+            self.mode = self.NORMAL
+            return
+        rels = self.board.relationships
+        item = self.selected()
+        if not rels or not item:
+            return
+        if event.key == pygame.K_UP:
+            self.rel_index = (self.rel_index - 1) % len(rels)
+        elif event.key == pygame.K_DOWN:
+            self.rel_index = (self.rel_index + 1) % len(rels)
+        elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+            self._cycle_relationship(item, rels[self.rel_index],
+                                     1 if event.key == pygame.K_RIGHT else -1)
+
+    def _cycle_relationship(self, item: Item, rel: str, delta: int) -> None:
+        options = [""] + list(self.board.collaborators)  # "" == unassigned
+        cur = item.relationships.get(rel, "")
+        idx = options.index(cur) if cur in options else 0
+        nxt = options[(idx + delta) % len(options)]
+        if nxt:
+            item.relationships[rel] = nxt
+        else:
+            item.relationships.pop(rel, None)
+        item.mark_edited(self._actor())
+        self.persist(f"set {rel} on '{item.title}'")
+
+    def draw_relationships(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 520, 360)
+        item = self.selected()
+        title = self.font_lg.render("Relationships", True, TEXT)
+        self.screen.blit(title, (rect.x + 24, rect.y + 18))
+        sub = self.font_sm.render("UP/DOWN select · LEFT/RIGHT assign · ESC close", True, MUTED)
+        self.screen.blit(sub, (rect.x + 24, rect.y + 54))
+        y = rect.y + 90
+        if not self.board.collaborators:
+            note = self.font_sm.render("no collaborators yet — add them under 'collaborators:' in board.yaml",
+                                       True, MUTED)
+            self.screen.blit(note, (rect.x + 24, y))
+            y += 30
+        for i, rel in enumerate(self.board.relationships):
+            selected = i == self.rel_index
+            if selected:
+                hl = pygame.Rect(rect.x + 12, y - 4, rect.w - 24, 32)
+                pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
+            name = self.font.render(rel, True, TEXT)
+            self.screen.blit(name, (rect.x + 24, y))
+            who = item.relationships.get(rel, "") if item else ""
+            val = self.font.render(f"@{who}" if who else "—", True, ACCENT if who else BADGE)
+            self.screen.blit(val, (rect.right - val.get_width() - 24, y))
+            y += 36
+
+    def draw_switch_board(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 560, 480)
+        title = self.font_lg.render("Switch board", True, TEXT)
+        self.screen.blit(title, (rect.x + 24, rect.y + 18))
+        sub = self.font_sm.render("type to search · UP/DOWN select · ENTER open · ESC close", True, MUTED)
+        self.screen.blit(sub, (rect.x + 24, rect.y + 54))
+
+        # Search box (caret blinks only while the search box has focus).
+        box = pygame.Rect(rect.x + 24, rect.y + 84, rect.w - 48, 38)
+        pygame.draw.rect(self.screen, BG, box, border_radius=6)
+        focus_search = self.sb_focus == "search"
+        pygame.draw.rect(self.screen, ACCENT if focus_search else MUTED, box,
+                         width=2 if focus_search else 1, border_radius=6)
+        blink = focus_search and (pygame.time.get_ticks() // 500) % 2 == 0
+        if self.sb_query is not None:
+            self.draw_editable(self.font, box, self.sb_query, blink)
+        if self.sb_query is None or not self.sb_query.text:
+            ph = self.font.render("Search boards…", True, MUTED)
+            self.screen.blit(ph, (box.x + 12, box.y + box.h // 2 - ph.get_height() // 2))
+
+        # Board list.
+        list_top = box.bottom + 14
+        boards = self.sb_boards
+        if not boards:
+            msg = "no other boards — CTRL+B creates one"
+            self.screen.blit(self.font.render(msg, True, MUTED), (rect.x + 24, list_top + 6))
+        y = list_top
+        row_h = 38
+        for i, name in enumerate(boards):
+            if y + row_h > rect.bottom - 40:
+                break  # don't overflow the panel
+            selected = i == self.sb_index
+            if selected:
+                hl = pygame.Rect(rect.x + 12, y, rect.w - 24, row_h - 4)
+                pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
+                pygame.draw.rect(self.screen, ACCENT, hl, width=1, border_radius=6)
+            label = self.font.render(name, True, ACCENT if selected else TEXT)
+            self.screen.blit(label, (rect.x + 24, y + (row_h - 4) // 2 - label.get_height() // 2))
+            opened = self.workspace.opened(name)
+            when = ("opened " + timefmt.ago(opened, self.settings.timestamp_format())) if opened else "never opened"
+            ws = self.font_sm.render(when, True, MUTED)
+            self.screen.blit(ws, (rect.right - ws.get_width() - 24,
+                                  y + (row_h - 4) // 2 - ws.get_height() // 2))
+            y += row_h
+
+    def _theme_colors(self, name: str) -> dict:
+        if name not in self._theme_cache:
+            self._theme_cache[name] = theme.load(theme.THEMES_DIR / f"{name}.yaml")
+        return self._theme_cache[name]
+
+    def draw_themes(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 560, 480)
+        title = self.font_lg.render("Colour theme", True, TEXT)
+        self.screen.blit(title, (rect.x + 24, rect.y + 18))
+        sub = self.font_sm.render("type to search · UP/DOWN select · ENTER apply · ESC close", True, MUTED)
+        self.screen.blit(sub, (rect.x + 24, rect.y + 54))
+
+        box = pygame.Rect(rect.x + 24, rect.y + 84, rect.w - 48, 38)
+        pygame.draw.rect(self.screen, BG, box, border_radius=6)
+        focus_search = self.th_focus == "search"
+        pygame.draw.rect(self.screen, ACCENT if focus_search else MUTED, box,
+                         width=2 if focus_search else 1, border_radius=6)
+        blink = focus_search and (pygame.time.get_ticks() // 500) % 2 == 0
+        if self.th_query is not None:
+            self.draw_editable(self.font, box, self.th_query, blink)
+        if self.th_query is None or not self.th_query.text:
+            ph = self.font.render("Search themes…", True, MUTED)
+            self.screen.blit(ph, (box.x + 12, box.y + box.h // 2 - ph.get_height() // 2))
+
+        names = self.th_themes
+        if not names:
+            self.screen.blit(self.font.render("no themes found", True, MUTED),
+                             (rect.x + 24, box.bottom + 20))
+        y = box.bottom + 14
+        row_h = 40
+        for i, name in enumerate(names):
+            if y + row_h > rect.bottom - 40:
+                break
+            selected = i == self.th_index
+            if selected:
+                hl = pygame.Rect(rect.x + 12, y, rect.w - 24, row_h - 4)
+                pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
+                pygame.draw.rect(self.screen, ACCENT, hl, width=1, border_radius=6)
+            label = self.font.render(name, True, ACCENT if selected else TEXT)
+            self.screen.blit(label, (rect.x + 24, y + (row_h - 4) // 2 - label.get_height() // 2))
+            # Colour swatches previewing the theme's palette.
+            colors = self._theme_colors(name)
+            swatches = [colors["accent"], colors["badge"], colors["card_bg"],
+                        colors["bg"], colors["danger"]]
+            sx = rect.right - 24 - len(swatches) * 22
+            for c in swatches:
+                pygame.draw.rect(self.screen, c[:3], (sx, y + (row_h - 4) // 2 - 8, 16, 16),
+                                 border_radius=3)
+                pygame.draw.rect(self.screen, MUTED, (sx, y + (row_h - 4) // 2 - 8, 16, 16),
+                                 width=1, border_radius=3)
+                sx += 22
+            y += row_h
 
     def draw_toast(self, w: int, h: int) -> None:
         if not self.toast or pygame.time.get_ticks() > self.toast_until:

@@ -46,11 +46,12 @@ items:
 
 
     i have changed the default bindings for creating new items, dont worry'
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782146529.362
   edited: 1782146529.362
+  moved_to: Done
   actor: Sam
 - id: 26c1c1ec1c7d4b46a18ea9edd44a3f10
   title: '[CLAUDE] keybindings view should scroll'
@@ -121,7 +122,7 @@ items:
     then don''t mark the item as Last edited by ___ at X.'
   points: 0
   description: instead add a new tracking timestamp for "viewed"
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782148788.325

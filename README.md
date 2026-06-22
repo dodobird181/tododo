@@ -54,31 +54,6 @@ it is selected (default); `all` keeps every description expanded.
   the last-fetch time.
 - A `pre-push` git hook (installed on startup) also fetches before any push.
 
-### Fetch instantly on a new commit (webhook)
-
-A local git hook can't fire when *someone else* pushes — that's a remote event —
-so the app can optionally run a small HTTP receiver. A POST to it triggers an
-immediate fetch+merge instead of waiting for the periodic poll.
-
-Enable it in `settings.yaml`:
-
-```yaml
-webhook_enabled: true
-webhook_port: 8765
-webhook_secret: 'some-shared-secret'   # optional but recommended
-```
-
-Then make the port reachable by the sender and point a webhook at it:
-
-1. Expose it — on a laptop, a tunnel works: `cloudflared tunnel --url http://localhost:8765`
-   (or `ngrok http 8765`). On a public host, just open the port.
-2. In your GitHub repo: **Settings → Webhooks → Add webhook**, Payload URL =
-   the exposed URL, Content type = `application/json`, Secret = the same
-   `webhook_secret`, events = *Just the push event*.
-
-Now every push from anyone triggers your local app to fetch within a second. A
-`GET` to the URL returns `200` for a quick liveness check.
-
 ### Concurrent edits
 
 Edits from multiple people are reconciled by git, and the sync never blocks on a

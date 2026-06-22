@@ -1,27 +1,31 @@
-"""Avatar images fetched from the web, keyed by git email.
+"""GitHub avatar images, keyed by git email.
 
-A real avatar can't be derived from an email via GitHub (that needs the API and a
-username), but **Gravatar** is keyed directly on the email's md5 hash and many
-developers — including GitHub users — have one. We request it with ``d=404`` so a
-missing avatar returns an error and we cleanly fall back to the monogram circle.
+A real avatar is pulled from GitHub (``avatars.githubusercontent.com``). The
+account is resolved from the commit email via the GitHub user-search API; the
+resolved ``login`` + ``avatar_url`` are then cached and (by the caller) written
+into the board's ``authors:`` registry so they are version-controlled and only
+looked up once. A known github username yields ``https://github.com/<login>.png``
+directly. Anything not resolvable falls back to the monogram circle.
 
-Fetching happens on background threads; ``get()`` returns a ready circular Surface
-or None (draw the monogram meanwhile). Results are cached, including misses.
+Fetching happens on background threads; ``resolve()`` and ``image()`` return
+immediately with whatever is ready (or None), so the UI never blocks.
 """
 
 from __future__ import annotations
 
-import hashlib
 import io
+import json
 import threading
+import urllib.parse
 import urllib.request
 
 import pygame
 
+_SEARCH_URL = "https://api.github.com/search/users?q={q}+in:email"
 
-def gravatar_url(email: str, size: int) -> str:
-    digest = hashlib.md5(email.strip().lower().encode("utf-8")).hexdigest()
-    return f"https://www.gravatar.com/avatar/{digest}?s={size}&d=404"
+
+def github_png_url(login: str, size: int) -> str:
+    return f"https://github.com/{login}.png?size={size}"
 
 
 def _circle(data: bytes, d: int):
@@ -40,42 +44,79 @@ def _circle(data: bytes, d: int):
 
 class AvatarStore:
     def __init__(self):
-        self._bytes: dict[str, object] = {}   # email -> bytes | None | "pending"
-        self._surf: dict[tuple, object] = {}  # (email, size) -> Surface | None
+        self._resolved: dict[str, object] = {}  # email -> {login, avatar_url} | None | "pending"
+        self._bytes: dict[str, object] = {}      # url -> bytes | None | "pending"
+        self._img: dict[tuple, object] = {}      # (url, size) -> Surface | None
         self._lock = threading.Lock()
 
-    def _fetch(self, email: str, px: int) -> None:
-        data = None
-        try:
-            req = urllib.request.Request(gravatar_url(email, px), headers={"User-Agent": "tododo"})
-            data = urllib.request.urlopen(req, timeout=5).read()
-        except Exception:
-            data = None
-        with self._lock:
-            self._bytes[email] = data or None
+    # --- resolve email -> github account ---------------------------------
 
-    def get(self, email: str, size: int):
-        """Return a circular Surface for the email, or None if not ready/available."""
+    def resolve(self, email: str):
+        """Return {'login','avatar_url'} for an email, or None if unresolved/pending."""
         if not email:
             return None
-        key = (email, size)
         with self._lock:
-            if key in self._surf:
-                return self._surf[key]
-            state = self._bytes.get(email, "missing")
+            state = self._resolved.get(email, "missing")
             if state == "missing":
-                self._bytes[email] = "pending"
-                threading.Thread(target=self._fetch, args=(email, size * 2),
-                                 name="avatar", daemon=True).start()
+                self._resolved[email] = "pending"
+                threading.Thread(target=self._resolve_thread, args=(email,),
+                                 name="avatar-resolve", daemon=True).start()
+                return None
+            if state in ("pending", None):
+                return None
+            return state
+
+    def _resolve_thread(self, email: str) -> None:
+        result = None
+        try:
+            url = _SEARCH_URL.format(q=urllib.parse.quote(email))
+            req = urllib.request.Request(url, headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "tododo",
+            })
+            data = json.loads(urllib.request.urlopen(req, timeout=5).read())
+            items = data.get("items") or []
+            if items:
+                result = {"login": items[0].get("login", ""),
+                          "avatar_url": items[0].get("avatar_url", "")}
+        except Exception:
+            result = None
+        with self._lock:
+            self._resolved[email] = result
+
+    # --- fetch an avatar image from a URL --------------------------------
+
+    def image(self, url: str, size: int):
+        """Return a circular Surface for the avatar URL, or None if not ready."""
+        if not url:
+            return None
+        key = (url, size)
+        with self._lock:
+            if key in self._img:
+                return self._img[key]
+            state = self._bytes.get(url, "missing")
+            if state == "missing":
+                self._bytes[url] = "pending"
+                threading.Thread(target=self._fetch_thread, args=(url,),
+                                 name="avatar-img", daemon=True).start()
                 return None
             if state == "pending":
                 return None
             if state is None:
-                self._surf[key] = None
+                self._img[key] = None
                 return None
             raw = state  # bytes
-        # Build the Surface on the calling (main) thread.
         surf = _circle(raw, size)
         with self._lock:
-            self._surf[key] = surf
+            self._img[key] = surf
         return surf
+
+    def _fetch_thread(self, url: str) -> None:
+        data = None
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "tododo"})
+            data = urllib.request.urlopen(req, timeout=5).read()
+        except Exception:
+            data = None
+        with self._lock:
+            self._bytes[url] = data or None

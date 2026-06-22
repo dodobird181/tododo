@@ -38,6 +38,29 @@ def _relative(delta: float) -> str:
     return f"{hour_part} and {quarter} minutes ago"
 
 
+def _date(ts: float, fmt: str) -> str:
+    dt = datetime.fromtimestamp(ts)
+    try:
+        out = dt.strftime(fmt or DEFAULT_FORMAT)
+    except ValueError:
+        out = dt.strftime(DEFAULT_FORMAT.replace("%-I", "%I"))
+    return out.replace("{th}", ordinal(dt.day))
+
+
+def ago(ts: float, fmt: str = DEFAULT_FORMAT, now: float | None = None) -> str:
+    """A relative phrase: "<1 min", minutes/hours (<24h), days (<1 week), else date."""
+    if not ts:
+        return ""
+    now = time.time() if now is None else now
+    delta = max(0.0, now - ts)
+    if delta < 24 * 3600:
+        return _relative(delta)
+    days = int(delta // 86400)
+    if days < 7:
+        return f"{days} day{'s' if days != 1 else ''} ago"
+    return _date(ts, fmt)
+
+
 def format_timestamp(ts: float, fmt: str = DEFAULT_FORMAT, now: float | None = None) -> str:
     if not ts:
         return ""
@@ -45,9 +68,4 @@ def format_timestamp(ts: float, fmt: str = DEFAULT_FORMAT, now: float | None = N
     delta = max(0.0, now - ts)
     if delta < 24 * 3600:
         return _relative(delta)
-    dt = datetime.fromtimestamp(ts)
-    try:
-        out = dt.strftime(fmt or DEFAULT_FORMAT)
-    except ValueError:
-        out = dt.strftime(DEFAULT_FORMAT.replace("%-I", "%I"))
-    return out.replace("{th}", ordinal(dt.day))
+    return _date(ts, fmt)

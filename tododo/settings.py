@@ -26,9 +26,6 @@ DEFAULTS = {
     "avatar_images": True,           # try to load a real Gravatar image (else monogram)
     "timestamps": "selected",        # show last-updated time: "selected" or "all"
     "timestamp_format": "%B {th}, %Y at %-I:%M %p (%Z)",  # strftime + {th} ordinal day
-    "webhook_enabled": False,        # listen for push notifications -> instant fetch
-    "webhook_port": 8765,            # port the webhook receiver binds to
-    "webhook_secret": "",            # optional shared secret (X-Hub-Signature-256)
 }
 
 
@@ -96,16 +93,3 @@ class Settings:
             return max(self.poll_interval(), float(self.values.get("poll_backoff_max", 300)))
         except (TypeError, ValueError):
             return 300.0
-
-    @property
-    def webhook_enabled(self) -> bool:
-        return bool(self.values.get("webhook_enabled", False))
-
-    def webhook_port(self) -> int:
-        try:
-            return int(self.values.get("webhook_port", 8765))
-        except (TypeError, ValueError):
-            return 8765
-
-    def webhook_secret(self) -> str:
-        return str(self.values.get("webhook_secret", "") or "")

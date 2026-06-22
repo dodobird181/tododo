@@ -66,6 +66,60 @@ def _font_for(fonts: MarkdownFonts, style: str):
     return {"b": fonts.bold, "i": fonts.italic, "code": fonts.code}.get(style, fonts.base)
 
 
+_HEADING_RE = re.compile(r"(#{1,3})\s")
+_BULLET_RE = re.compile(r"[-*]\s")
+
+
+def _apply_inline(line: str, lo: int, hi: int, styles: list, off: int, base: str) -> None:
+    """Style the inline span line[lo:hi]: markers -> 'marker', inner -> b/i/code."""
+    for k in range(lo, hi):
+        styles[off + k] = base
+    for m in _INLINE_RE.finditer(line[lo:hi]):
+        s, e = lo + m.start(), lo + m.end()
+        tok = m.group()
+        if tok.startswith("**") or tok.startswith("__"):
+            inner, mlen = "b", 2
+        elif tok.startswith("`"):
+            inner, mlen = "code", 1
+        else:
+            inner, mlen = "i", 1
+        for k in range(s, e):
+            styles[off + k] = "marker"
+        for k in range(s + mlen, e - mlen):
+            styles[off + k] = inner
+
+
+def char_styles(text: str) -> list:
+    """A per-character style tag for soft-rendering text *in place* (markers kept).
+
+    Unlike :func:`flow`, no characters are dropped, so offsets map 1:1 onto the
+    source string — letting an editable caret/selection stay exact while the text
+    is shown styled. Styles: '' normal, 'b' bold, 'i' italic, 'code', 'h' heading,
+    'quote', 'marker' (the de-emphasised markup characters).
+    """
+    styles = [""] * len(text)
+    pos = 0
+    for line in text.split("\n"):
+        n = len(line)
+        mh = _HEADING_RE.match(line)
+        if mh:
+            for k in range(mh.end()):
+                styles[pos + k] = "marker"
+            for k in range(mh.end(), n):
+                styles[pos + k] = "h"
+        elif _BULLET_RE.match(line):
+            styles[pos] = styles[pos + 1] = "marker"
+            _apply_inline(line, 2, n, styles, pos, base="")
+        elif line[:2] == "> ":
+            styles[pos] = styles[pos + 1] = "marker"
+            for k in range(2, n):
+                styles[pos + k] = "quote"
+        else:
+            _apply_inline(line, 0, n, styles, pos, base="")
+        pos += n + 1  # +1 for the newline
+    return styles
+
+
 def flow(text: str, fonts: MarkdownFonts, max_w: int):
     """Lay out markdown into rows.
 
