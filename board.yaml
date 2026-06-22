@@ -247,12 +247,15 @@ items:
     - control pallet view (for the selected item name / title)
 
 
+    - on items themselves
+
+
     - try and find other places across the codebase...'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152514.008
-  edited: 1782152941.002
+  edited: 1782155679.433
   actor: Sam
 - id: c8d6711da77247c7a20ba6085df160a9
   title: '[CLAUDE] Unified Item Display'
