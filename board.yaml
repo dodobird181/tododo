@@ -12,7 +12,7 @@ items:
   title: Edits auto-commit and push to git
   points: 3
   description: ''
-  column: Doing
+  column: Todo
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
