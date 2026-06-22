@@ -4,11 +4,6 @@ columns:
 - FARTS AND PEE
 - Done
 items:
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Done
 - id: seed0001
   title: Drag me into another column
   points: 1
@@ -50,5 +45,10 @@ items:
 - id: seed0002
   title: Hit the command key to open operations
   points: 2
+  description: ''
+  column: FARTS AND PEE
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
   description: ''
   column: FARTS AND PEE
