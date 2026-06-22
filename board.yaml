@@ -19,11 +19,6 @@ items:
   points: 1
   description: ''
   column: FARTS AND PEE
-- id: seed0004
-  title: Set up tododo
-  points: 1
-  description: ''
-  column: FARTS AND PEE
 - id: seed0003
   title: Edits auto-commit and push to git
   points: 3
@@ -51,4 +46,9 @@ items:
   title: joey poop
   points: 0
   description: hey thats stinky dont poo in my tododo!!!
+  column: Doing
+- id: seed0004
+  title: Set up tododo
+  points: 1
+  description: ''
   column: Doing
