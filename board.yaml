@@ -222,8 +222,10 @@ items:
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
   points: 0
-  description: ''
+  description: and when they do, their name should show up in the commit to tell that
+    it was them and then we display this information like we display the other blame
+    information related to timestamps!
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107984.021
+  updated: 1782108038.494
