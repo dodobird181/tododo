@@ -19,8 +19,8 @@ items:
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
   description: in all editable text boxes
-  column: Doing
-  updated: 1782105877.705
+  column: Done
+  updated: 1782105879.618
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
   points: 0
