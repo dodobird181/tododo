@@ -308,13 +308,13 @@ items:
 
 
     Default should be similar to the existing layouts of expanded and collapsed.'
-  column: Ideas
+  column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
   edited: 1782155620.465
-  moved: 1782156575.401
-  moved_to: Ideas
+  moved: 1782156722.596
+  moved_to: Todo
   actor: dodobird181
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -358,7 +358,7 @@ items:
     over of github profile photo'
   points: 0
   description: thanks!!
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782156606.779
