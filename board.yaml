@@ -14,17 +14,17 @@ items:
   points: 0
   description: ''
   column: Done
+- id: 9b76ef69a5d849bd8c0691181c54fc1c
+  title: aefjnaewkjdnawjodnaw
+  points: 0
+  description: ''
+  column: Todo
 - id: b33c2fa950d34151a435e67829dc26f7
   title: new tingy
   points: 0
   description: 'hellooooo
 
     AWDKAWMDKAWD'
-  column: Doing
-- id: 9b76ef69a5d849bd8c0691181c54fc1c
-  title: aefjnaewkjdnawjodnaw
-  points: 0
-  description: ''
   column: Doing
 - id: 4602d6a917c54ba3a7de57c5b0b1d2d1
   title: awdawd
@@ -37,4 +37,4 @@ items:
   description: '# awdawd
 
     awdawdawd'
-  column: Todo
+  column: Done
