@@ -18,6 +18,11 @@ items:
   points: 13
   description: ''
   column: Todo
+- id: 449ee787806f4bd4b52854ad6e9cda02
+  title: JOEY
+  points: 0
+  description: FARTS
+  column: Todo
 - id: seed0004
   title: Set up tododo
   points: 1
@@ -28,8 +33,3 @@ items:
   points: 3
   description: ''
   column: Todo
-- id: 449ee787806f4bd4b52854ad6e9cda02
-  title: JOEY
-  points: 0
-  description: FARTS
-  column: Done
