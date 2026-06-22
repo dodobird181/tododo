@@ -6,17 +6,4 @@ authors:
   dodobird181@gmail.com:
     name: Sam
     github: dodobird181
-items:
-- id: 997b4332b6354c348c185416235cc20b
-  title: TEst item
-  points: 0
-  description: awdawd
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782134197.413
-  edited: 1782151772.917
-  moved: 1782164290.823
-  moved_to: Todo
-  actor: dodobird181
-  due: '2026-07-04'
+items: []
