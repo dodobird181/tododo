@@ -49,22 +49,6 @@ items:
   created: 1782145605.205
   edited: 1782148176.177
   actor: Sam
-- id: 8292f6d72eb24fb193eb5fa40417d9fc
-  title: '[CLAUDE] when minimizing a column, select a maximized column'
-  points: 0
-  description: 'so the user gets feedback immediately about the minimization.
-
-
-    if no maximized column is available, deselect all columns (uysing arrow keys or
-    clicking will just select columns again and move around)'
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782146372.771
-  edited: 1782146372.771
-  moved: 1782148898.507
-  moved_to: Todo
-  actor: Sam
 - id: 2011c8bc17f343bb9720f208a77fd0e3
   title: '[CLAUDE] add copy/paste functionality to items'
   points: 0
@@ -91,6 +75,22 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782147478.802
   edited: 1782147478.802
+  actor: Sam
+- id: 8292f6d72eb24fb193eb5fa40417d9fc
+  title: '[CLAUDE] when minimizing a column, select a maximized column'
+  points: 0
+  description: 'so the user gets feedback immediately about the minimization.
+
+
+    if no maximized column is available, deselect all columns (uysing arrow keys or
+    clicking will just select columns again and move around)'
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782146372.771
+  edited: 1782146372.771
+  moved: 1782148898.507
+  moved_to: Todo
   actor: Sam
 - id: ff2b79af5b774620804046bc4aaab48c
   title: '[CLAUDE] fix ascii rendering for arrow keys in hints'
