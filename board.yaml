@@ -196,10 +196,10 @@ items:
   points: 0
   description: why is there auth logic in avatars.py? we shouldn't need auth to grab
     their profile photo / image
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782133064.673
+  updated: 1782133556.776
 - id: afb5253dac53425baf38d888fa8526d7
   title: '[CLAUDE] add a a new command for viewing an item''s YAML'
   points: 0
@@ -210,10 +210,10 @@ items:
 
     3. this command should be triggerable from edi view, as well as the main window
     (when an item is selected)'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782107373.194
+  updated: 1782133556.461
 - id: 12d197d142894e82a04ee62905d6887a
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
@@ -239,19 +239,19 @@ items:
 
 
     im just gojnn ause the exponential bavckoff'
-  column: Todo
+  column: Hidden
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782108186.882
+  updated: 1782133608.415
 - id: 86324d59d86b452bb10690cbd6c8a63b
   title: '[CLAUDE] when a selected item is in a minimized column, tempoarily maximize
     it'
   points: 0
   description: ''
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
-  updated: 1782108334.899
+  updated: 1782133556.657
 - id: 47b53be39dcc49c4a3103e0a279de8a9
   title: '[CLAUDE] create a local workspace.yaml file to track which columns are minimized
     between saves'
