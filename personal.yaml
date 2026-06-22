@@ -1,7 +1,10 @@
 columns:
-- Todo
+- Homemaking
+- Financial
+- Planning
 - Doing
 - Done
+- Hidden
 authors:
   dodobird181@gmail.com:
     name: Sam
@@ -15,11 +18,11 @@ items:
   title: Install Window AC in Room
   points: 0
   description: ''
-  column: Todo
+  column: Financial
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782149008.643
   edited: 1782149008.643
-  moved: 1782149213.733
-  moved_to: Todo
+  moved: 1782149338.962
+  moved_to: Financial
   actor: Sam
