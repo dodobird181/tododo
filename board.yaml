@@ -244,13 +244,13 @@ items:
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
   description: should be a separate file...
-  column: Doing
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133766.387
   edited: 1782133766.387
-  moved: 1782134874.802
-  moved_to: Doing
+  moved: 1782134874.949
+  moved_to: Done
   actor: Sam
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
