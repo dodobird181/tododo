@@ -28,7 +28,7 @@ items:
   title: foobar
   points: 13
   description: ''
-  column: Done
+  column: Doing
 - id: seed0004
   title: Set up tododo
   points: 1
