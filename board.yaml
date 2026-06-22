@@ -14,11 +14,6 @@ items:
   points: 1
   description: ''
   column: FARTS AND PEE
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Todo
 - id: 449ee787806f4bd4b52854ad6e9cda02
   title: JOEY
   points: 5
@@ -42,3 +37,8 @@ items:
   points: 3
   description: ''
   column: Done
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
+  description: ''
+  column: Doing
