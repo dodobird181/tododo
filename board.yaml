@@ -58,3 +58,11 @@ items:
 
     2. when hittijng the right or left key once.'
   column: Todo
+- id: e592dc7447ee4b79a819029e57f843b4
+  title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
+  points: 0
+  description: Fetching happens every two seconds, but if no changes are found, AND
+    there are no local commits that haven't been pushed, we can do an exponential
+    backoff... limiting it at 5 mins. The limit should be configurable but exponential
+    backoff should not
+  column: Todo
