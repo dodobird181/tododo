@@ -438,9 +438,11 @@ items:
 
 
     3. the theme search view should work basically the same as the board search view'
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782136651.714
   edited: 1782136651.714
+  moved: 1782137238.258
+  moved_to: Doing
   actor: Sam
