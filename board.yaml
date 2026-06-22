@@ -308,13 +308,13 @@ items:
 
 
     Default should be similar to the existing layouts of expanded and collapsed.'
-  column: Todo
+  column: Ideas
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782153019.195
   edited: 1782155620.465
-  moved: 1782156538.988
-  moved_to: Todo
+  moved: 1782156575.401
+  moved_to: Ideas
   actor: dodobird181
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
