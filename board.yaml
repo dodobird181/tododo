@@ -63,7 +63,8 @@ items:
     awdawdawd'
   column: Done
 - id: 506f105cde884233a31c7bc9f8c7ed64
-  title: '[CLAUDE]'
+  title: '[CLAUDE] Hot reload when source file is edited'
   points: 0
-  description: ''
+  description: The UI should hot reload / sense changes when the source board.yaml,
+    settings.yaml, or keybindings.yaml files are changes.
   column: Todo
