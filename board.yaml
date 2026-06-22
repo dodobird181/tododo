@@ -4,13 +4,6 @@ columns:
 - The FORBIDDEN Column
 - Done
 items:
-- id: d7d73b67244c4c53b3ad0466e53842c7
-  title: WE NEED MORE ITEMS
-  points: 0
-  description: '# awdawd
-
-    awdawdawd'
-  column: The FORBIDDEN Column
 - id: 4304595df3244a7686c06f7ad393cabf
   title: SAM IS HOT
   points: 0
@@ -38,3 +31,10 @@ items:
   points: 0
   description: ''
   column: The FORBIDDEN Column
+- id: d7d73b67244c4c53b3ad0466e53842c7
+  title: WE NEED MORE ITEMS
+  points: 0
+  description: '# awdawd
+
+    awdawdawd'
+  column: Doing
