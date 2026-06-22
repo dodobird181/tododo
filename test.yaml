@@ -11,12 +11,12 @@ items:
   title: Foo bar item
   points: 0
   description: BAZ!
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782164322.918
   edited: 1782164322.918
-  moved: 1782164324.607
-  moved_to: Done
+  moved: 1782164325.188
+  moved_to: Doing
   actor: dodobird181
   creator: dodobird181@gmail.com
