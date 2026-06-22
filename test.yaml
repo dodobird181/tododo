@@ -15,12 +15,12 @@ items:
   title: TEst item
   points: 0
   description: awdawd
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134197.413
   edited: 1782151772.917
-  moved: 1782151775.33
-  moved_to: Done
+  moved: 1782151775.607
+  moved_to: Doing
   actor: Sam
   due: '2026-07-04'
