@@ -249,3 +249,12 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782108334.899
+- id: 47b53be39dcc49c4a3103e0a279de8a9
+  title: '[CLAUDE] create a local workspace.yaml file to track which columns are minimized
+    between saves'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782108418.794
