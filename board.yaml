@@ -244,11 +244,14 @@ items:
   title: '[CLAUDE] can create new board with CTRL + B'
   points: 0
   description: should be a separate file...
-  column: Done
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133766.387
   edited: 1782133766.387
+  moved: 1782134872.636
+  moved_to: Doing
+  actor: Sam
 - id: b8fa4efaf5e046b4ab1e882705da98d3
   title: '[CLAUDE] LLMS / Agents should be allowed to move and edit files'
   points: 0
@@ -301,11 +304,14 @@ items:
     in that column'
   points: 0
   description: ''
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782133980.195
   edited: 1782133980.195
+  moved: 1782134812.273
+  moved_to: Done
+  actor: Claude
 - id: 8f53b674079a4b788ddbf552e8677523
   title: '[CLAUDE] switching to a new board should be a siupported action'
   points: 0
@@ -314,20 +320,24 @@ items:
 
     the default shortcut or switching boards should be CTRL + B (right now doesn''t
     appear in the command pallette menu)'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134585.545
   edited: 1782134662.356
-  actor: Sam
+  moved: 1782134813.263
+  moved_to: Done
+  actor: Claude
 - id: 66d486c8abbd49e9aedb69b469899fb8
   title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
     board name'
   points: 0
   description: to avoid clobbering other board's settings when switching boards
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134490.619
   edited: 1782134507.738
-  actor: Sam
+  moved: 1782134814.308
+  moved_to: Done
+  actor: Claude
