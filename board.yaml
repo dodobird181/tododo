@@ -102,3 +102,14 @@ items:
   moved_to: Ideas
   actor: dodobird181
   creator: dodobird181@gmail.com
+- id: 9f3776ab588d4f66830e8b76564a33af
+  title: '[CLAUDE] set a max description height in settings.yaml'
+  points: 0
+  description: and of course default settings as well.
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782166260.677
+  edited: 1782166260.677
+  actor: dodobird181
+  creator: dodobird181@gmail.com
