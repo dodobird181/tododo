@@ -36,12 +36,13 @@ items:
   actor: Sam
 - id: 422185a48a044a8487a7e772098bdc36
   title: '[CLAUDE] automatically add the current github user / committer to collaborators
-    inside'
+    in the yaml board files'
   points: 0
-  description: ''
+  description: should be on first commit. the users can manually remove people if
+    they want fromt he YAML
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782145529.017
-  edited: 1782145535.144
+  edited: 1782145571.061
   actor: Sam
