@@ -15,11 +15,11 @@ items:
   title: Drag me into another column
   points: 1
   column: Todo
-- id: seed0002
-  title: Hit the command key to open operations
-  points: 2
-  column: Doing
 - id: seed0004
   title: Set up tododo
   points: 1
-  column: Todo
+  column: Done
+- id: seed0002
+  title: Hit the command key to open operations
+  points: 2
+  column: Done
