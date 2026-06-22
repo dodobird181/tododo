@@ -27,6 +27,11 @@ items:
 
     * awdawd'
   column: Done
+- id: 21d150c9ea204363b32b22faa448b998
+  title: foobar
+  points: 13
+  description: ''
+  column: FARTS AND PEE
 - id: seed0004
   title: Set up tododo
   points: 1
@@ -37,8 +42,3 @@ items:
   points: 3
   description: ''
   column: Done
-- id: 21d150c9ea204363b32b22faa448b998
-  title: foobar
-  points: 13
-  description: ''
-  column: Todo
