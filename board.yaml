@@ -13,7 +13,7 @@ items:
   title: Drag me into another column
   points: 1
   description: ''
-  column: FARTS AND PEE
+  column: Todo
 - id: 21d150c9ea204363b32b22faa448b998
   title: foobar
   points: 13
