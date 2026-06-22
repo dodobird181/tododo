@@ -369,9 +369,20 @@ items:
   title: '[CLAUDE] only ESC should close the item layout editor view'
   points: 0
   description: closing it with CTRL + I interferes with typing.
-  column: Todo
+  column: Doing
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782157977.269
   edited: 1782157977.269
+  actor: dodobird181
+- id: 182a9c7eacf04d33bab74d757fa3d40d
+  title: '[CLAUDE] line-wrapping should be respected in the item layout'
+  points: 0
+  description: it currently doesn't wrap when there are more than one column in a
+    row, and also i believe on the borders of the card in general
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782158029.196
+  edited: 1782158029.196
   actor: dodobird181
