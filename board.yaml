@@ -73,7 +73,7 @@ items:
   points: 0
   description: The UI should hot reload / sense changes when the source board.yaml,
     settings.yaml, or keybindings.yaml files are changes.
-  column: Todo
+  column: Doing
 - id: 6c80eed62efa450b85b39f34976d43fa
   title: '[CLAUDE] CTRL + Enter key should open the selected item just like regular
     enter key does'
