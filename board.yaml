@@ -51,13 +51,9 @@ items:
   description: ''
   column: Done
 - id: 100d5f0dd03f421b84263ab1361686ee
-  title: '[CLAUDE] up and down arrow fix for editing description'
+  title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
-  description: 'Make up and down arrow not havethe same behaviour as TAB in the edit
-    dialogue for the description.
-
-
-    the behaviour should be to move up and down inside the actual description text...'
+  description: in all editable text boxes
   column: Todo
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
