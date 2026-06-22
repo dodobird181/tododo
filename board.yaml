@@ -239,14 +239,20 @@ items:
   edited: 1782151732.534
   actor: Sam
 - id: 069280a9563b470da096488e8bf0ebf9
-  title: '[CLAUDE]'
+  title: '[CLAUDE] clean up line-wrapping across the codebase'
   points: 0
-  description: ''
+  description: 'there are a few places where line wrapping can be improved
+
+
+    - control pallet view (for the selected item name / title)
+
+
+    -'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152514.008
-  edited: 1782152659.422
+  edited: 1782152888.204
   actor: Sam
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
