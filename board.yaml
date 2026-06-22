@@ -374,14 +374,15 @@ items:
   moved_to: Doing
   actor: Claude
 - id: 5a2e1ff435ff47e69256fa22a14c706d
-  title: awdawd
+  title: '[CLAUDE] switching boards should be M while creating a new board should
+    be B'
   points: 0
   description: ''
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782135459.596
-  edited: 1782135459.596
+  edited: 1782135539.507
   moved: 1782135460.209
   moved_to: Todo
   actor: Sam
