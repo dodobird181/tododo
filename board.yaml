@@ -10,6 +10,16 @@ relationships:
 - Assigned to
 - Reporter
 items:
+- id: f32b7e772206494185dbcf228e88e9e7
+  title: '[CLAUDE] mark the current board in the workspace'
+  points: 0
+  description: and on app startup open to that board, not always boarddddd.yaml
+  column: Done
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782145250.217
+  edited: 1782145266.3
+  actor: Sam
 - id: 26050e3affcf4104bf4089bade5fa6be
   title: '[CLAUDE] make it so that you can only minimize if you click the minux sign'
   points: 0
@@ -23,16 +33,6 @@ items:
   author_email: dodobird181@gmail.com
   created: 1782144992.07
   edited: 1782144992.07
-  actor: Sam
-- id: f32b7e772206494185dbcf228e88e9e7
-  title: '[CLAUDE] mark the current board in the workspace'
-  points: 0
-  description: and on app startup open to that board, not always boarddddd.yaml
-  column: Done
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782145250.217
-  edited: 1782145266.3
   actor: Sam
 - id: 659e33c7e231451ab845509dc0c08623
   title: '[CLAUDE] search for and find better default color themes'
