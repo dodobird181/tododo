@@ -89,3 +89,12 @@ items:
   points: 0
   description: 'hint should read: "TAB switch *CTRL + Enter save * ESC"'
   column: Todo
+- id: 51283c5224974167a6eab5eb701f2fc4
+  title: '[CLAUDE] add git avatars'
+  points: 0
+  description: 'add a git avatar circle to the left of items (default on, can disable
+    in settings)
+
+
+    mousing over git avatar should show git username / email'
+  column: Todo
