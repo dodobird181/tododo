@@ -239,8 +239,7 @@ items:
   edited: 1782151732.534
   actor: Sam
 - id: 069280a9563b470da096488e8bf0ebf9
-  title: '[CLAUDE] automatically add the current github user / committer to collaborators
-    in the yaml board files (CLAUDE DID YOU DO THIS BECAUSE IT DOESNT SEEM SO)'
+  title: '[CLAUDE]'
   points: 0
   description: should be on first commit. the users can manually remove people if
     they want fromt he YAML
@@ -248,5 +247,5 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782152514.008
-  edited: 1782152514.008
+  edited: 1782152620.69
   actor: Sam
