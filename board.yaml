@@ -13,8 +13,8 @@ items:
     in the description, up moves to the line directly above (and if it''s the first
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
-  column: Done
-  updated: 1782105786.022
+  column: Doing
+  updated: 1782106542.752
 - id: 100d5f0dd03f421b84263ab1361686ee
   title: '[CLAUDE] holding shift and moving the cursor should highlight text'
   points: 0
