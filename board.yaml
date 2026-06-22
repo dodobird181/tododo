@@ -338,14 +338,14 @@ items:
 
 
     Claude DID YOU DO THIS?'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134585.545
   edited: 1782134917.024
-  moved: 1782134905.147
-  moved_to: Todo
-  actor: Sam
+  moved: 1782135210.832
+  moved_to: Done
+  actor: Claude
 - id: 66d486c8abbd49e9aedb69b469899fb8
   title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
     board name'
@@ -358,4 +358,16 @@ items:
   edited: 1782134507.738
   moved: 1782134883.602
   moved_to: Done
+  actor: Sam
+- id: b84199c732e74643b226b4e0dcfd564e
+  title: '[CLAUDE] the cursor that shows which item is selected should work in empty
+    columns'
+  points: 0
+  description: the cursor should just highlight the column title. this is primarily
+    so that it is eay to create new items in empty columns
+  column: Done
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782135367.544
+  edited: 1782135367.544
   actor: Sam
