@@ -265,3 +265,12 @@ items:
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782133640.403
+- id: b8c96048eb3f4a1aa859cf3b55fc8b76
+  title: '[CLAUDE] hitting CTRL + a on an item in a column hould select all items
+    in that column'
+  points: 0
+  description: ''
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  updated: 1782133980.195
