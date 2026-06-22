@@ -16,6 +16,14 @@ items:
 
     AWDKAWMDKAWD'
   column: Done
+- id: e592dc7447ee4b79a819029e57f843b4
+  title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
+  points: 0
+  description: Fetching happens every two seconds, but if no changes are found, AND
+    there are no local commits that haven't been pushed, we can do an exponential
+    backoff... limiting it at 5 mins. The limit should be configurable but exponential
+    backoff should not
+  column: Done
 - id: 612a6fb39f3c49749e14a66a5019b4b1
   title: '[CLAUDE] fix right and left arrow not moving the cursor'
   points: 0
@@ -50,7 +58,7 @@ items:
 
 
     the behaviour should be to move up and down inside the actual description text...'
-  column: Done
+  column: The FORBIDDEN Column
 - id: d7d73b67244c4c53b3ad0466e53842c7
   title: WE NEED MORE ITEMS
   points: 0
@@ -58,11 +66,3 @@ items:
 
     awdawdawd'
   column: Done
-- id: e592dc7447ee4b79a819029e57f843b4
-  title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
-  points: 0
-  description: Fetching happens every two seconds, but if no changes are found, AND
-    there are no local commits that haven't been pushed, we can do an exponential
-    backoff... limiting it at 5 mins. The limit should be configurable but exponential
-    backoff should not
-  column: Todo
