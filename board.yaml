@@ -20,7 +20,7 @@ items:
   points: 0
   description: in all editable text boxes
   column: Done
-  updated: 1782105879.618
+  updated: 1782106239.172
 - id: e592dc7447ee4b79a819029e57f843b4
   title: '[CLAUDE] Implement Exponential Backoff for Git Fetch'
   points: 0
@@ -112,7 +112,7 @@ items:
   title: '[CLAUDE] The columns should be scrollable'
   points: 0
   description: ''
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
 - id: 4edf41a82f864d178a5293f84eefb7ff
@@ -130,7 +130,7 @@ items:
 
 
     https://avatars.githubusercontent.com/u/53889741?v=4'
-  column: Todo
+  column: Done
   author: Sam
   author_email: dodobird181@gmail.com
   updated: 1782105765.77
