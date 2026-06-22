@@ -128,20 +128,6 @@ items:
   created: 1782148788.325
   edited: 1782148788.325
   actor: Sam
-- id: 422185a48a044a8487a7e772098bdc36
-  title: '[CLAUDE] automatically add the current github user / committer to collaborators
-    in the yaml board files (CLAUDE DID YOU DO THIS BECAUSE IT DOESNT SEEM SO)'
-  points: 0
-  description: should be on first commit. the users can manually remove people if
-    they want fromt he YAML
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
-  created: 1782145529.017
-  edited: 1782148865.832
-  moved: 1782148853.679
-  moved_to: Todo
-  actor: Sam
 - id: 8292f6d72eb24fb193eb5fa40417d9fc
   title: '[CLAUDE] when minimizing a column, select a maximized column (CLAUDE I DONT
     THINK YOU DID THIS EITHER! Please take another look)'
@@ -212,6 +198,20 @@ items:
   edited: 1782151082.75
   moved: 1782151924.851
   moved_to: Done
+  actor: Sam
+- id: 422185a48a044a8487a7e772098bdc36
+  title: '[CLAUDE] automatically add the current github user / committer to collaborators
+    in the yaml board files (CLAUDE DID YOU DO THIS BECAUSE IT DOESNT SEEM SO)'
+  points: 0
+  description: should be on first commit. the users can manually remove people if
+    they want fromt he YAML
+  column: Todo
+  author: Sam
+  author_email: dodobird181@gmail.com
+  created: 1782145529.017
+  edited: 1782148865.832
+  moved: 1782148853.679
+  moved_to: Todo
   actor: Sam
 - id: bdca4e4150b8491b860c94fcacb3971f
   title: '[CLAUDE] CTRL + F should fuzzy-search the items and return a list of matching
