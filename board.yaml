@@ -28,7 +28,7 @@ items:
   title: foobar
   points: 13
   description: ''
-  column: FARTS AND PEE
+  column: Done
 - id: seed0004
   title: Set up tododo
   points: 1
