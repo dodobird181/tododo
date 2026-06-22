@@ -13,7 +13,7 @@ items:
     in the description, up moves to the line directly above (and if it''s the first
     line then to the beginning of that line), and down moves to the line below (and
     if it''s the last line then to the end of that line)'
-  column: Todo
+  column: Done
 - id: b33c2fa950d34151a435e67829dc26f7
   title: new tingy
   points: 0
@@ -78,7 +78,7 @@ items:
     enter key does'
   points: 0
   description: make this a separate keybinding for the confirm action
-  column: Todo
+  column: Done
 - id: b2472359c4a44409912c752e391d4708
   title: '[CLAUDE]'
   points: 0
