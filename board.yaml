@@ -309,12 +309,16 @@ items:
 - id: 8f53b674079a4b788ddbf552e8677523
   title: '[CLAUDE] switching to a new board should be a siupported action'
   points: 0
-  description: ''
+  description: 'the default shortcut for this should be CTRL + M.
+
+
+    the default shortcut or switching boards should be CTRL + B (right now doesn''t
+    appear in the command pallette menu)'
   column: Todo
   author: Sam
   author_email: dodobird181@gmail.com
   created: 1782134585.545
-  edited: 1782134585.545
+  edited: 1782134662.356
   actor: Sam
 - id: 66d486c8abbd49e9aedb69b469899fb8
   title: '[CLAUDE] workspace settings in workspace.yaml should be namespaced by the
