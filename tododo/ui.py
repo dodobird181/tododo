@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import pygame
 
+from . import clipboard, markdown, merge
 from .board import Board, Item
 from .keybindings import ACTIONS, Keybindings, code_to_key_name
 from .gitsync import GitSync
@@ -37,6 +38,8 @@ ACCENT = (110, 168, 254)
 BADGE = (96, 200, 160)
 OVERLAY = (10, 12, 16, 210)
 DANGER = (224, 108, 108)
+CODE = (224, 196, 140)
+SELECTION = (74, 110, 165)
 
 COLUMN_COLORS = [(110, 168, 254), (240, 196, 110), (96, 200, 160), (200, 130, 240), (240, 140, 170)]
 
@@ -90,6 +93,11 @@ class ItemEditor:
         self.fields = [title, description]
         self.labels = ["Title", "Description"]
         self.active = 0
+        self.sel_all = False  # whole active field "selected" (CTRL+A)
+
+    def _switch(self, step: int) -> None:
+        self.active = (self.active + step) % len(self.fields)
+        self.sel_all = False
 
     def handle(self, event) -> bool:
         """Return True when the modal should close."""
@@ -98,25 +106,52 @@ class ItemEditor:
         mods = event.mod
         if event.key == pygame.K_ESCAPE:
             return True
+
+        # Clipboard / select-all shortcuts (CTRL+A/C/V).
+        if mods & pygame.KMOD_CTRL:
+            if event.key == pygame.K_a:
+                self.sel_all = True
+                return False
+            if event.key == pygame.K_c:
+                clipboard.copy(self.fields[self.active])
+                return False
+            if event.key == pygame.K_v:
+                pasted = clipboard.paste()
+                if self.sel_all:
+                    self.fields[self.active] = pasted
+                else:
+                    self.fields[self.active] += pasted
+                self.sel_all = False
+                return False
+
         if event.key == pygame.K_TAB:
-            step = -1 if (mods & pygame.KMOD_SHIFT) else 1
-            self.active = (self.active + step) % len(self.fields)
+            self._switch(-1 if (mods & pygame.KMOD_SHIFT) else 1)
             return False
         if event.key in (pygame.K_UP, pygame.K_DOWN):
-            self.active = (self.active + (1 if event.key == pygame.K_DOWN else -1)) % len(self.fields)
+            self._switch(1 if event.key == pygame.K_DOWN else -1)
             return False
         if event.key == pygame.K_RETURN:
             # Title field submits; description field inserts a newline unless CTRL.
             if self.active == 1 and not (mods & pygame.KMOD_CTRL):
+                if self.sel_all:
+                    self.fields[1] = ""
+                    self.sel_all = False
                 self.fields[1] += "\n"
                 return False
             self.on_submit(self.fields[0], self.fields[1])
             return True
         if event.key == pygame.K_BACKSPACE:
-            self.fields[self.active] = self.fields[self.active][:-1]
+            if self.sel_all:
+                self.fields[self.active] = ""
+                self.sel_all = False
+            else:
+                self.fields[self.active] = self.fields[self.active][:-1]
             return False
         ch = event.unicode
         if ch and ch.isprintable():
+            if self.sel_all:
+                self.fields[self.active] = ""
+                self.sel_all = False
             self.fields[self.active] += ch
         return False
 
@@ -135,6 +170,7 @@ class App:
     EDIT = "edit"
     CONFIRM = "confirm"
     KEYBINDINGS = "keybindings"
+    CONFLICT = "conflict"
 
     def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
         pygame.init()
@@ -146,6 +182,8 @@ class App:
         self.font = pygame.font.Font(None, 24)
         self.font_sm = pygame.font.Font(None, 20)
         self.font_lg = pygame.font.Font(None, 34)
+        # Markdown fonts for rendering item descriptions (Obsidian-style).
+        self.md = markdown.MarkdownFonts(20, TEXT, MUTED, CODE, ACCENT)
 
         self.board = board
         self.keys = keys
@@ -156,8 +194,11 @@ class App:
         self.selected_id: str | None = None
         self.running = True
 
-        # drag state
+        # drag state. A click sets a *candidate*; it only becomes a real drag
+        # (pulled out of its column, drawn floating) once the mouse moves past a
+        # small threshold, so a plain click just selects without anything moving.
         self.drag_item: Item | None = None
+        self.drag_candidate: Item | None = None
         self.drag_offset = (0, 0)
         self.drag_pos = (0, 0)
         self.mouse_down_pos = None
@@ -170,6 +211,11 @@ class App:
         # keybindings editor state
         self.kb_index = 0
         self.kb_capturing = False
+
+        # conflict-resolution state
+        self.conflicts: list = []
+        self.conflict_idx = 0
+        self.conflict_choices: dict[str, str] = {}
 
         # cached card rects from last render, for hit-testing
         self.card_rects: list[CardRect] = []
@@ -198,8 +244,11 @@ class App:
         while self.running:
             for event in pygame.event.get():
                 self.handle_event(event)
-            # External pulls may have changed the file on disk.
-            if self.git.board_changed.is_set():
+            # A background merge may have paused awaiting conflict resolution.
+            if self.git.conflicts_ready.is_set() and self.mode != self.CONFLICT:
+                self.open_conflicts()
+            # External pulls may have changed the file on disk (not mid-resolve).
+            if self.git.board_changed.is_set() and self.mode != self.CONFLICT:
                 self.git.board_changed.clear()
                 self.reload_board()
             self.render()
@@ -212,6 +261,45 @@ class App:
         if self.selected_id and not self.board.find(self.selected_id):
             self.selected_id = None
         self.notify("reloaded from git")
+
+    def open_conflicts(self) -> None:
+        pending = self.git.take_conflicts()
+        if not pending or not pending[1]:
+            return
+        self.conflicts = pending[1]
+        self.conflict_idx = 0
+        self.conflict_choices = {}
+        self.mode = self.CONFLICT
+
+    def handle_conflict(self, event) -> None:
+        if event.type != pygame.KEYDOWN:
+            return
+        if not self.conflicts:
+            self.mode = self.NORMAL
+            return
+        if event.key == pygame.K_ESCAPE:
+            self.git.cancel_conflicts()
+            self.conflicts = []
+            self.mode = self.NORMAL
+            self.notify("merge canceled")
+            return
+        c = self.conflicts[self.conflict_idx]
+        choice = None
+        if event.key == pygame.K_c:
+            choice = merge.CURRENT
+        elif event.key == pygame.K_i:
+            choice = merge.INCOMING
+        elif event.key == pygame.K_b and c.kind in ("edit", "add"):
+            choice = merge.BOTH
+        if choice is None:
+            return
+        self.conflict_choices[c.id] = choice
+        self.conflict_idx += 1
+        if self.conflict_idx >= len(self.conflicts):
+            self.git.resolve_conflicts(self.conflict_choices)
+            self.conflicts = []
+            self.mode = self.NORMAL
+            self.notify("conflicts resolved")
 
     # --- event handling --------------------------------------------------
 
@@ -239,6 +327,9 @@ class App:
         if self.mode == self.KEYBINDINGS:
             self.handle_keybindings(event)
             return
+        if self.mode == self.CONFLICT:
+            self.handle_conflict(event)
+            return
         if self.mode == self.PALETTE:
             self.handle_palette(event)
             return
@@ -264,8 +355,8 @@ class App:
                 return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.on_mouse_down(event.pos)
-        elif event.type == pygame.MOUSEMOTION and self.drag_item:
-            self.drag_pos = event.pos
+        elif event.type == pygame.MOUSEMOTION:
+            self.on_mouse_motion(event.pos)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.on_mouse_up(event.pos)
 
@@ -283,29 +374,41 @@ class App:
                 return name
         return None
 
+    DRAG_THRESHOLD = 6
+
     def on_mouse_down(self, pos) -> None:
         item = self.card_at(pos)
         self.selected_id = item.id if item else None
         self.mouse_down_pos = pos
+        self.drag_item = None
+        self.drag_candidate = None
         if item:
             for cr in self.card_rects:
                 if cr.item.id == item.id:
-                    self.drag_item = item
+                    self.drag_candidate = item
                     self.drag_offset = (pos[0] - cr.rect.x, pos[1] - cr.rect.y)
                     self.drag_pos = pos
                     break
 
-    def on_mouse_up(self, pos) -> None:
-        if not self.drag_item:
+    def on_mouse_motion(self, pos) -> None:
+        if self.drag_item:
+            self.drag_pos = pos
             return
+        # Promote a candidate to a real drag only after moving past the threshold.
+        if self.drag_candidate and self.mouse_down_pos:
+            if (abs(pos[0] - self.mouse_down_pos[0]) > self.DRAG_THRESHOLD
+                    or abs(pos[1] - self.mouse_down_pos[1]) > self.DRAG_THRESHOLD):
+                self.drag_item = self.drag_candidate
+                self.drag_pos = pos
+
+    def on_mouse_up(self, pos) -> None:
         item = self.drag_item
         self.drag_item = None
+        self.drag_candidate = None
+        if not item:
+            return  # plain click: selection only
         target_col = self.column_at(pos)
-        # Treat tiny movements as a click (selection only, no reorder).
-        moved = self.mouse_down_pos and (
-            abs(pos[0] - self.mouse_down_pos[0]) > 5 or abs(pos[1] - self.mouse_down_pos[1]) > 5
-        )
-        if not moved or target_col is None:
+        if target_col is None:
             return
         position = self.drop_position(target_col, pos, dragging_id=item.id)
         self.board.reorder(item.id, target_col, position)
@@ -533,6 +636,8 @@ class App:
             self.draw_confirm(w, h)
         elif self.mode == self.KEYBINDINGS:
             self.draw_keybindings(w, h)
+        elif self.mode == self.CONFLICT:
+            self.draw_conflict(w, h)
 
         self.draw_toast(w, h)
         pygame.display.flip()
@@ -616,14 +721,15 @@ class App:
         lines = self.wrap_text(item.title, self.font, inner_w - 40)
         text_h = len(lines) * self.font.get_linesize()
 
-        desc_lines: list[str] = []
+        md_rows = None
+        desc_h = 0
         if self.show_description(item, floating):
-            # Descriptions may contain explicit newlines; wrap each paragraph.
-            for para in item.description.split("\n"):
-                desc_lines.extend(self.wrap_text(para, self.font_sm, inner_w) if para else [""])
-        desc_h = len(desc_lines) * self.font_sm.get_linesize()
-        if desc_lines:
-            desc_h += 6  # gap between title and description
+            try:
+                md_rows, desc_h = markdown.flow(item.description, self.md, inner_w)
+            except Exception:
+                md_rows, desc_h = None, 0
+            if md_rows:
+                desc_h += 6  # gap between title and description
 
         card_h = max(CARD_MIN_H, text_h + desc_h + 2 * CARD_PAD)
         rect = pygame.Rect(x, y, w, card_h)
@@ -643,12 +749,9 @@ class App:
             self.screen.blit(surf, (x + CARD_PAD, ty))
             ty += self.font.get_linesize()
 
-        if desc_lines:
+        if md_rows:
             ty += 6
-            for line in desc_lines:
-                surf = self.font_sm.render(line, True, MUTED)
-                self.screen.blit(surf, (x + CARD_PAD, ty))
-                ty += self.font_sm.get_linesize()
+            markdown.draw(self.screen, x + CARD_PAD, ty, md_rows)
 
         # points badge
         if item.points:
@@ -674,7 +777,8 @@ class App:
         pygame.draw.rect(self.screen, COL_HEADER, rect)
         with self.git._lock:
             status = self.git.status
-        surf = self.font_sm.render(status, True, MUTED)
+        line = f"{status}   ·   last fetch: {self.git.last_fetch_label()}"
+        surf = self.font_sm.render(line, True, MUTED)
         self.screen.blit(surf, (12, h - STATUSBAR_H + 5))
         # Footnote: how to reach the command palette.
         palette_key = self.keys.label("open_palette") or "SPACE"
@@ -757,10 +861,14 @@ class App:
             self.screen.blit(lab, (rect.x + 24, y))
             box = pygame.Rect(rect.x + 24, y + 22, rect.w - 48, field_heights[i])
             pygame.draw.rect(self.screen, BG, box, border_radius=6)
+            # Highlight the field interior when its whole contents are selected.
+            if i == ed.active and ed.sel_all and value:
+                pygame.draw.rect(self.screen, SELECTION, box.inflate(-6, -6), border_radius=4)
             border = ACCENT if i == ed.active else MUTED
             pygame.draw.rect(self.screen, border, box, width=2 if i == ed.active else 1, border_radius=6)
             # Render (possibly multi-line) value, with a cursor on the active field.
-            shown = value + ("|" if (i == ed.active and cursor_on) else "")
+            cursor = "|" if (i == ed.active and cursor_on and not ed.sel_all) else ""
+            shown = value + cursor
             tx, ty = box.x + 10, box.y + 8
             for line in shown.split("\n"):
                 for wrapped in self.wrap_text(line, self.font, box.w - 20) if line else [""]:
@@ -770,7 +878,7 @@ class App:
             y += 22 + field_heights[i] + 16
 
         foot = self.font_sm.render(
-            "TAB / ↑↓ switch field   ·   ENTER save (CTRL+ENTER in description)   ·   ESC cancel",
+            "TAB switch · ENTER save (CTRL+ENTER in description) · CTRL+A/C/V select/copy/paste · ESC cancel",
             True, MUTED)
         self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
 
@@ -805,6 +913,59 @@ class App:
                 val = self.font.render(self.keys.mapping.get(action, ""), True, BADGE)
             self.screen.blit(val, (rect.right - val.get_width() - 24, y))
             y += 36
+
+    def _field_value(self, item: dict | None, field: str) -> str:
+        if item is None:
+            return "(deleted)"
+        val = item.get(field, "")
+        return str(val) if val != "" else "—"
+
+    def draw_conflict(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 780, 480)
+        c = self.conflicts[self.conflict_idx]
+        head = self.font_lg.render(
+            f"Merge conflict  ({self.conflict_idx + 1}/{len(self.conflicts)})", True, TEXT)
+        self.screen.blit(head, (rect.x + 24, rect.y + 18))
+        kind_text = {
+            "edit": "Both sides edited this item.",
+            "edit_delete": "Edited on one side, deleted on the other.",
+            "add": "Same id added differently on both sides.",
+        }.get(c.kind, "")
+        self.screen.blit(self.font_sm.render(kind_text, True, MUTED), (rect.x + 24, rect.y + 56))
+        self.screen.blit(self.font.render(c.title, True, ACCENT), (rect.x + 24, rect.y + 80))
+
+        col_l = rect.x + 200
+        col_r = rect.x + 480
+        colw = 280
+        self.screen.blit(self.font.render("CURRENT (yours)", True, TEXT), (col_l, rect.y + 116))
+        self.screen.blit(self.font.render("INCOMING (theirs)", True, TEXT), (col_r, rect.y + 116))
+
+        y = rect.y + 150
+        for field in ("title", "points", "description"):
+            lhs = self._field_value(c.ours, field)
+            rhs = self._field_value(c.theirs, field)
+            differ = lhs != rhs
+            self.screen.blit(self.font_sm.render(field, True, MUTED), (rect.x + 24, y))
+            lcolor = ACCENT if differ else TEXT
+            rcolor = ACCENT if differ else TEXT
+            rows_l = self.wrap_text(lhs, self.font_sm, colw)[:4]
+            rows_r = self.wrap_text(rhs, self.font_sm, colw)[:4]
+            yy = y
+            for line in rows_l:
+                self.screen.blit(self.font_sm.render(line, True, lcolor), (col_l, yy))
+                yy += self.font_sm.get_linesize()
+            yy = y
+            for line in rows_r:
+                self.screen.blit(self.font_sm.render(line, True, rcolor), (col_r, yy))
+                yy += self.font_sm.get_linesize()
+            y += max(len(rows_l), len(rows_r), 1) * self.font_sm.get_linesize() + 12
+
+        if c.kind == "edit_delete":
+            foot = "[C] keep your item    [I] accept deletion    [ESC] cancel merge"
+        else:
+            foot = "[C] keep current    [I] take incoming    [B] keep both    [ESC] cancel merge"
+        self.screen.blit(self.font_sm.render(foot, True, MUTED), (rect.x + 24, rect.bottom - 30))
 
     def draw_toast(self, w: int, h: int) -> None:
         if not self.toast or pygame.time.get_ticks() > self.toast_until:
