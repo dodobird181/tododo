@@ -52,12 +52,6 @@ items:
   description: ''
   column: Doing
   author: dodobird181@gmail.com
-- id: edb4d576336248b69db1ec4175a6df80
-  title: Do Laundry
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: cc7d12b1f5694616933dc934915eb211
   title: Grocery Shop
   points: 0
@@ -70,6 +64,12 @@ items:
     - Kale
 
     - Feta cheese'
+  column: Todo
+  author: dodobird181@gmail.com
+- id: edb4d576336248b69db1ec4175a6df80
+  title: Do Laundry
+  points: 0
+  description: ''
   column: Todo
   author: dodobird181@gmail.com
 - id: eb58511bd7bb4c68939ec221a96f5964
