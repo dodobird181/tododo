@@ -45,8 +45,11 @@ items:
 
 
     - edit item (must provide LLM name, e.g., Claude)'
-  column: Ideas
+  column: Todo
   author: dodobird181@gmail.com
+  moved: 1782332718.358
+  moved_to: Todo
+  actor: Joey
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
