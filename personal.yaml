@@ -21,12 +21,6 @@ items:
   description: ''
   column: Backlog
   author: dodobird181@gmail.com
-- id: edb4d576336248b69db1ec4175a6df80
-  title: Do Laundry
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: 0c0dd91979624dbaa04ce5a8c7c36c96
   title: Pay Canadianwebhosting on their online portal
   points: 0
@@ -38,6 +32,12 @@ items:
   points: 0
   description: ''
   column: Backlog
+  author: dodobird181@gmail.com
+- id: edb4d576336248b69db1ec4175a6df80
+  title: Do Laundry
+  points: 0
+  description: ''
+  column: Todo
   author: dodobird181@gmail.com
 - id: a15b5e150ee646d6b83557fd5bdd0644
   title: Send tax documents to Mimi
