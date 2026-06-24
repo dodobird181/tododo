@@ -13,7 +13,7 @@ items:
   title: Do Laundry
   points: 0
   description: ''
-  column: Backlog
+  column: Todo
   author: dodobird181@gmail.com
 - id: 118ce08619c74f26b7a97f1cc5110867
   title: Install Window AC in Room
