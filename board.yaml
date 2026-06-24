@@ -5,6 +5,14 @@ columns:
 - Doing
 - Done
 - Hidden
+authors:
+  joey.love@tokusystems.com:
+    name: Joey
+relationships:
+- Assigned to
+- Reporter
+collaborators:
+- Joey
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -119,4 +127,5 @@ items:
     \    - reporter"
   column: Doing
   author: dodobird181@gmail.com
-  updated: 1782332478.12
+  created: 1782332478.12
+  edited: 1782332478.12
