@@ -8,11 +8,9 @@ columns:
 authors:
   joey.love@tokusystems.com:
     name: Joey
-relationships:
-- Assigned to
-- Reporter
-collaborators:
-- Joey
+  dodobird181@gmail.com:
+    name: Sam
+    github: dodobird181
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -47,9 +45,6 @@ items:
     - edit item (must provide LLM name, e.g., Claude)'
   column: Ideas
   author: dodobird181@gmail.com
-  moved: 1782332720.098
-  moved_to: Ideas
-  actor: Joey
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -82,6 +77,7 @@ items:
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
   column: Done
   author: dodobird181@gmail.com
+  assignee: joey.love@tokusystems.com
 - id: 9f3776ab588d4f66830e8b76564a33af
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
@@ -130,8 +126,3 @@ items:
     \    - reporter"
   column: Done
   author: dodobird181@gmail.com
-  created: 1782332478.12
-  edited: 1782332478.12
-  moved: 1782332542.502
-  moved_to: Done
-  actor: Joey
