@@ -48,12 +48,6 @@ items:
     - Feta cheese'
   column: Todo
   author: dodobird181@gmail.com
-- id: 0b085ec8f3964c41b5bca1818c6e6195
-  title: Sign up for identity theft protection from that data-leak thingy
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: a15b5e150ee646d6b83557fd5bdd0644
   title: Send tax documents to Mimi
   points: 3
@@ -78,6 +72,12 @@ items:
   points: 0
   description: ''
   column: Doing
+  author: dodobird181@gmail.com
+- id: 0b085ec8f3964c41b5bca1818c6e6195
+  title: Sign up for identity theft protection from that data-leak thingy
+  points: 0
+  description: ''
+  column: Todo
   author: dodobird181@gmail.com
 - id: 6daab7aecde14b92886ce978f65a5187
   title: Atlas work
