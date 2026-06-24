@@ -73,6 +73,7 @@ items:
   description: and of course default settings as well.
   column: Done
   author: dodobird181@gmail.com
+  assignee: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
