@@ -71,7 +71,7 @@ items:
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
   description: and of course default settings as well.
-  column: Doing
+  column: Trash
   author: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
