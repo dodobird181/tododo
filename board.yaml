@@ -11,6 +11,11 @@ authors:
   dodobird181@gmail.com:
     name: Sam
     github: dodobird181
+relationships:
+- Assigned to
+- Reporter
+collaborators:
+- Joey
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -77,8 +82,6 @@ items:
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
   column: Done
   author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
-  reporter: joey.love@tokusystems.com
 - id: 9f3776ab588d4f66830e8b76564a33af
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
