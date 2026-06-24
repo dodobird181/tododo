@@ -5,10 +5,6 @@ columns:
 - Doing
 - Done
 - Hidden
-authors:
-  dodobird181@gmail.com:
-    name: Sam
-    github: dodobird181
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -43,18 +39,6 @@ items:
     - edit item (must provide LLM name, e.g., Claude)'
   column: Ideas
   author: dodobird181@gmail.com
-  due: in 2 days
-- id: 52e7cd99b7064379812c00015db1493a
-  title: '[Claude] Refactor relationship concept'
-  points: 0
-  description: "1. relationships and collaborators should be removed. use author instead\
-    \ of collaborator.\n2. the following fields should be added and must only reference\
-    \ keys from a board's authors top-level key:\n    - creator\n    - assignee\n\
-    \    - reporter"
-  column: Done
-  author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
-  reporter: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -83,8 +67,6 @@ items:
   description: and of course default settings as well.
   column: Done
   author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
-  reporter: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
@@ -107,8 +89,6 @@ items:
   description: similar to the keybindings view! TEST EDIT
   column: Done
   author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
-  reporter: dodobird181@gmail.com
 - id: 525ad1acb7b4489a9fd4cdcee940a139
   title: '[CLAUDE] fix history list view not displaying actions other than created
     (i havent tested delete though)'
@@ -130,3 +110,13 @@ items:
     3. when an item is only collapsed'
   column: Done
   author: dodobird181@gmail.com
+- id: 52e7cd99b7064379812c00015db1493a
+  title: '[Claude] Refactor relationship concept'
+  points: 0
+  description: "1. relationships and collaborators should be removed. use author instead\
+    \ of collaborator.\n2. the following fields should be added and must only reference\
+    \ keys from a board's authors top-level key:\n    - creator\n    - assignee\n\
+    \    - reporter"
+  column: Doing
+  author: dodobird181@gmail.com
+  updated: 1782332478.12
