@@ -125,7 +125,10 @@ items:
     \ of collaborator.\n2. the following fields should be added and must only reference\
     \ keys from a board's authors top-level key:\n    - creator\n    - assignee\n\
     \    - reporter"
-  column: Doing
+  column: Done
   author: dodobird181@gmail.com
   created: 1782332478.12
   edited: 1782332478.12
+  moved: 1782332542.502
+  moved_to: Done
+  actor: Joey
