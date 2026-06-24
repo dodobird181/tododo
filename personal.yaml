@@ -34,18 +34,6 @@ items:
   description: ''
   column: Doing
   author: dodobird181@gmail.com
-- id: a15b5e150ee646d6b83557fd5bdd0644
-  title: Send tax documents to Mimi
-  points: 3
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
-- id: 6dc0cb638f754a05ad832f22f0ddd407
-  title: Shower
-  points: 0
-  description: ''
-  column: Doing
-  author: dodobird181@gmail.com
 - id: cc7d12b1f5694616933dc934915eb211
   title: Grocery Shop
   points: 0
@@ -59,6 +47,18 @@ items:
 
     - Feta cheese'
   column: Todo
+  author: dodobird181@gmail.com
+- id: a15b5e150ee646d6b83557fd5bdd0644
+  title: Send tax documents to Mimi
+  points: 3
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
+- id: 6dc0cb638f754a05ad832f22f0ddd407
+  title: Shower
+  points: 0
+  description: ''
+  column: Doing
   author: dodobird181@gmail.com
 - id: edb4d576336248b69db1ec4175a6df80
   title: Do Laundry
