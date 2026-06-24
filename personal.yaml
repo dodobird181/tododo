@@ -51,7 +51,18 @@ items:
 - id: 0b085ec8f3964c41b5bca1818c6e6195
   title: Sign up for identity theft protection from that data-leak thingy
   points: 0
-  description: ''
+  description: '- I couldn''t set up MFA and am currently locked-out of my account.
+
+    -  should alos probably set up credit freezes on the major credit bureauxs:
+
+
+    https://www.equifax.com/personal/credit-report-services/credit-freeze/
+
+
+    https://www.transunion.com/credit-freeze
+
+
+    https://www.experian.com/freeze/center.html'
   column: Doing
   author: dodobird181@gmail.com
 - id: a15b5e150ee646d6b83557fd5bdd0644
