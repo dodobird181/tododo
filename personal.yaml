@@ -79,6 +79,14 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
+- id: d9f31e61876644fea305df76424b2a5b
+  title: Pharmaprix shopping
+  points: 0
+  description: '- High-flouride toothpaste.
+
+    - NSF Certified for sport creatine.'
+  column: Todo
+  author: dodobird181@gmail.com
 - id: cf70d7977ad54261bc272602a3286d63
   title: Therapy
   points: 0
@@ -97,12 +105,4 @@ items:
   description: the one that blocked the feed of videos to the right of regular video
     playback and changed my background to a reddish color
   column: Backlog
-  author: dodobird181@gmail.com
-- id: d9f31e61876644fea305df76424b2a5b
-  title: Pharmaprix shopping
-  points: 0
-  description: '- High-flouride toothpaste.
-
-    - NSF Certified for sport creatine.'
-  column: Todo
   author: dodobird181@gmail.com
