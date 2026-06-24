@@ -15,12 +15,6 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: 6dc0cb638f754a05ad832f22f0ddd407
-  title: Shower
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: 118ce08619c74f26b7a97f1cc5110867
   title: Install Window AC in Room
   points: 0
@@ -38,6 +32,12 @@ items:
   points: 0
   description: ''
   column: Backlog
+  author: dodobird181@gmail.com
+- id: 6dc0cb638f754a05ad832f22f0ddd407
+  title: Shower
+  points: 0
+  description: ''
+  column: Todo
   author: dodobird181@gmail.com
 - id: a15b5e150ee646d6b83557fd5bdd0644
   title: Send tax documents to Mimi
