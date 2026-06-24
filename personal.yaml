@@ -13,12 +13,16 @@ items:
   points: 0
   description: ''
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
 - id: 118ce08619c74f26b7a97f1cc5110867
   title: Install Window AC in Room
   points: 0
   description: ''
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
+- id: 0c0dd91979624dbaa04ce5a8c7c36c96
+  title: Pay Canadianwebhosting on their online portal
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
