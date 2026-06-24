@@ -45,15 +45,15 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: edb4d576336248b69db1ec4175a6df80
-  title: Do Laundry
+- id: a43270d3166040078c6d15b25630f17a
+  title: Email Gabriel Sordet askiung to take an additional day off on thursday July
+    9th
   points: 0
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: a43270d3166040078c6d15b25630f17a
-  title: Email Gabriel Sordet askiung to take an additional day off on thursday July
-    9th
+- id: edb4d576336248b69db1ec4175a6df80
+  title: Do Laundry
   points: 0
   description: ''
   column: Todo
