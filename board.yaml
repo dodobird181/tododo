@@ -8,9 +8,11 @@ columns:
 authors:
   joey.love@tokusystems.com:
     name: Joey
-  dodobird181@gmail.com:
-    name: Sam
-    github: dodobird181
+relationships:
+- Assigned to
+- Reporter
+collaborators:
+- Joey
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -73,7 +75,6 @@ items:
   description: and of course default settings as well.
   column: Done
   author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
@@ -126,3 +127,8 @@ items:
     \    - reporter"
   column: Done
   author: dodobird181@gmail.com
+  created: 1782332478.12
+  edited: 1782332478.12
+  moved: 1782332542.502
+  moved_to: Done
+  actor: Joey
