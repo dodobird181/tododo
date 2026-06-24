@@ -91,3 +91,10 @@ items:
   description: ''
   column: Done
   author: dodobird181@gmail.com
+- id: bfbbd63906f14fae8f2e30924ec001aa
+  title: Investigate what happened to my youtube extension
+  points: 0
+  description: the one that blocked the feed of videos to the right of regular video
+    playback and changed my background to a reddish color
+  column: Backlog
+  author: dodobird181@gmail.com
