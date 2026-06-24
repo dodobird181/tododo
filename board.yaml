@@ -77,7 +77,6 @@ items:
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
   column: Done
   author: dodobird181@gmail.com
-  assignee: joey.love@tokusystems.com
 - id: 9f3776ab588d4f66830e8b76564a33af
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
