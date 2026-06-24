@@ -53,6 +53,7 @@ items:
     \    - reporter"
   column: Done
   author: dodobird181@gmail.com
+  reporter: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -79,7 +80,7 @@ items:
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 0
   description: and of course default settings as well.
-  column: Todo
+  column: Done
   author: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
@@ -89,19 +90,19 @@ items:
     \    name: Sam\n    github: dodobird181\nitems:\n- id: db80cafe5faa49c584fe80e7fdf66842\n\
     \  title: Test item\n  points: 0\n  description: adawdawdwd\n  column: Todo\n\
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
-  column: Doing
+  column: Done
   author: dodobird181@gmail.com
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
   description: users should only edit the item layout in their settings.yaml files.
-  column: Todo
+  column: Done
   author: dodobird181@gmail.com
 - id: 3d926282b32e4db3b37f0113eb141c2c
   title: '[CLAUDE] add scrollbar to commad pallet'
   points: 0
   description: similar to the keybindings view! TEST EDIT
-  column: Todo
+  column: Done
   author: dodobird181@gmail.com
   assignee: dodobird181@gmail.com
   reporter: dodobird181@gmail.com
@@ -110,7 +111,7 @@ items:
     (i havent tested delete though)'
   points: 0
   description: all the field changes should be reflected!!!!
-  column: Todo
+  column: Done
   author: dodobird181@gmail.com
 - id: 8b757a752e9d44e1a307a7633c535ae8
   title: '[CLAUDE] add assignee profile pic / avatar to the cards.'
@@ -124,5 +125,5 @@ items:
 
 
     3. when an item is only collapsed'
-  column: Todo
+  column: Done
   author: dodobird181@gmail.com
