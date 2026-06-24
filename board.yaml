@@ -53,7 +53,6 @@ items:
     \    - reporter"
   column: Done
   author: dodobird181@gmail.com
-  assignee: dodobird181@gmail.com
   reporter: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
