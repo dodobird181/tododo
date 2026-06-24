@@ -73,18 +73,18 @@ items:
     - Feta cheese'
   column: Backlog
   author: dodobird181@gmail.com
-- id: 6daab7aecde14b92886ce978f65a5187
-  title: Atlas work
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: d9f31e61876644fea305df76424b2a5b
   title: Pharmaprix shopping
   points: 0
   description: '- High-flouride toothpaste.
 
     - NSF Certified for sport creatine.'
+  column: Todo
+  author: dodobird181@gmail.com
+- id: 6daab7aecde14b92886ce978f65a5187
+  title: Atlas work
+  points: 0
+  description: ''
   column: Todo
   author: dodobird181@gmail.com
 - id: cf70d7977ad54261bc272602a3286d63
