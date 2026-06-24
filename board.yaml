@@ -84,6 +84,7 @@ items:
   column: Done
   author: dodobird181@gmail.com
   assignee: dodobird181@gmail.com
+  reporter: joey.love@tokusystems.com
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
