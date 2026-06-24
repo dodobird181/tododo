@@ -71,12 +71,6 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: cf70d7977ad54261bc272602a3286d63
-  title: Therapy
-  points: 0
-  description: ''
-  column: Todo
-  author: dodobird181@gmail.com
 - id: cc7d12b1f5694616933dc934915eb211
   title: Grocery Shop
   points: 0
@@ -89,5 +83,11 @@ items:
     - Kale
 
     - Feta cheese'
+  column: Todo
+  author: dodobird181@gmail.com
+- id: cf70d7977ad54261bc272602a3286d63
+  title: Therapy
+  points: 0
+  description: ''
   column: Todo
   author: dodobird181@gmail.com
