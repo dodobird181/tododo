@@ -60,13 +60,6 @@ items:
   description: ''
   column: Backlog
   author: dodobird181@gmail.com
-- id: a43270d3166040078c6d15b25630f17a
-  title: Email Gabriel Sordet askiung to take an additional day off on thursday July
-    9th
-  points: 0
-  description: ''
-  column: Backlog
-  author: dodobird181@gmail.com
 - id: cc7d12b1f5694616933dc934915eb211
   title: Grocery Shop
   points: 0
@@ -98,6 +91,13 @@ items:
   points: 0
   description: ''
   column: Done
+  author: dodobird181@gmail.com
+- id: a43270d3166040078c6d15b25630f17a
+  title: Email Gabriel Sordet askiung to take an additional day off on thursday July
+    9th
+  points: 0
+  description: ''
+  column: Backlog
   author: dodobird181@gmail.com
 - id: bfbbd63906f14fae8f2e30924ec001aa
   title: Investigate what happened to my youtube extension
