@@ -9,14 +9,14 @@ authors:
     name: Sam
     github: dodobird181
 items:
-- id: 6dc0cb638f754a05ad832f22f0ddd407
-  title: Shower
+- id: edb4d576336248b69db1ec4175a6df80
+  title: Do Laundry
   points: 0
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: edb4d576336248b69db1ec4175a6df80
-  title: Do Laundry
+- id: 6dc0cb638f754a05ad832f22f0ddd407
+  title: Shower
   points: 0
   description: ''
   column: Todo
