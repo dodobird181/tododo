@@ -1,4 +1,5 @@
 columns:
+- Trash
 - Ideas
 - Todo
 - Doing
@@ -41,8 +42,7 @@ items:
 
     - edit item (must provide LLM name, e.g., Claude)'
   column: Ideas
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
   due: in 2 days
 - id: 52e7cd99b7064379812c00015db1493a
   title: '[Claude] Refactor relationship concept'
@@ -52,8 +52,7 @@ items:
     \ keys from a board's authors top-level key:\n    - creator\n    - assignee\n\
     \    - reporter"
   column: Done
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
 - id: 0b2868b1c26041f28b42992604188884
   title: '[CLAUDE] make deadline picking smoother UI experience'
   points: 0
@@ -74,16 +73,14 @@ items:
 
     the default settings should transorm days into weeks at more than 30 days and
     weeks into months at more than 8 weeks, if that makes sense heh...'
-  column: Ideas
-  author: Sam
-  author_email: dodobird181@gmail.com
+  column: Trash
+  author: dodobird181@gmail.com
 - id: 9f3776ab588d4f66830e8b76564a33af
   title: '[CLAUDE] set a max description height in settings.yaml'
   points: 2
   description: and of course default settings as well.
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
@@ -92,23 +89,20 @@ items:
     \    name: Sam\n    github: dodobird181\nitems:\n- id: db80cafe5faa49c584fe80e7fdf66842\n\
     \  title: Test item\n  points: 0\n  description: adawdawdwd\n  column: Todo\n\
     \  author: Sam\n  author_email: dodobird181@gmail.com\n```"
-  column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  column: Doing
+  author: dodobird181@gmail.com
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
   description: users should only edit the item layout in their settings.yaml files.
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
 - id: 3d926282b32e4db3b37f0113eb141c2c
   title: '[CLAUDE] add scrollbar to commad pallet'
   points: 0
   description: similar to the keybindings view! TEST EDIT
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
   assignee: dodobird181@gmail.com
   reporter: dodobird181@gmail.com
 - id: 525ad1acb7b4489a9fd4cdcee940a139
@@ -117,8 +111,7 @@ items:
   points: 0
   description: all the field changes should be reflected!!!!
   column: Todo
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
 - id: 8b757a752e9d44e1a307a7633c535ae8
   title: '[CLAUDE] add assignee profile pic / avatar to the cards.'
   points: 0
@@ -132,5 +125,4 @@ items:
 
     3. when an item is only collapsed'
   column: Ideas
-  author: Sam
-  author_email: dodobird181@gmail.com
+  author: dodobird181@gmail.com
