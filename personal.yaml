@@ -1,4 +1,5 @@
 columns:
+- Backlog
 - Todo
 - Doing
 - Done
@@ -12,23 +13,23 @@ items:
   title: Do Laundry
   points: 0
   description: ''
-  column: Todo
+  column: Backlog
   author: dodobird181@gmail.com
 - id: 118ce08619c74f26b7a97f1cc5110867
   title: Install Window AC in Room
   points: 0
   description: ''
-  column: Todo
+  column: Backlog
   author: dodobird181@gmail.com
 - id: 0c0dd91979624dbaa04ce5a8c7c36c96
   title: Pay Canadianwebhosting on their online portal
   points: 0
   description: ''
-  column: Todo
+  column: Backlog
   author: dodobird181@gmail.com
 - id: 63724e5de26c414bbc883386155271a4
   title: Call Manuvie about that email they sent me
   points: 0
   description: ''
-  column: Todo
+  column: Backlog
   author: dodobird181@gmail.com
