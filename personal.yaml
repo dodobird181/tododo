@@ -9,6 +9,12 @@ authors:
     name: Sam
     github: dodobird181
 items:
+- id: 0c0dd91979624dbaa04ce5a8c7c36c96
+  title: Pay Canadianwebhosting on their online portal
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
 - id: 6dc0cb638f754a05ad832f22f0ddd407
   title: Shower
   points: 0
@@ -20,12 +26,6 @@ items:
   points: 0
   description: ''
   column: Backlog
-  author: dodobird181@gmail.com
-- id: 0c0dd91979624dbaa04ce5a8c7c36c96
-  title: Pay Canadianwebhosting on their online portal
-  points: 0
-  description: ''
-  column: Todo
   author: dodobird181@gmail.com
 - id: 63724e5de26c414bbc883386155271a4
   title: Call Manuvie about that email they sent me
@@ -39,14 +39,14 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: edb4d576336248b69db1ec4175a6df80
-  title: Do Laundry
+- id: 0b085ec8f3964c41b5bca1818c6e6195
+  title: Sign up for identity theft protection from that data-leak thingy
   points: 0
   description: ''
   column: Todo
   author: dodobird181@gmail.com
-- id: 0b085ec8f3964c41b5bca1818c6e6195
-  title: Sign up for identity theft protection from that data-leak thingy
+- id: edb4d576336248b69db1ec4175a6df80
+  title: Do Laundry
   points: 0
   description: ''
   column: Todo
