@@ -67,12 +67,6 @@ items:
     weeks into months at more than 8 weeks, if that makes sense heh...'
   column: Trash
   author: dodobird181@gmail.com
-- id: 9f3776ab588d4f66830e8b76564a33af
-  title: '[CLAUDE] set a max description height in settings.yaml'
-  points: 0
-  description: and of course default settings as well.
-  column: Done
-  author: dodobird181@gmail.com
 - id: f57ffdca07ae46d5b9bcdd2f08bb8797
   title: '[CLAUDE] fix author representation in YAML'
   points: 0
@@ -85,6 +79,12 @@ items:
   author: dodobird181@gmail.com
   assignee: dodobird181@gmail.com
   reporter: joey.love@tokusystems.com
+- id: 9f3776ab588d4f66830e8b76564a33af
+  title: '[CLAUDE] set a max description height in settings.yaml'
+  points: 0
+  description: and of course default settings as well.
+  column: Done
+  author: dodobird181@gmail.com
 - id: 4977cd413cd44c3bb428c46e54223c3c
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
