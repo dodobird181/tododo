@@ -53,6 +53,12 @@ items:
   description: ''
   column: Doing
   author: dodobird181@gmail.com
+- id: 0b085ec8f3964c41b5bca1818c6e6195
+  title: Sign up for identity theft protection from that data-leak thingy
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
 - id: cc7d12b1f5694616933dc934915eb211
   title: Grocery Shop
   points: 0
@@ -65,12 +71,6 @@ items:
     - Kale
 
     - Feta cheese'
-  column: Todo
-  author: dodobird181@gmail.com
-- id: 0b085ec8f3964c41b5bca1818c6e6195
-  title: Sign up for identity theft protection from that data-leak thingy
-  points: 0
-  description: ''
   column: Todo
   author: dodobird181@gmail.com
 - id: a15b5e150ee646d6b83557fd5bdd0644
