@@ -8,6 +8,9 @@ columns:
 authors:
   joey.love@tokusystems.com:
     name: Joey
+  dodobird181@gmail.com:
+    name: Sam
+    github: dodobird181
 items:
 - id: 2bf1b0a323334c6f9e1fa671b80238fc
   title: '[CLAUDE] Add an MCP Server'
@@ -84,7 +87,7 @@ items:
   title: '[CLAUDE] remove the CTRL + I view for editing the item layout'
   points: 0
   description: users should only edit the item layout in their settings.yaml files.
-  column: Done
+  column: Doing
   author: dodobird181@gmail.com
 - id: 3d926282b32e4db3b37f0113eb141c2c
   title: '[CLAUDE] add scrollbar to commad pallet'
