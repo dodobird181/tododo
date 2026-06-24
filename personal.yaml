@@ -60,6 +60,12 @@ items:
   description: ''
   column: Doing
   author: dodobird181@gmail.com
+- id: 6daab7aecde14b92886ce978f65a5187
+  title: Atlas work
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
 - id: edb4d576336248b69db1ec4175a6df80
   title: Do Laundry
   points: 0
@@ -72,12 +78,6 @@ items:
   points: 0
   description: ''
   column: Doing
-  author: dodobird181@gmail.com
-- id: 6daab7aecde14b92886ce978f65a5187
-  title: Atlas work
-  points: 0
-  description: ''
-  column: Todo
   author: dodobird181@gmail.com
 - id: 0b085ec8f3964c41b5bca1818c6e6195
   title: Sign up for identity theft protection from that data-leak thingy
