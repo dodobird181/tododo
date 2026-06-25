@@ -141,3 +141,9 @@ items:
   description: ''
   column: Todo
   author: dodobird181@gmail.com
+- id: 5b30cefb7a784d589a5e2cddcce433c2
+  title: dollarama shopping
+  points: 0
+  description: '- padlock for going to the gym'
+  column: Backlog
+  author: dodobird181@gmail.com
