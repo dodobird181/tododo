@@ -117,3 +117,9 @@ items:
   description: ''
   column: Backlog
   author: dodobird181@gmail.com
+- id: 99173867c65a43a7afc66d59468ae5fd
+  title: Pay karen
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
