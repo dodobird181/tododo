@@ -147,3 +147,9 @@ items:
   description: '- padlock for going to the gym'
   column: Backlog
   author: dodobird181@gmail.com
+- id: c0b8b400eec94547aac25662260b5c11
+  title: dry-clean suit BEFORE VICTORIA TRIP
+  points: 0
+  description: ''
+  column: Todo
+  author: dodobird181@gmail.com
