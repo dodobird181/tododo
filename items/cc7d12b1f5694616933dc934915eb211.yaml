@@ -1,0 +1,44 @@
+id: cc7d12b1f5694616933dc934915eb211
+title:
+  value: Grocery Shop
+  last_edited_at: '2026-07-03T04:01:05+00:00'
+  last_edited_by: dodobird181
+description:
+  value: '- Lemon
+
+    - Lime
+
+    - Mint leaves
+
+    - Kale
+
+    - Feta cheese'
+  last_edited_at: '2026-07-03T04:01:05+00:00'
+  last_edited_by: dodobird181
+start:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+end:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+column:
+  value: Backlog
+  last_edited_at: '2026-07-03T04:01:05+00:00'
+  last_edited_by: dodobird181
+board:
+  value: personal
+  last_edited_at: '2026-07-03T04:01:05+00:00'
+  last_edited_by: dodobird181
+assigned_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+report_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+lock:
+  value: null
+  last_edited_at: ''
