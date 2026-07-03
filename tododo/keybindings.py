@@ -31,6 +31,7 @@ ACTIONS = [
     "point",
     "keybindings",
     "view_yaml",
+    "view_history",
     "new_board",
     "switch_board",
     "relationships",

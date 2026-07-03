@@ -22,6 +22,7 @@ move_down: down   # move selected item down within its column
 point: p          # assign a point value to the selected item
 keybindings: k    # open the keybindings editor
 view_yaml: y      # view the selected item's raw YAML (CTRL+Y)
+view_history: h   # view the selected item's git history (CTRL+H)
 new_board: m      # create a new board file (CTRL+B)
 switch_board: b   # switch to an existing board file (CTRL+M)
 relationships: r  # edit the selected item's relationships (CTRL+R)

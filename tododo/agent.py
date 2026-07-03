@@ -72,7 +72,7 @@ def cmd_move(args) -> int:
         print(f"no item with id {args.id}", file=sys.stderr)
         return 1
     actor = _actor(args.actor)
-    board.move_to_column(args.id, args.column, actor=actor)
+    board.move_to_column(args.id, args.column)
     board.save()
     msg = f"move '{item.title}' to {item.column}"
     if args.commit:
@@ -91,8 +91,6 @@ def cmd_edit(args) -> int:
         item.title = args.title
     if args.description is not None:
         item.description = args.description
-    actor = _actor(args.actor)
-    item.mark_edited(actor)
     board.save()
     msg = f"edit '{item.title}'"
     if args.commit:
@@ -104,7 +102,7 @@ def cmd_edit(args) -> int:
 def cmd_create(args) -> int:
     board = Board.load(args.board)
     actor = _actor(args.actor)
-    item = board.create(args.title, column=args.column, actor=actor)
+    item = board.create(args.title, column=args.column)
     board.save()
     msg = f"create '{item.title}'"
     if args.commit:

@@ -12,6 +12,8 @@ from pathlib import Path
 
 import yaml
 
+from tododo.ascii_layout import parse_ascii_grid
+
 ROOT = Path(__file__).resolve().parent.parent
 USERDATA = ROOT / "userdata"
 DEFAULT_PATH = ROOT / "default_settings.yaml"
@@ -20,6 +22,7 @@ _LEGACY_USER_PATH = ROOT / "settings.yaml"
 
 DEFAULTS = {
     "descriptions": "selected",      # "selected" or "all"
+    "max_description_height": 300,   # max pixel height for description on a card; 0 = no limit
     "merge_conflicts": "incoming",   # "incoming" (-X theirs) or "current" (-X ours)
     "push_interval": 2,              # seconds between batched pushes
     "poll_interval": 2,              # seconds between background fetches for remote changes
@@ -28,7 +31,64 @@ DEFAULTS = {
     "avatar_images": True,           # try to load a real Gravatar image (else monogram)
     "timestamps": "selected",        # show last-updated time: "selected" or "all"
     "timestamp_format": "%B {th}, %Y at %-I:%M %p (%Z)",  # strftime + {th} ordinal day
+    "item_layout": None,             # overridden by default_settings.yaml
 }
+
+# Built-in layout defaults (used when item_layout is absent from settings).
+DEFAULT_ITEM_LAYOUT = {
+    "collapsed": (
+        "+---1---+\n"
+        "| title |\n"
+        "+-------+\n"
+    ),
+    "expanded": (
+        "+-------2-------+\n"
+        "| title         |\n"
+        "+---------------+\n"
+        "| description   |\n"
+        "+---1---+---1---+\n"
+        "| blame | due   |\n"
+        "+---------------+\n"
+        "| relationships |\n"
+        "+---------------+\n"
+    ),
+}
+
+
+def _parse_layout_row(row_str: str) -> list[tuple[str, int]]:
+    """Parse "field1:w1 field2:w2" or "field" into [(field, weight), ...]."""
+    cells = []
+    for token in str(row_str).strip().split():
+        if ":" in token:
+            field, _, wt = token.partition(":")
+            try:
+                w = int(wt)
+            except ValueError:
+                w = 1
+        else:
+            field, w = token, 1
+        field = field.strip()
+        if field:
+            cells.append((field, max(1, w)))
+    return cells
+
+
+def _parse_item_layout(rows) -> list[list[tuple[str, int]]]:
+    result = []
+    for row in (rows or []):
+        cells = _parse_layout_row(str(row))
+        if cells:
+            result.append(cells)
+    return result
+
+
+def _ascii_to_layout(ascii_str: str) -> list[list[tuple[str, int]]]:
+    cells = parse_ascii_grid(ascii_str)
+    rows: dict[int, list[tuple[str, int]]] = {}
+    for c in sorted(cells, key=lambda c: (c.row, c.col)):
+        if c.field.strip():
+            rows.setdefault(c.row, []).append((c.field, c.width_ratio))
+    return [rows[r] for r in sorted(rows)]
 
 
 class Settings:
@@ -61,6 +121,13 @@ class Settings:
     @property
     def descriptions_always(self) -> bool:
         return str(self.values.get("descriptions", "selected")).lower() == "all"
+
+    @property
+    def max_description_height(self) -> int:
+        try:
+            return max(0, int(self.values.get("max_description_height", 300)))
+        except (TypeError, ValueError):
+            return 300
 
     @property
     def git_avatars(self) -> bool:
@@ -99,3 +166,19 @@ class Settings:
             return max(self.poll_interval(), float(self.values.get("poll_backoff_max", 300)))
         except (TypeError, ValueError):
             return 300.0
+
+    def item_layout(self, mode: str) -> list[list[tuple[str, int]]]:
+        """Parsed grid layout for 'collapsed' or 'expanded' mode."""
+        spec = self.values.get("item_layout") or {}
+        if not isinstance(spec, dict):
+            spec = {}
+        val = spec.get(mode) or DEFAULT_ITEM_LAYOUT.get(mode)
+        if val is None:
+            return []
+        if isinstance(val, str):
+            try:
+                return _ascii_to_layout(val)
+            except Exception:
+                return []
+        return _parse_item_layout(val)
+

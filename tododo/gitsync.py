@@ -58,6 +58,9 @@ class GitSync:
         # Set when a pull changed the board file on disk; the UI reloads on it.
         self.board_changed = threading.Event()
         self._enabled = self._is_repo()
+        # Optional callback fired in the committer thread after each successful commit.
+        # Set by App to trigger history-cache invalidation without polling.
+        self.on_commit: "Callable[[], None] | None" = None
         self._committer = threading.Thread(target=self._commit_loop, name="gitcommit", daemon=True)
         self._syncer = threading.Thread(target=self._sync_loop, name="gitsync", daemon=True)
 
@@ -129,6 +132,14 @@ class GitSync:
         if not ts:
             return "never"
         return time.strftime("%H:%M:%S", time.localtime(ts))
+
+    def git_show_file(self, commit_ref: str) -> str:
+        """Return raw text of the tracked board file at commit_ref.
+
+        Does NOT acquire _git_lock (read-only). Returns '' on error.
+        """
+        result = self._git("show", f"{commit_ref}:{self._rel}", timeout=10)
+        return result.stdout if result.returncode == 0 else ""
 
     # --- internals -------------------------------------------------------
 
@@ -228,6 +239,8 @@ class GitSync:
                     made = self._commit(message)
                 if made:
                     self._dirty.set()
+                    if self.on_commit:
+                        self.on_commit()
             except subprocess.TimeoutExpired:
                 self._set_status("git: commit timeout")
             except Exception as exc:  # best-effort, never crash the UI

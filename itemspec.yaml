@@ -1,0 +1,34 @@
+id: uuid
+
+title:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+description:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+start:
+  value: ISO-formatted string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+end:
+  value: ISO-formatted string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+column:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+board:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+lock:
+  

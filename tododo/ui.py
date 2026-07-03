@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -393,6 +394,7 @@ class App:
     SWITCH_BOARD = "switch_board"
     THEME = "theme"
     SEARCH = "search"
+    VIEW_HISTORY = "view_history"
 
     def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
         pygame.init()
@@ -472,6 +474,8 @@ class App:
         # Avatar circles from the last render, for hover tooltips: (rect, label).
         self._avatar_hits: list[tuple[pygame.Rect, str]] = []
 
+        # palette scroll state
+        self._palette_scroll = 0
         # keybindings editor state
         self.kb_index = 0
         self.kb_capturing = False
@@ -483,6 +487,15 @@ class App:
         self.search_results: list[Item] = []
         # relationships editor state
         self.rel_index = 0
+
+        # Git history cache: item_id -> list[HistoryEvent] (newest-first)
+        # None = full-load in progress; absent = not warmed; [] = no history found.
+        self._history_cache: dict[str, list | None] = {}
+        self._history_dirty = threading.Event()
+        self.git.on_commit = self._history_dirty.set
+        # History modal state.
+        self._history_item_id: str | None = None
+        self._history_scroll = 0
 
         # cached card rects from last render, for hit-testing
         self.card_rects: list[CardRect] = []
@@ -516,49 +529,25 @@ class App:
 
     def persist(self, message: str) -> None:
         """Save board to disk and queue a git push."""
-        self._ensure_self_collaborator()
+        self._ensure_self_author()
         self.board.save()
         # Record our own write so the file watcher doesn't treat it as external.
         self._watch_mtime["board"] = self._mtime(self.board.path)
         self.git.push_change(message)
 
-    def _ensure_self_collaborator(self) -> None:
-        """On the local user's first commit to a board, add them to the
-        version-controlled ``collaborators`` list. One-shot per board per machine
-        (tracked in workspace.yaml) so removing oneself from the YAML later sticks
-        and isn't undone on the next commit."""
-        key = self._board_key()
+    def _ensure_self_author(self) -> None:
+        """Register the local user in the board's authors registry and cache
+        their GitHub login so avatar lookups are fast on subsequent opens."""
         name, email = self.git.identity()
-        if email:
-            self.board.register_author(email, name)
-        rec = self.board.authors.get(email, {}) if email else {}
-        # Prefer: already-resolved login in authors > gh CLI > git display name.
+        if not email:
+            return
+        if self.board.register_author(email, name):
+            self._authors_dirty = True
+        rec = self.board.authors.get(email, {})
         gh_login = rec.get("github") or self.git.github_username()
-        handle = gh_login or name
-        if not handle:
-            return  # no identity available yet — try again on the next commit
-
-        in_list = handle.lower() in {c.lower() for c in self.board.collaborators}
-        if in_list:
-            if not self.workspace.self_added(key):
-                self.workspace.mark_self_added(key)
-                self.workspace.save(key, self.board.columns)
-            return
-
-        # Handle not in collaborators.
-        # If self_added is true and collaborators is non-empty, the user intentionally
-        # removed themselves — respect that and don't re-add.
-        if self.workspace.self_added(key) and self.board.collaborators:
-            return
-
-        # First commit on this board, or recovering from an empty collaborators list.
-        self.board.collaborators.append(handle)
-        # Cache the gh-resolved login in authors so avatar lookup skips the HTTP call.
-        if gh_login and email and not rec.get("github"):
+        if gh_login and not rec.get("github"):
             if self.board.set_author_meta(email, github=gh_login):
                 self._authors_dirty = True
-        self.workspace.mark_self_added(key)
-        self.workspace.save(key, self.board.columns)
 
     def selected(self) -> Item | None:
         return self.board.find(self.selected_id) if self.selected_id else None
@@ -589,7 +578,30 @@ class App:
 
     # --- main loop -------------------------------------------------------
 
+    def _invalidate_history_cache(self) -> None:
+        self._history_cache.clear()
+
+    def _warm_history_cache(self) -> None:
+        """Background daemon: load latest_event for each board item into cache."""
+        from .history import latest_event
+        for item_id in [it.id for it in self.board.items]:
+            evt = latest_event(self.git.repo_root, self.git._rel, item_id)
+            self._history_cache[item_id] = [evt] if evt else []
+
+    def _ensure_history_loaded(self, item_id: str) -> None:
+        """Background: load full history for one item (for the history modal)."""
+        from .history import load_item_history
+        root = self.git.repo_root
+        rel = self.git._rel
+
+        def _load() -> None:
+            events = load_item_history(root, rel, item_id)
+            self._history_cache[item_id] = events
+
+        threading.Thread(target=_load, name="histload", daemon=True).start()
+
     def run(self) -> None:
+        threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
         while self.running:
             for event in pygame.event.get():
                 self.handle_event(event)
@@ -597,11 +609,18 @@ class App:
             if self.git.board_changed.is_set():
                 self.git.board_changed.clear()
                 self.reload_board()
+                self._invalidate_history_cache()
+                threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
             self.check_file_reloads()
             # Persist newly-registered authors / resolved avatars (version control).
             if self._authors_dirty:
                 self._authors_dirty = False
                 self.persist("update authors")
+            # Re-warm blame cache after a local commit.
+            if self._history_dirty.is_set():
+                self._history_dirty.clear()
+                self._invalidate_history_cache()
+                threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
             self.render()
             self.clock.tick(60)
         self.git.stop()
@@ -683,6 +702,10 @@ class App:
                 self.open_yaml(self.selected(), self.EDIT)
                 return
             if (event.type == pygame.KEYDOWN and (event.mod & pygame.KMOD_CTRL)
+                    and self.keys.matches("view_history", event.key) and self.selected()):
+                self.open_history(self.selected())
+                return
+            if (event.type == pygame.KEYDOWN and (event.mod & pygame.KMOD_CTRL)
                     and self.keys.matches("due_date", event.key) and self.selected()):
                 self.start_due_date()
                 return
@@ -692,6 +715,9 @@ class App:
             return
         if self.mode == self.VIEW_YAML:
             self.handle_yaml(event)
+            return
+        if self.mode == self.VIEW_HISTORY:
+            self.handle_history(event)
             return
         if self.mode == self.SWITCH_BOARD:
             self.handle_switch_board(event)
@@ -718,7 +744,10 @@ class App:
             self.handle_relationships(event)
             return
         if self.mode == self.PALETTE:
-            self.handle_palette(event)
+            if event.type == pygame.MOUSEWHEEL:
+                self._palette_scroll = max(0, self._palette_scroll - event.y * self.font.get_linesize())
+            else:
+                self.handle_palette(event)
             return
 
         # NORMAL mode
@@ -732,6 +761,10 @@ class App:
                 # CTRL+Y views the selected item's raw YAML.
                 if self.keys.matches("view_yaml", event.key) and self.selected():
                     self.open_yaml(self.selected(), self.NORMAL)
+                    return
+                # CTRL+H views the selected item's git history.
+                if self.keys.matches("view_history", event.key) and self.selected():
+                    self.open_history(self.selected())
                     return
                 # CTRL+A selects every item in the focused item's column.
                 if self.keys.matches("select_column", event.key) and self.selected():
@@ -755,6 +788,7 @@ class App:
                 # CTRL+<open_palette> opens the palette; CTRL+<action> runs it directly.
                 if self.keys.matches("open_palette", event.key):
                     self.mode = self.PALETTE
+                    self._palette_scroll = 0
                     return
                 action = self.action_for_key(event.key)
                 if action:
@@ -865,7 +899,7 @@ class App:
         if target_col is None:
             return
         position = self.drop_position(target_col, pos, dragging_id=item.id)
-        self.board.reorder(item.id, target_col, position, self._actor())
+        self.board.reorder(item.id, target_col, position)
         self.persist(f"move '{item.title}' to {target_col}")
 
     def drop_position(self, column: str, pos, dragging_id: str) -> int:
@@ -980,7 +1014,7 @@ class App:
         ("Palette", ["open_palette"]),
         ("Items", ["create", "delete", "point", "relationships", "select_column", "due_date"]),
         ("Movement", ["move_left", "move_right", "move_up", "move_down"]),
-        ("Views", ["keybindings", "view_yaml", "themes", "new_board", "switch_board", "search"]),
+        ("Views", ["keybindings", "view_yaml", "view_history", "themes", "new_board", "switch_board", "search"]),
         ("Dialogs", ["confirm", "cancel"]),
     ]
 
@@ -989,7 +1023,7 @@ class App:
         "create", "delete", "move_left", "move_right",
         "move_up", "move_down", "point", "relationships",
         "new_board", "switch_board", "themes", "keybindings",
-        "due_date", "search",
+        "due_date", "search", "view_history",
     ]
 
     def action_for_key(self, key: int) -> str | None:
@@ -1035,6 +1069,11 @@ class App:
                 self.notify("no item selected")
         elif action == "search":
             self.start_search()
+        elif action == "view_history":
+            if self.selected():
+                self.open_history(self.selected())
+            else:
+                self.notify("no item selected")
 
     def handle_palette(self, event) -> None:
         if event.type != pygame.KEYDOWN:
@@ -1054,9 +1093,10 @@ class App:
                    "description": item.description}
         if item.due:
             d["due"] = item.due
-        rels = {k: v for k, v in item.relationships.items() if v}
-        if rels:
-            d["relationships"] = rels
+        if item.assignee:
+            d["assignee"] = item.assignee
+        if item.reporter:
+            d["reporter"] = item.reporter
         return d
 
     def copy_selection(self) -> None:
@@ -1098,11 +1138,10 @@ class App:
             item = self.board.create(title, column=col,
                                      points=int(entry.get("points", 0) or 0),
                                      description=str(entry.get("description", "") or ""),
-                                     author=name, author_email=email, actor=self._actor())
+                                     author=email)
             item.due = str(entry.get("due", "") or "")
-            rels = entry.get("relationships")
-            if isinstance(rels, dict):
-                item.relationships = {str(k): str(v) for k, v in rels.items() if v}
+            item.assignee = str(entry.get("assignee", "") or "")
+            item.reporter = str(entry.get("reporter", "") or "")
             created.append(item)
         if not created:
             self.notify("clipboard isn't an item")
@@ -1127,7 +1166,7 @@ class App:
             title = title.strip()
             if title:
                 item = self.board.create(title, column=col, description=description.strip(),
-                                         author=name, author_email=email, actor=self._actor())
+                                         author=email)
                 self.board.register_author(email, name)  # track contributor in version control
                 self.selected_id = item.id
                 self.focused_col = None
@@ -1147,15 +1186,10 @@ class App:
             if not title:
                 return
             description = description.strip()
-            # Opening and saving with no change isn't an edit — record a "viewed"
-            # timestamp instead of bumping "last edited by".
             if title == orig_title and description == orig_desc:
-                item.mark_viewed()
-                self.persist(f"view '{title}'")
-                return
+                return  # no change — don't create a pointless commit
             item.title = title
             item.description = description
-            item.mark_edited(self._actor())
             self.persist(f"edit '{title}'")
         self.editor = ItemEditor("Edit item", submit, title=item.title, description=item.description)
         self.mode = self.EDIT
@@ -1412,19 +1446,27 @@ class App:
             ph = self.font.render("Search…", True, MUTED)
             self.screen.blit(ph, (box.x + 12, box.y + box.h // 2 - ph.get_height() // 2))
 
-        # Results.
+        # Results — unified card rendering with variable heights.
         results = self.search_results
-        body = pygame.Rect(rect.x + 12, box.bottom + 8, rect.w - 24, rect.h - 112 - 38)
-        row_h = 56
-        content_h = len(results) * row_h
+        card_w = rect.w - 24
+        body = pygame.Rect(rect.x + 12, box.bottom + 8, card_w, rect.h - 112 - 38)
+
+        # Precompute item heights so we can scroll correctly.
+        heights = [
+            self._card_height(item, card_w, force_expanded=(i == self.search_index))
+            for i, item in enumerate(results)
+        ]
+        content_h = sum(ih + CARD_GAP for ih in heights) if heights else 0
         self.search_scroll = max(0, min(self.search_scroll, max(0, content_h - body.h)))
 
-        # Keep selected row in view.
-        sel_top = self.search_index * row_h
-        if sel_top < self.search_scroll:
-            self.search_scroll = sel_top
-        elif sel_top + row_h > self.search_scroll + body.h:
-            self.search_scroll = sel_top + row_h - body.h
+        # Keep selected card in view.
+        if heights:
+            sel_top = sum(heights[j] + CARD_GAP for j in range(self.search_index))
+            sel_bot = sel_top + heights[self.search_index]
+            if sel_top < self.search_scroll:
+                self.search_scroll = sel_top
+            elif sel_bot > self.search_scroll + body.h:
+                self.search_scroll = sel_bot - body.h
 
         prev_clip = self.screen.get_clip()
         self.screen.set_clip(body.clip(prev_clip) if prev_clip else body)
@@ -1433,21 +1475,12 @@ class App:
             self.screen.blit(self.font.render(msg, True, MUTED), (rect.x + 24, body.y + 10))
         y = body.y - self.search_scroll
         for i, item in enumerate(results):
-            if body.y <= y + row_h and y < body.bottom:
+            ih = heights[i]
+            if body.y <= y + ih and y < body.bottom:
                 selected = i == self.search_index
-                if selected:
-                    hl = pygame.Rect(rect.x + 12, y + 2, rect.w - 24, row_h - 4)
-                    pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
-                    pygame.draw.rect(self.screen, ACCENT, hl, width=1, border_radius=6)
-                name_surf = self.font.render(item.title, True, ACCENT if selected else TEXT)
-                self.screen.blit(name_surf, (rect.x + 24, y + 8))
-                col_surf = self.font_sm.render(item.column, True, MUTED)
-                self.screen.blit(col_surf, (rect.right - col_surf.get_width() - 24, y + 8))
-                if item.description:
-                    desc = item.description.replace("\n", " ")[:80]
-                    desc_surf = self.font_sm.render(desc, True, MUTED)
-                    self.screen.blit(desc_surf, (rect.x + 24, y + 8 + self.font.get_linesize()))
-            y += row_h
+                self.draw_card(item, body.x, y, card_w,
+                               force_expanded=selected, force_selected=selected)
+            y += ih + CARD_GAP
         self.screen.set_clip(prev_clip)
 
         # Scrollbar.
@@ -1472,6 +1505,7 @@ class App:
         self.board = Board.load(path)  # creates a default board if missing
         self.selected_id = None
         self._clear_multi()
+        self._invalidate_history_cache()
         # Retarget git sync + the file watcher at the new board.
         self.git.set_tracked_file(path)
         self._watch["board"] = path
@@ -1518,7 +1552,6 @@ class App:
                 item.points = int(text or 0)
             except ValueError:
                 item.points = 0
-            item.mark_edited(self._actor())
             self.persist(f"point '{item.title}' = {item.points}")
         self.text_input = TextInput(f"Points for '{item.title}':", submit,
                                     initial=str(item.points), numeric=True)
@@ -1533,7 +1566,6 @@ class App:
             text = text.strip()
             # Accept empty string to clear the due date.
             item.due = text
-            item.mark_edited(self._actor())
             label = text or "cleared"
             self.persist(f"due date '{item.title}' = {label}")
         self.text_input = TextInput(
@@ -1548,7 +1580,7 @@ class App:
             self.mode = self.NORMAL
             return
         for item in sel:
-            self.board.move_relative(item.id, delta, self._actor())
+            self.board.move_relative(item.id, delta)
         if len(sel) == 1:
             self.persist(f"move '{sel[0].title}' to {sel[0].column}")
         else:
@@ -1561,7 +1593,7 @@ class App:
             self.notify("no item selected")
             self.mode = self.NORMAL
             return
-        if self.board.move_within_column(item.id, delta, self._actor()):
+        if self.board.move_within_column(item.id, delta):
             self.persist(f"reorder '{item.title}'")
         self.mode = self.NORMAL
 
@@ -1641,6 +1673,8 @@ class App:
             self.draw_themes(w, h)
         elif self.mode == self.SEARCH:
             self.draw_search(w, h)
+        elif self.mode == self.VIEW_HISTORY:
+            self.draw_history(w, h)
 
         self.draw_toast(w, h)
         pygame.display.flip()
@@ -1796,111 +1830,184 @@ class App:
         return item.id == self.selected_id
 
     def show_timestamp(self, item: Item, floating: bool) -> bool:
-        if not item.last_active:
+        events = self._history_cache.get(item.id)
+        if events is None:
+            return self.settings.timestamps_always or item.id == self.selected_id
+        if not events:
             return False
-        if self.settings.timestamps_always:
-            return True
-        return item.id == self.selected_id
+        return self.settings.timestamps_always or item.id == self.selected_id
 
     def blame_line(self, item: Item) -> str:
-        """A git-blame-style sentence for the item's most recent action.
-
-        e.g. "Marked 'Done' less than a minute ago by Sam",
-             "Last edited 2 hours ago by Sam", "Created 2 days ago by Sam".
-        """
+        """Git-blame-style sentence derived from the history cache."""
+        events = self._history_cache.get(item.id)
+        if events is None:
+            return "Loading…"
+        if not events:
+            return ""
+        evt = events[0]
         fmt = self.settings.timestamp_format()
-        by = f" by {item.actor}" if item.actor else ""
-        # A bare view (opened + closed unchanged) isn't authored, so it carries no
-        # blame — but only wins if it's strictly the most recent action.
-        if item.viewed and item.viewed > max(item.moved, item.edited, item.created):
-            return f"Viewed {timefmt.ago(item.viewed, fmt)}"
-        # Pick whichever action happened most recently.
-        if item.moved and item.moved >= item.edited and item.moved >= item.created:
-            col = item.moved_to or item.column
-            return f"Marked '{col}' {timefmt.ago(item.moved, fmt)}{by}"
-        if item.edited and item.edited >= item.created:
-            return f"Last edited {timefmt.ago(item.edited, fmt)}{by}"
-        if item.created:
-            return f"Created {timefmt.ago(item.created, fmt)}{by}"
-        return ""
+        ts = timefmt.ago(evt.timestamp, fmt)
+        by = f" by {evt.author_name}" if evt.author_name else ""
+        if evt.action == "created":
+            return f"Created {ts}{by}"
+        if evt.action == "column":
+            col = evt.new_value or item.column
+            return f"Marked '{col}' {ts}{by}"
+        if evt.action == "deleted":
+            return f"Deleted {ts}{by}"
+        return f"Last edited {ts}{by}"
 
-    def draw_card(self, item: Item, x: int, y: int, w: int, floating: bool = False) -> pygame.Rect:
+    # --- unified item display ---------------------------------------------
+
+    def _compute_field(self, item: Item, field: str, w: int) -> tuple[int, object]:
+        """Compute (pixel_height, cached_data) for a layout field without drawing."""
+        if field == "title":
+            lines = self.wrap_text(item.title, self.font, max(1, w - 40))
+            return len(lines) * self.font.get_linesize(), lines
+        if field == "description":
+            if not item.description:
+                return 0, None
+            try:
+                md_rows, h = markdown.flow(item.description, self.md, w)
+            except Exception:
+                return 0, None
+            if not md_rows or h == 0:
+                return 0, None
+            max_h = self.settings.max_description_height
+            if max_h and h > max_h:
+                h = max_h
+            return h + 6, md_rows
+        if field == "blame":
+            text = self.blame_line(item)
+            return (self.font_sm.get_linesize() + 6, text) if text else (0, None)
+        if field == "due":
+            if not item.due:
+                return 0, None
+            return self.font_sm.get_linesize() + 4, f"Due: {item.due}"
+        if field == "relationships":
+            from tododo.board import PERSON_FIELDS
+            parts = [f"{f}: @{self._handle_for(getattr(item, f))}"
+                     for f in PERSON_FIELDS if getattr(item, f, "")]
+            text = " · ".join(parts)
+            return (self.font_sm.get_linesize() + 4, text) if text else (0, None)
+        return 0, None
+
+    def _draw_cached_field(self, field: str, x: int, y: int, w: int, cached, *,
+                           item: Item | None = None) -> None:
+        """Draw a pre-computed field at (x, y) within cell width w."""
+        if field == "title":
+            lines = cached or []
+            if item and item.points:
+                badge = self.font_sm.render(str(item.points), True, (20, 24, 30))
+                bw = badge.get_width() + 14
+                brect = pygame.Rect(x + w - bw - 4, y, bw, 22)
+                pygame.draw.rect(self.screen, BADGE, brect, border_radius=11)
+                self.screen.blit(badge, (brect.x + 7, brect.y + 11 - badge.get_height() // 2))
+            ty = y
+            for line in lines:
+                self.screen.blit(self.font.render(line, True, TEXT), (x, ty))
+                ty += self.font.get_linesize()
+        elif field == "description":
+            if cached:
+                markdown.draw(self.screen, x, y + 6, cached)
+        elif field == "blame":
+            if cached:
+                self.screen.blit(self.font_sm.render(cached, True, MUTED), (x, y + 6))
+        elif field == "due":
+            if cached:
+                self.screen.blit(self.font_sm.render(cached, True, DANGER), (x, y + 4))
+        elif field == "relationships":
+            if cached:
+                self.screen.blit(self.font_sm.render(cached, True, ACCENT), (x, y + 4))
+
+    def _layout_card(self, item: Item, content_w: int,
+                     layout: list[list[tuple[str, int]]]) -> tuple[int, list]:
+        """Compute (total_content_h, rows_data) without drawing.
+
+        rows_data is a list of (row_h, [(x_offset, cell_w, field, cached), ...]).
+        Only rows with at least one non-zero-height cell are included.
+        """
+        rows_data = []
+        total_h = 0
+        for row_cells in layout:
+            total_weight = sum(wt for _, wt in row_cells)
+            if total_weight == 0:
+                continue
+            cell_list = []
+            row_h = 0
+            x_off = 0
+            for field, wt in row_cells:
+                cell_w = max(1, int(content_w * wt / total_weight))
+                h, cached = self._compute_field(item, field, cell_w)
+                row_h = max(row_h, h)
+                cell_list.append((x_off, cell_w, field, cached))
+                x_off += cell_w
+            if row_h > 0:
+                rows_data.append((row_h, cell_list))
+                total_h += row_h
+        return total_h, rows_data
+
+    def _card_height(self, item: Item, w: int, *, force_expanded: bool | None = None) -> int:
+        """Compute card height without drawing (for scroll pre-computation)."""
         show_av = self.settings.git_avatars
         av_d, av_gap = 24, 8
         left = CARD_PAD + (av_d + av_gap if show_av else 0)
         content_w = w - left - CARD_PAD
-        text_x = x + left
-        lines = self.wrap_text(item.title, self.font, content_w - 40)
-        text_h = len(lines) * self.font.get_linesize()
+        if force_expanded is not None:
+            expanded = force_expanded
+        else:
+            expanded = self.show_description(item, False) or self.show_timestamp(item, False)
+        layout = self.settings.item_layout("expanded" if expanded else "collapsed")
+        total_h, rows_data = self._layout_card(item, content_w, layout)
+        n_gaps = max(0, len(rows_data) - 1)
+        return max(CARD_MIN_H, total_h + n_gaps * 4 + 2 * CARD_PAD)
 
-        md_rows = None
-        desc_h = 0
-        if self.show_description(item, floating):
-            try:
-                md_rows, desc_h = markdown.flow(item.description, self.md, content_w)
-            except Exception:
-                md_rows, desc_h = None, 0
-            if md_rows:
-                desc_h += 6  # gap between title and description
+    def draw_card(self, item: Item, x: int, y: int, w: int, floating: bool = False, *,
+                  force_expanded: bool | None = None,
+                  force_selected: bool = False) -> pygame.Rect:
+        show_av = self.settings.git_avatars
+        av_d, av_gap = 24, 8
+        left = CARD_PAD + (av_d + av_gap if show_av else 0)
+        content_w = w - left - CARD_PAD
+        content_x = x + left
 
-        ts_text = ""
-        ts_h = 0
-        if self.show_timestamp(item, floating):
-            ts_text = self.blame_line(item)
-            if ts_text:
-                ts_h = self.font_sm.get_linesize() + 6
+        if force_expanded is not None:
+            expanded = force_expanded
+        else:
+            expanded = self.show_description(item, floating) or self.show_timestamp(item, floating)
+        layout = self.settings.item_layout("expanded" if expanded else "collapsed")
 
-        rel_text = " · ".join(f"{rel} @{who}" for rel, who in item.relationships.items() if who)
-        rel_h = self.font_sm.get_linesize() + 4 if rel_text else 0
-        due_h = self.font_sm.get_linesize() + 4 if item.due else 0
-
-        card_h = max(CARD_MIN_H, text_h + desc_h + ts_h + rel_h + due_h + 2 * CARD_PAD)
+        total_content_h, rows_data = self._layout_card(item, content_w, layout)
+        n_gaps = max(0, len(rows_data) - 1)
+        card_h = max(CARD_MIN_H, total_content_h + n_gaps * 4 + 2 * CARD_PAD)
         rect = pygame.Rect(x, y, w, card_h)
+
         if floating:
             color = CARD_BG_DRAG
-        elif self.is_selected(item):
+        elif force_selected or self.is_selected(item):
             color = CARD_BG_SEL
         else:
             color = CARD_BG
         pygame.draw.rect(self.screen, color, rect, border_radius=8)
         if not floating and item.id == self.selected_id:
             pygame.draw.rect(self.screen, ACCENT, rect, width=2, border_radius=8)
-        elif not floating and item.id in self.multi:
+        elif not floating and (item.id in self.multi or force_selected):
             pygame.draw.rect(self.screen, ACCENT, rect, width=1, border_radius=8)
 
         if show_av:
             self._draw_avatar(item, x, y, av_d, floating)
 
         ty = y + CARD_PAD
-        for line in lines:
-            surf = self.font.render(line, True, TEXT)
-            self.screen.blit(surf, (text_x, ty))
-            ty += self.font.get_linesize()
+        for i, (row_h, cell_list) in enumerate(rows_data):
+            if i > 0:
+                ty += 4
+            for x_off, cell_w, field, cached in cell_list:
+                old_clip = self.screen.get_clip()
+                self.screen.set_clip(pygame.Rect(content_x + x_off, ty, cell_w, row_h))
+                self._draw_cached_field(field, content_x + x_off, ty, cell_w, cached, item=item)
+                self.screen.set_clip(old_clip)
+            ty += row_h
 
-        if md_rows:
-            ty += 6
-            ty = markdown.draw(self.screen, text_x, ty, md_rows)
-
-        if ts_text:
-            ty += 6
-            self.screen.blit(self.font_sm.render(ts_text, True, MUTED), (text_x, ty))
-
-        if rel_text:
-            ty += 4 + (self.font_sm.get_linesize() if ts_text else 0)
-            self.screen.blit(self.font_sm.render(rel_text, True, ACCENT), (text_x, ty))
-
-        if item.due:
-            ty += 4 + (self.font_sm.get_linesize() if (ts_text or rel_text) else 0)
-            due_surf = self.font_sm.render(f"Due: {item.due}", True, DANGER)
-            self.screen.blit(due_surf, (text_x, ty))
-
-        # points badge
-        if item.points:
-            badge = self.font_sm.render(str(item.points), True, (20, 24, 30))
-            bw = badge.get_width() + 14
-            brect = pygame.Rect(rect.right - bw - CARD_PAD, y + CARD_PAD, bw, 22)
-            pygame.draw.rect(self.screen, BADGE, brect, border_radius=11)
-            self.screen.blit(badge, (brect.x + 7, brect.y + 11 - badge.get_height() // 2))
         return rect
 
     def _avatar_image(self, email: str, name: str, size: int):
@@ -1927,9 +2034,11 @@ class App:
         return self.avatars.image(url, size) if url else None
 
     def _draw_avatar(self, item: Item, x: int, y: int, av_d: int, floating: bool) -> None:
-        local_name, local_email = self.git.identity()
-        name = item.author or local_name
-        email = item.author_email or local_email
+        email = item.assignee
+        if not email:
+            return
+        rec = self.board.authors.get(email, {})
+        name = rec.get("name") or ""
         r = av_d // 2
         cx, cy = x + CARD_PAD + r, y + CARD_PAD + r
         img = self._avatar_image(email, name, av_d)
@@ -1946,7 +2055,7 @@ class App:
                 who = f"{name} (@{gh})" if name else f"@{gh}"
             else:
                 who = name or "unknown"
-            label = f"{who} <{email}>" if email else who
+            label = f"Assignee: {who} <{email}>" if email else who
             self._avatar_hits.append((pygame.Rect(cx - r, cy - r, av_d, av_d), label))
 
     def draw_avatar_tooltip(self, w: int, h: int) -> None:
@@ -2016,21 +2125,44 @@ class App:
             ("move_up", "Move selected up"),
             ("move_down", "Move selected down"),
             ("point", "Assign points"),
-            ("relationships", "Edit relationships"),
+            ("relationships", "Edit people (creator/assignee/reporter)"),
             ("new_board", "Create new board"),
             ("switch_board", "Switch board"),
             ("themes", "Switch colour theme"),
             ("keybindings", "Edit keybindings"),
             ("due_date", "Set due date (CTRL+D)"),
+            ("view_history", "View item history"),
         ]
-        y = rect.y + 84
+
+        ROW_H = 34
+        body = pygame.Rect(rect.x + 12, rect.y + 78, rect.w - 24, rect.h - 108)
+        content_h = len(rows) * ROW_H
+        view_h = body.h
+        self._palette_scroll = max(0, min(self._palette_scroll, max(0, content_h - view_h)))
+
+        prev_clip = self.screen.get_clip()
+        self.screen.set_clip(body.clip(prev_clip) if prev_clip else body)
+
+        y = body.y - self._palette_scroll
         for action, desc in rows:
-            keylabel = self.keys.label(action)
-            key_surf = self.font.render(f"[{keylabel}]", True, ACCENT)
-            self.screen.blit(key_surf, (rect.x + 24, y))
-            desc_surf = self.font.render(desc, True, TEXT)
-            self.screen.blit(desc_surf, (rect.x + 130, y))
-            y += 34
+            if body.y <= y + ROW_H and y < body.bottom:
+                keylabel = self.keys.label(action)
+                key_surf = self.font.render(f"[{keylabel}]", True, ACCENT)
+                self.screen.blit(key_surf, (rect.x + 24, y + (ROW_H - self.font.get_linesize()) // 2))
+                desc_surf = self.font.render(desc, True, TEXT)
+                self.screen.blit(desc_surf, (rect.x + 130, y + (ROW_H - self.font.get_linesize()) // 2))
+            y += ROW_H
+
+        self.screen.set_clip(prev_clip)
+
+        if content_h > view_h:
+            track_h = view_h - 4
+            thumb_h = max(20, int(track_h * view_h / content_h))
+            scroll_ratio = self._palette_scroll / max(1, content_h - view_h)
+            thumb_y = body.y + 2 + int((track_h - thumb_h) * scroll_ratio)
+            pygame.draw.rect(self.screen, MUTED,
+                             (rect.right - 10, thumb_y, 4, thumb_h), border_radius=2)
+
         foot = self.font_sm.render(
             "press a key, or use CTRL+<key> any time   ·   [ESC] close", True, MUTED)
         self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
@@ -2405,19 +2537,20 @@ class App:
             thumb_y = body.y + 2 + int((track_h - thumb_h) * self.kb_scroll / max(1, total_h - view_h))
             pygame.draw.rect(self.screen, MUTED, (rect.right - 10, thumb_y, 4, thumb_h), border_radius=2)
 
-    # --- relationships editor -------------------------------------------
+    # --- person-fields editor (creator / assignee / reporter) ---------------
+
+    def _author_emails(self) -> list[str]:
+        """Sorted list of email keys from board.authors."""
+        return sorted(self.board.authors.keys())
+
+    def _handle_for(self, email: str) -> str:
+        """Display handle for an author email (github handle > name > email)."""
+        rec = self.board.authors.get(email, {})
+        return rec.get("github") or rec.get("name") or email
 
     def start_relationships(self) -> None:
-        item = self.selected()
-        if not item:
+        if not self.selected():
             return
-        # Seed collaborators from known author github logins if the list is empty,
-        # so there's always something to assign on a fresh board.
-        if not self.board.collaborators:
-            seeded = sorted({rec.get("github") for rec in self.board.authors.values()
-                             if rec.get("github")})
-            if seeded:
-                self.board.collaborators = seeded
         self.rel_index = 0
         self.mode = self.RELATIONSHIPS
 
@@ -2427,55 +2560,145 @@ class App:
         if self.keys.matches("cancel", event.key) or self.keys.matches("relationships", event.key):
             self.mode = self.NORMAL
             return
-        rels = self.board.relationships
+        from tododo.board import PERSON_FIELDS
         item = self.selected()
-        if not rels or not item:
+        if not item:
             return
         if event.key == pygame.K_UP:
-            self.rel_index = (self.rel_index - 1) % len(rels)
+            self.rel_index = (self.rel_index - 1) % len(PERSON_FIELDS)
         elif event.key == pygame.K_DOWN:
-            self.rel_index = (self.rel_index + 1) % len(rels)
+            self.rel_index = (self.rel_index + 1) % len(PERSON_FIELDS)
         elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
-            self._cycle_relationship(item, rels[self.rel_index],
+            self._cycle_person_field(item, PERSON_FIELDS[self.rel_index],
                                      1 if event.key == pygame.K_RIGHT else -1)
 
-    def _cycle_relationship(self, item: Item, rel: str, delta: int) -> None:
-        options = [""] + list(self.board.collaborators)  # "" == unassigned
-        cur = item.relationships.get(rel, "")
+    def _cycle_person_field(self, item: Item, field: str, delta: int) -> None:
+        options = [""] + self._author_emails()
+        cur = getattr(item, field, "")
         idx = options.index(cur) if cur in options else 0
         nxt = options[(idx + delta) % len(options)]
-        if nxt:
-            item.relationships[rel] = nxt
-        else:
-            item.relationships.pop(rel, None)
-        item.mark_edited(self._actor())
-        self.persist(f"set {rel} on '{item.title}'")
+        setattr(item, field, nxt)
+        self.persist(f"set {field} on '{item.title}'")
 
     def draw_relationships(self, w: int, h: int) -> None:
+        from tododo.board import PERSON_FIELDS
         self.dim(w, h)
-        rect = self.panel(w, h, 520, 360)
+        rect = self.panel(w, h, 520, 300)
         item = self.selected()
-        title = self.font_lg.render("Relationships", True, TEXT)
+        title = self.font_lg.render("People", True, TEXT)
         self.screen.blit(title, (rect.x + 24, rect.y + 18))
         sub = self.font_sm.render("UP/DOWN select · LEFT/RIGHT assign · ESC close", True, MUTED)
         self.screen.blit(sub, (rect.x + 24, rect.y + 54))
         y = rect.y + 90
-        if not self.board.collaborators:
-            note = self.font_sm.render("no collaborators yet — add them under 'collaborators:' in board.yaml",
-                                       True, MUTED)
+        if not self.board.authors:
+            note = self.font_sm.render("no authors yet — create an item first", True, MUTED)
             self.screen.blit(note, (rect.x + 24, y))
             y += 30
-        for i, rel in enumerate(self.board.relationships):
+        for i, field in enumerate(PERSON_FIELDS):
             selected = i == self.rel_index
             if selected:
                 hl = pygame.Rect(rect.x + 12, y - 4, rect.w - 24, 32)
                 pygame.draw.rect(self.screen, CARD_BG_SEL, hl, border_radius=6)
-            name = self.font.render(rel, True, TEXT)
-            self.screen.blit(name, (rect.x + 24, y))
-            who = item.relationships.get(rel, "") if item else ""
-            val = self.font.render(f"@{who}" if who else "—", True, ACCENT if who else BADGE)
+            label = self.font.render(field, True, TEXT)
+            self.screen.blit(label, (rect.x + 24, y))
+            email = getattr(item, field, "") if item else ""
+            display = f"@{self._handle_for(email)}" if email else "—"
+            val = self.font.render(display, True, ACCENT if email else BADGE)
             self.screen.blit(val, (rect.right - val.get_width() - 24, y))
             y += 36
+
+    # --- history modal ------------------------------------------------------
+
+    def open_history(self, item: Item) -> None:
+        self._history_item_id = item.id
+        self._history_scroll = 0
+        cached = self._history_cache.get(item.id)
+        if not cached:
+            self._history_cache[item.id] = None  # mark as loading
+            self._ensure_history_loaded(item.id)
+        self.mode = self.VIEW_HISTORY
+
+    def handle_history(self, event) -> None:
+        if event.type == pygame.MOUSEWHEEL:
+            ROW_H = self.font_sm.get_linesize() + 8
+            self._history_scroll = max(0, self._history_scroll - event.y * ROW_H)
+            return
+        if event.type != pygame.KEYDOWN:
+            return
+        if (self.keys.matches("cancel", event.key)
+                or self.keys.matches("view_history", event.key)):
+            self.mode = self.NORMAL
+            return
+        ROW_H = self.font_sm.get_linesize() + 8
+        if event.key == pygame.K_UP:
+            self._history_scroll = max(0, self._history_scroll - ROW_H)
+        elif event.key == pygame.K_DOWN:
+            self._history_scroll += ROW_H
+
+    def draw_history(self, w: int, h: int) -> None:
+        self.dim(w, h)
+        rect = self.panel(w, h, 680, 520)
+        item = self.board.find(self._history_item_id) if self._history_item_id else None
+        title_text = f"History: {item.title[:40]}" if item else "History"
+        self.screen.blit(self.font_lg.render(title_text, True, TEXT),
+                         (rect.x + 24, rect.y + 18))
+        self.screen.blit(
+            self.font_sm.render("UP/DOWN · scroll · ESC close", True, MUTED),
+            (rect.x + 24, rect.y + 54))
+
+        body = pygame.Rect(rect.x + 20, rect.y + 82, rect.w - 40, rect.h - 120)
+        events = self._history_cache.get(self._history_item_id) if self._history_item_id else []
+
+        if events is None:
+            self.screen.blit(self.font.render("Loading history…", True, MUTED),
+                             (body.x + 12, body.y + 12))
+        elif not events:
+            self.screen.blit(self.font.render("No git history found.", True, MUTED),
+                             (body.x + 12, body.y + 12))
+        else:
+            ROW_H = self.font_sm.get_linesize() + 8
+            content_h = len(events) * ROW_H
+            max_scroll = max(0, content_h - body.h)
+            self._history_scroll = min(self._history_scroll, max_scroll)
+
+            prev_clip = self.screen.get_clip()
+            self.screen.set_clip(body)
+            fmt = self.settings.timestamp_format()
+            y = body.y - self._history_scroll
+            for evt in events:
+                if y + ROW_H >= body.y and y < body.bottom:
+                    if evt.action == "created":
+                        color, label = BADGE, "Created"
+                    elif evt.action == "deleted":
+                        color, label = DANGER, "Deleted"
+                    elif evt.action == "column":
+                        color, label = ACCENT, f"Moved → '{evt.new_value}'"
+                    else:
+                        old = str(evt.old_value or "")[:20]
+                        new = str(evt.new_value or "")[:20]
+                        color, label = TEXT, f"{evt.action}: '{old}' → '{new}'"
+                    ts_s = self.font_sm.render(timefmt.ago(evt.timestamp, fmt), True, MUTED)
+                    act_s = self.font_sm.render(label, True, color)
+                    by_s = self.font_sm.render(
+                        f"@{evt.author_name or evt.author_email}", True, MUTED)
+                    self.screen.blit(ts_s, (body.x, y + 4))
+                    self.screen.blit(act_s, (body.x + 210, y + 4))
+                    self.screen.blit(by_s, (body.right - by_s.get_width(), y + 4))
+                y += ROW_H
+            self.screen.set_clip(prev_clip)
+
+            if content_h > body.h:
+                track_h = body.h - 4
+                thumb_h = max(20, int(track_h * body.h / content_h))
+                scroll_ratio = self._history_scroll / max(1, max_scroll)
+                thumb_y = body.y + 2 + int((track_h - thumb_h) * scroll_ratio)
+                pygame.draw.rect(self.screen, MUTED,
+                                 (rect.right - 10, thumb_y, 4, thumb_h), border_radius=2)
+
+        count = len(events) if events else 0
+        foot = self.font_sm.render(
+            f"{count} events   ·   [ESC] close", True, MUTED)
+        self.screen.blit(foot, (rect.x + 24, rect.bottom - 28))
 
     def draw_switch_board(self, w: int, h: int) -> None:
         self.dim(w, h)

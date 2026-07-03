@@ -7,6 +7,9 @@
 #   all      -> every item shows its description, always expanded
 descriptions: selected
 
+# Maximum height (pixels) for the description field on a card. 0 = no limit.
+max_description_height: 300
+
 # Show a small git-author avatar circle on the left of each card. The avatar is a
 # coloured monogram of whoever created the item; hover it to see name / email.
 git_avatars: true
@@ -47,3 +50,24 @@ poll_interval: 1
 # configurable; the backoff itself is always on. Set equal to poll_interval to
 # effectively disable backoff.
 poll_backoff_max: 300
+
+# Item card layout: which fields appear on cards, arranged in an ASCII grid.
+# Two modes: collapsed (unselected cards) and expanded (selected / search-highlighted).
+# Available fields: title, description, blame, due, relationships
+# Digits in fence segments set column width ratios (+---1---+---2---+ = 1:2 split).
+# Unannotated closing fences inherit column positions from the annotated reference fence.
+item_layout:
+  collapsed: |
+    +---1---+
+    | title |
+    +-------+
+  expanded: |
+    +-------2-------+
+    | title         |
+    +---------------+
+    | description   |
+    +---1---+---1---+
+    | blame | due   |
+    +---------------+
+    | relationships |
+    +---------------+
