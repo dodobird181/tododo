@@ -1,0 +1,43 @@
+id: 21ccfb8a70834b7f812ec1f37516f641
+title:
+  value: '[CLAUDE] Limit card locking'
+  last_edited_at: '2026-07-09T18:15:23+00:00'
+  last_edited_by: dodobird181
+description:
+  value: 'Only lock a card:
+
+    1. when it is moved (before sending toe move to github.)
+
+    2. when it is deleted (before sending the delete to github.) and;
+
+    3. when someone enters the edit dialogue (before allowing any saving / editing
+    to occur.)'
+  last_edited_at: '2026-07-09T18:15:23+00:00'
+  last_edited_by: dodobird181
+start:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+end:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+column:
+  value: Todo
+  last_edited_at: '2026-07-09T18:15:23+00:00'
+  last_edited_by: dodobird181
+board:
+  value: board
+  last_edited_at: '2026-07-09T18:15:23+00:00'
+  last_edited_by: dodobird181
+assigned_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+report_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+lock:
+  value: null
+  last_edited_at: ''
