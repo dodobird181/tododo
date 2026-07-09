@@ -1,0 +1,40 @@
+id: 430f05ca95244c77b9fcbda743a37386
+title:
+  value: Call Revenue Quebec
+  last_edited_at: '2026-07-09T18:08:35+00:00'
+  last_edited_by: dodobird181
+description:
+  value: '1. Open EQ bank account to see tax transaction and revenue quebec account.
+
+    2. Settle accounts / make sure they got my payment.
+
+    3. Ask about the "Schedule T" tuition tax credit in Quebec.'
+  last_edited_at: '2026-07-09T18:08:35+00:00'
+  last_edited_by: dodobird181
+start:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+end:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+column:
+  value: Backlog
+  last_edited_at: '2026-07-09T18:08:35+00:00'
+  last_edited_by: dodobird181
+board:
+  value: personal
+  last_edited_at: '2026-07-09T18:08:35+00:00'
+  last_edited_by: dodobird181
+assigned_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+report_to:
+  value: ''
+  last_edited_at: ''
+  last_edited_by: ''
+lock:
+  value: null
+  last_edited_at: ''
