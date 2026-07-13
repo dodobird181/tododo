@@ -17,8 +17,8 @@ end:
   last_edited_at: ''
   last_edited_by: ''
 column:
-  value: Todo
-  last_edited_at: '2026-07-09T18:19:48+00:00'
+  value: Ideas
+  last_edited_at: '2026-07-13T00:12:28+00:00'
   last_edited_by: dodobird181
 board:
   value: board
@@ -33,5 +33,5 @@ report_to:
   last_edited_at: ''
   last_edited_by: ''
 lock:
-  value: null
-  last_edited_at: '2026-07-13T00:12:07+00:00'
+  value: dodobird181
+  last_edited_at: '2026-07-13T00:12:28+00:00'
