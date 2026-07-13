@@ -43,6 +43,10 @@ DEFAULTS: dict = {
     "danger": [224, 108, 108],
     "code": [224, 196, 140],
     "selection": [74, 110, 165],
+    # Locking: dotted outline when *you* select an item you hold the lock on;
+    # a distinct highlight when the item is locked by *another* user.
+    "lock_dotted": [240, 196, 110],
+    "lock_other": [200, 90, 120],
     "column_colors": [
         [110, 168, 254], [240, 196, 110], [96, 200, 160],
         [200, 130, 240], [240, 140, 170],

@@ -30,5 +30,16 @@ board:
   last_edited_at: ISO-formatted string
   last_edited_by: string
 
+assigned_to:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
+report_to:
+  value: string
+  last_edited_at: ISO-formatted string
+  last_edited_by: string
+
 lock:
-  
+  value: string | null
+  last_edited_at: ISO-formatted string

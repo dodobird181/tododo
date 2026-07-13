@@ -1,0 +1,167 @@
+# tododo local data server — HTTP/JSON API.
+#
+# The pygame GUI is a client of this server; the server is the only process that
+# touches the filesystem (items/, boards/), git, and encryption. All bodies and
+# responses are JSON. The caller identity (for lock ownership + edit provenance)
+# is the server's own git github-username, so requests carry no auth.
+#
+# base url: http://127.0.0.1:<server_port>   (default 8770)
+
+api:
+
+  user:
+    GET:
+      # The local git user driving this server.
+      response: |
+        {"user": "[git name]", "email": "[git email]", "github": "[github login]"}
+
+  item:
+    # Each field (except id/lock) is {value, last_edited_at, last_edited_by}.
+    # lock is {value: "[github login]" | null, last_edited_at}.
+    GET:
+      # GET /item?id=<uuid>
+      request: |
+        {"id": "[uuid4]"}
+      response: |
+        {...all item fields}
+    POST:
+      # Create. Stamps provenance + commits. board and column are required.
+      request: |
+        {"board": "name", "column": "Todo", "title": "...", "description": "...",
+         "start": "ISO", "end": "ISO", "assigned_to": "...", "report_to": "..."}
+      response: |
+        {...created item}
+    PUT:
+      # Update fields. CANNOT PUT WITHOUT HOLDING THE LOCK (else 409).
+      request: |
+        {"id": "[uuid4]", "title": "...", "column": "Doing", ...any fields}
+      response: |
+        {...updated item}   # 409 {"error": ...} if you don't hold the lock
+    DELETE:
+      # DELETE /item?id=<uuid>. Requires the lock (else 409).
+      request: |
+        {"id": "[uuid4]"}
+      response: |
+        {"deleted": true}
+
+  item/list:
+    POST:
+      # Filtered query. Any omitted filter is ignored.
+      request: |
+        {
+          "title_contains": "foobar",
+          "title_does_not_contain": "baz",
+          "description_contains": "foobar",
+          "description_does_not_contain": "baz",
+          "started_before": "ISO formatted datetime",
+          "started_after": "ISO formatted datetime",
+          "ended_before": "ISO formatted datetime",
+          "ended_after": "ISO formatted datetime",
+          "in_column": "example_column_name",
+          "not_in_column": "example_column_name",
+          "in_board": "example_board_name",
+          "not_in_board": "example_board_name",
+          "locked_by": "example github login",
+          "not_locked_by": "example github login"
+        }
+      response: |
+        {"items": [...all matching items]}
+
+  item/lock:
+    POST:
+      # Acquire the exclusive edit lock (succeeds if free, stale, or already yours).
+      request: |
+        {"id": "[uuid4]"}
+      response: |
+        {"locked": true|false, "holder": "[github login]" | null}
+    DELETE:
+      # Release the lock (only if you hold it). DELETE /item/lock?id=<uuid>
+      request: |
+        {"id": "[uuid4]"}
+      response: |
+        {"released": true|false}
+
+  item/history:
+    GET:
+      # Commits touching this item's file, newest-first (from git).
+      # GET /item/history?id=<uuid>
+      request: |
+        {"id": "[uuid4]"}
+      response: |
+        {"events": [{"commit": "...", "email": "...", "name": "...", "timestamp": "ISO"}]}
+
+  board:
+    # A board is {name (unique), columns: [unique strings, unique per board]}.
+    GET:
+      # GET /board?name=<name>
+      request: |
+        {"name": "board name"}
+      response: |
+        {"name": "board name", "columns": ["Todo", "Doing", "Done"]}
+    POST:
+      # Create. Name must be unique (else 409).
+      request: |
+        {"name": "board name", "columns": ["Todo", "Doing", "Done"]}
+      response: |
+        {"name": "board name", "columns": [...]}
+    PUT:
+      # Rename and/or replace columns. Held under a board-edit lock while a
+      # rename / add-column dialog is open (see board/lock). 409 if another user
+      # holds the board lock or the new name is taken.
+      request: |
+        {"name": "current name", "new_name": "renamed?", "columns": ["...?"]}
+      response: |
+        {"name": "...", "columns": [...]}
+    DELETE:
+      # DELETE /board?name=<name>
+      request: |
+        {"name": "board name"}
+      response: |
+        {"deleted": true}
+
+  board/list:
+    GET:
+      response: |
+        {"boards": [{"name": "...", "columns": [...]}, ...]}
+
+  board/lock:
+    # Coarse board-level lock, held while a client opens an add-column / rename
+    # dialog so two users can't restructure the same board at once.
+    POST:
+      request: |
+        {"name": "board name"}
+      response: |
+        {"locked": true|false, "holder": "[github login]" | null}
+    DELETE:
+      request: |
+        {"name": "board name"}
+      response: |
+        {"released": true|false}
+
+  keybindings:
+    GET:
+      # All action -> key-name bindings.
+      response: |
+        {"bindings": {"create": "n", "delete": "d", ...}}
+    PUT:
+      # Update one binding.
+      request: |
+        {"action": "create", "value": "x"}
+      response: |
+        {"bindings": {...updated}}
+
+  settings:
+    GET:
+      # Values keep native types (bool/int/float/str) so the GUI renders the
+      # right control per primitive.
+      response: |
+        {"settings": {"push_interval": 2, "encryption": false, ...}}
+    PUT:
+      # Update one setting; live-tunable git values are pushed to the sync loop.
+      request: |
+        {"key": "push_interval", "value": 5}
+      response: |
+        {"settings": {...updated}}
+
+  # NOTE: workspace.yaml has no endpoint — it is purely server-side generated
+  # (per-machine view state), never exposed to or written by the client.

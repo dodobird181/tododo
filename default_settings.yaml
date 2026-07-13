@@ -51,23 +51,15 @@ poll_interval: 1
 # effectively disable backoff.
 poll_backoff_max: 300
 
-# Item card layout: which fields appear on cards, arranged in an ASCII grid.
-# Two modes: collapsed (unselected cards) and expanded (selected / search-highlighted).
-# Available fields: title, description, blame, due, relationships
-# Digits in fence segments set column width ratios (+---1---+---2---+ = 1:2 split).
-# Unannotated closing fences inherit column positions from the annotated reference fence.
-item_layout:
-  collapsed: |
-    +---1---+
-    | title |
-    +-------+
-  expanded: |
-    +-------2-------+
-    | title         |
-    +---------------+
-    | description   |
-    +---1---+---1---+
-    | blame | due   |
-    +---------------+
-    | relationships |
-    +---------------+
+# Port the local HTTP data server binds to (the GUI connects to it on localhost).
+server_port: 8770
+
+# Seconds before another user's item lock is treated as stale and can be reclaimed
+# (covers a client that crashed without releasing its lock).
+lock_ttl: 300
+
+# Optional AES-256 encryption of item/board files at rest. When true, the 32-byte
+# key is read from the TODODO_KEY env var (base64/hex) or encryption_key_file.
+# With encryption on, git stores ciphertext.
+encryption: false
+encryption_key_file: ""

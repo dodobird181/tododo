@@ -1,20 +1,20 @@
-"""Git synchronization.
+"""Git synchronization (repo/directory oriented).
 
-The board YAML lives inside a git repo and git is treated as the durable
-backing store:
+Data now lives as one file per item (``items/``) and per board (``boards/``);
+git is the durable backing store:
 
-  * Every mutation commits the board *immediately* (locally).
+  * Every mutation commits the changed files *immediately* (locally).
   * Pushes are bundled/throttled: a sync loop ticks once a second and, if there
     are new local commits, fetches+merges (always pull before push) and pushes.
-  * When idle it still fetches periodically so the running app picks up edits
-    made elsewhere.
-  * Concurrent edits are reconciled by git with a configurable strategy option:
-    ``-X theirs`` (incoming wins) or ``-X ours`` (current wins). Non-conflicting
-    changes always merge normally; a merge git still can't resolve falls back to
-    "needs manual merge".
+  * When idle it still fetches periodically so the server picks up edits made
+    elsewhere.
+  * Concurrent edits are reconciled by git per file. Different items/boards are
+    different files, so they never conflict. A same-file conflict (rare — locks
+    serialize writers, and encrypted blobs can't line-merge) is resolved with the
+    configured ``-X`` option, or falls back to "needs manual merge".
 
 All git calls are best-effort: failures (offline, etc.) are reflected in an
-in-memory status string shown in the app status bar rather than crashing.
+in-memory status string rather than crashing.
 """
 
 from __future__ import annotations
@@ -24,29 +24,24 @@ import subprocess
 import threading
 import time
 from pathlib import Path
-
-from .board import Board
+from typing import Callable
 
 # How often the sync loop wakes to check for work.
 TICK_SECONDS = 1
 
 
 class GitSync:
-    def __init__(self, repo_root: Path, tracked_file: Path, merge_option: str = "theirs",
-                 push_interval: float = 2.0, poll_interval: float = 2.0,
-                 poll_backoff_max: float = 300.0):
+    def __init__(self, repo_root: Path, tracked: tuple[str, ...] = ("items", "boards"),
+                 merge_option: str = "theirs", push_interval: float = 2.0,
+                 poll_interval: float = 2.0, poll_backoff_max: float = 300.0):
         self.repo_root = Path(repo_root)
-        self.tracked_file = Path(tracked_file)
+        self.tracked = list(tracked)
         self.merge_option = merge_option if merge_option in ("ours", "theirs") else "theirs"
         self.push_interval = max(0.5, float(push_interval))
         self.poll_interval = max(0.5, float(poll_interval))
         self.poll_backoff_max = max(self.poll_interval, float(poll_backoff_max))
         # Current (possibly backed-off) gap between idle fetches.
         self._cur_poll = self.poll_interval
-        try:
-            self._rel = str(self.tracked_file.relative_to(self.repo_root))
-        except ValueError:
-            self._rel = self.tracked_file.name
         self._jobs: "queue.Queue[str | None]" = queue.Queue()
         self._dirty = threading.Event()      # unpushed local commits exist
         self._fetch_now = threading.Event()  # external request for an immediate fetch
@@ -55,11 +50,11 @@ class GitSync:
         self._git_lock = threading.Lock()    # serializes git subprocess calls
         self.status = "git: idle"
         self.last_fetch: float = 0.0
-        # Set when a pull changed the board file on disk; the UI reloads on it.
-        self.board_changed = threading.Event()
+        # Set when a pull advanced HEAD (remote changes landed). Server bumps its
+        # revision so polling clients reload.
+        self.changed = threading.Event()
         self._enabled = self._is_repo()
         # Optional callback fired in the committer thread after each successful commit.
-        # Set by App to trigger history-cache invalidation without polling.
         self.on_commit: "Callable[[], None] | None" = None
         self._committer = threading.Thread(target=self._commit_loop, name="gitcommit", daemon=True)
         self._syncer = threading.Thread(target=self._sync_loop, name="gitsync", daemon=True)
@@ -78,7 +73,7 @@ class GitSync:
     # --- public API ------------------------------------------------------
 
     def push_change(self, message: str) -> None:
-        """Queue a commit for the latest board state (push happens, bundled, soon)."""
+        """Queue a commit for the current worktree (push happens, bundled, soon)."""
         if self._enabled:
             self._jobs.put(message)
 
@@ -86,16 +81,6 @@ class GitSync:
         """Ask the sync loop to fetch+merge right away (bypassing the poll backoff)."""
         if self._enabled:
             self._fetch_now.set()
-
-    def set_tracked_file(self, path: Path) -> None:
-        """Point sync at a different board file (used when switching boards)."""
-        path = Path(path)
-        with self._git_lock:
-            self.tracked_file = path
-            try:
-                self._rel = str(path.relative_to(self.repo_root))
-            except ValueError:
-                self._rel = path.name
 
     def identity(self) -> tuple[str, str]:
         """The configured git user (name, email); cached, best-effort."""
@@ -133,12 +118,10 @@ class GitSync:
             return "never"
         return time.strftime("%H:%M:%S", time.localtime(ts))
 
-    def git_show_file(self, commit_ref: str) -> str:
-        """Return raw text of the tracked board file at commit_ref.
-
-        Does NOT acquire _git_lock (read-only). Returns '' on error.
-        """
-        result = self._git("show", f"{commit_ref}:{self._rel}", timeout=10)
+    def file_log(self, rel_path: str, max_count: int = 50) -> str:
+        """Raw ``git log`` for one file (read-only, no lock). '' on error."""
+        result = self._git("log", f"--max-count={max_count}",
+                           "--format=%H|%ae|%an|%aI", "--", rel_path, timeout=15)
         return result.stdout if result.returncode == 0 else ""
 
     # --- internals -------------------------------------------------------
@@ -159,16 +142,13 @@ class GitSync:
             timeout=timeout,
         )
 
-    def _file_mtime(self) -> float:
-        try:
-            return self.tracked_file.stat().st_mtime
-        except OSError:
-            return 0.0
+    def _head(self) -> str:
+        return self._git("rev-parse", "HEAD").stdout.strip()
 
     def _commit(self, message: str) -> bool:
-        """Commit the tracked file locally. Returns True if a commit was made."""
-        self._git("add", self._rel)
-        staged = self._git("diff", "--cached", "--quiet", "--", self._rel)
+        """Commit tracked dirs locally. Returns True if a commit was made."""
+        self._git("add", "--", *self.tracked)
+        staged = self._git("diff", "--cached", "--quiet", "--", *self.tracked)
         if staged.returncode == 0:
             return False  # nothing staged
         self._git("commit", "-m", message)
@@ -176,7 +156,7 @@ class GitSync:
 
     def _pull(self) -> bool:
         """Fetch and reconcile remote changes. Returns True if the remote was ahead."""
-        before = self._file_mtime()
+        before = self._head()
         self._git("fetch", "--quiet")
         with self._lock:
             self.last_fetch = time.time()
@@ -188,8 +168,8 @@ class GitSync:
             # No local commits: a plain fast-forward, no conflicts possible.
             ff = self._git("merge", "--ff-only", "@{u}")
             if ff.returncode == 0:
-                if self._file_mtime() != before:
-                    self.board_changed.set()
+                if self._head() != before:
+                    self.changed.set()
                 self._set_status("git: pulled remote changes")
             else:
                 self._set_status("git: needs manual merge")
@@ -197,32 +177,23 @@ class GitSync:
         self._strategy_merge(before)
         return True
 
-    def _strategy_merge(self, before: float) -> None:
-        """Diverged history: let git merge with the configured -X option."""
+    def _strategy_merge(self, before: str) -> None:
+        """Diverged history: merge with the configured -X option, per file."""
         self._git("merge", "--no-commit", "--no-edit", "-X", self.merge_option, "@{u}")
         unmerged = self._git("diff", "--name-only", "--diff-filter=U").stdout.split()
         if unmerged:
+            # Ciphertext or genuinely conflicting files can't be auto-resolved.
             self._git("merge", "--abort")
             self._set_status("git: needs manual merge")
             return
-        # Safety net: a line-based merge can occasionally produce a corrupt or
-        # duplicated board. Parse-validate + normalize; bail to manual if broken.
-        try:
-            board = Board.load(self.tracked_file)
-            board.save()
-        except Exception:
-            self._git("merge", "--abort")
-            self._set_status("git: needs manual merge")
-            return
-        self._git("add", self._rel)
+        self._git("add", "--", *self.tracked)
         self._git("commit", "--no-edit")
-        if self._file_mtime() != before:
-            self.board_changed.set()
+        if self._head() != before:
+            self.changed.set()
         self._set_status(f"git: merged remote changes (-X {self.merge_option})")
 
     def _push(self) -> None:
-        # Always fetch + merge before pushing.
-        self._pull()
+        self._pull()  # always fetch + merge before pushing
         push = self._git("push")
         if push.returncode == 0:
             self._set_status("git: pushed")
@@ -243,7 +214,7 @@ class GitSync:
                         self.on_commit()
             except subprocess.TimeoutExpired:
                 self._set_status("git: commit timeout")
-            except Exception as exc:  # best-effort, never crash the UI
+            except Exception as exc:  # best-effort, never crash the server
                 self._set_status(f"git: commit error {exc}")
 
     def _sync_loop(self) -> None:
@@ -253,27 +224,23 @@ class GitSync:
             now = time.monotonic()
             try:
                 if self._fetch_now.is_set():
-                    # Immediate fetch requested: pull right away.
                     self._fetch_now.clear()
                     with self._git_lock:
                         self._pull()
                     last_poll = now
-                    self._cur_poll = self.poll_interval  # activity -> reset backoff
+                    self._cur_poll = self.poll_interval
                 elif self._dirty.is_set() and now - last_push >= self.push_interval:
-                    # Batched push: send all commits accumulated since last push.
                     self._dirty.clear()
                     self._set_status("git: pushing…")
                     with self._git_lock:
                         self._push()
                     last_push = now
                     last_poll = now
-                    self._cur_poll = self.poll_interval  # activity -> reset backoff
+                    self._cur_poll = self.poll_interval
                 elif now - last_poll >= self._cur_poll:
                     with self._git_lock:
                         pulled = self._pull()
                     last_poll = now
-                    # Exponential backoff while idle: nothing remote AND nothing to
-                    # push. Reset to the base interval the moment there's activity.
                     if pulled or self._dirty.is_set():
                         self._cur_poll = self.poll_interval
                     else:

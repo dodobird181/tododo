@@ -12,8 +12,6 @@ from pathlib import Path
 
 import yaml
 
-from tododo.ascii_layout import parse_ascii_grid
-
 ROOT = Path(__file__).resolve().parent.parent
 USERDATA = ROOT / "userdata"
 DEFAULT_PATH = ROOT / "default_settings.yaml"
@@ -31,64 +29,11 @@ DEFAULTS = {
     "avatar_images": True,           # try to load a real Gravatar image (else monogram)
     "timestamps": "selected",        # show last-updated time: "selected" or "all"
     "timestamp_format": "%B {th}, %Y at %-I:%M %p (%Z)",  # strftime + {th} ordinal day
-    "item_layout": None,             # overridden by default_settings.yaml
+    "server_port": 8770,             # port the local HTTP data server binds to
+    "lock_ttl": 300,                 # seconds before an item lock is treated as stale
+    "encryption": False,             # AES-256 encrypt item/board files at rest
+    "encryption_key_file": "",       # path to a 32-byte key file (else TODODO_KEY env)
 }
-
-# Built-in layout defaults (used when item_layout is absent from settings).
-DEFAULT_ITEM_LAYOUT = {
-    "collapsed": (
-        "+---1---+\n"
-        "| title |\n"
-        "+-------+\n"
-    ),
-    "expanded": (
-        "+-------2-------+\n"
-        "| title         |\n"
-        "+---------------+\n"
-        "| description   |\n"
-        "+---1---+---1---+\n"
-        "| blame | due   |\n"
-        "+---------------+\n"
-        "| relationships |\n"
-        "+---------------+\n"
-    ),
-}
-
-
-def _parse_layout_row(row_str: str) -> list[tuple[str, int]]:
-    """Parse "field1:w1 field2:w2" or "field" into [(field, weight), ...]."""
-    cells = []
-    for token in str(row_str).strip().split():
-        if ":" in token:
-            field, _, wt = token.partition(":")
-            try:
-                w = int(wt)
-            except ValueError:
-                w = 1
-        else:
-            field, w = token, 1
-        field = field.strip()
-        if field:
-            cells.append((field, max(1, w)))
-    return cells
-
-
-def _parse_item_layout(rows) -> list[list[tuple[str, int]]]:
-    result = []
-    for row in (rows or []):
-        cells = _parse_layout_row(str(row))
-        if cells:
-            result.append(cells)
-    return result
-
-
-def _ascii_to_layout(ascii_str: str) -> list[list[tuple[str, int]]]:
-    cells = parse_ascii_grid(ascii_str)
-    rows: dict[int, list[tuple[str, int]]] = {}
-    for c in sorted(cells, key=lambda c: (c.row, c.col)):
-        if c.field.strip():
-            rows.setdefault(c.row, []).append((c.field, c.width_ratio))
-    return [rows[r] for r in sorted(rows)]
 
 
 class Settings:
@@ -167,18 +112,15 @@ class Settings:
         except (TypeError, ValueError):
             return 300.0
 
-    def item_layout(self, mode: str) -> list[list[tuple[str, int]]]:
-        """Parsed grid layout for 'collapsed' or 'expanded' mode."""
-        spec = self.values.get("item_layout") or {}
-        if not isinstance(spec, dict):
-            spec = {}
-        val = spec.get(mode) or DEFAULT_ITEM_LAYOUT.get(mode)
-        if val is None:
-            return []
-        if isinstance(val, str):
-            try:
-                return _ascii_to_layout(val)
-            except Exception:
-                return []
-        return _parse_item_layout(val)
+    def server_port(self) -> int:
+        try:
+            return int(self.values.get("server_port", 8770))
+        except (TypeError, ValueError):
+            return 8770
+
+    def set(self, key: str, value) -> None:
+        """Update one setting in-memory and rewrite the user file."""
+        self.values[key] = value
+        with USER_PATH.open("w", encoding="utf-8") as fh:
+            yaml.safe_dump(self.values, fh, sort_keys=False, allow_unicode=True)
 

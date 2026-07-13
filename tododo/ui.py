@@ -11,12 +11,31 @@ import pygame
 import yaml
 
 from . import avatars, clipboard, markdown, theme, timefmt, workspace
-from .board import Board, Item
+from .guimodel import UiBoard, UiItem as Item
 from .keybindings import ACTIONS, Keybindings, code_to_key_name
-from .keybindings import USER_PATH as KB_USER_PATH
-from .gitsync import GitSync
 from .settings import Settings
-from .settings import USER_PATH as SETTINGS_USER_PATH
+
+# Fixed card layouts (the old configurable item_layout system has been removed).
+# Each layout is rows of (field, weight); the layout engine below renders them.
+CARD_LAYOUT = {
+    "collapsed": [[("title", 1)]],
+    "expanded": [
+        [("title", 1)],
+        [("description", 1)],
+        [("blame", 1), ("due", 1)],
+        [("relationships", 1)],
+    ],
+}
+PERSON_FIELDS = ["assignee", "reporter"]
+
+
+def _iso_epoch(s: str) -> float:
+    """Parse an ISO datetime string to unix seconds (0.0 on failure)."""
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(s).timestamp()
+    except Exception:
+        return 0.0
 
 # --- layout constants ----------------------------------------------------
 
@@ -46,6 +65,8 @@ OVERLAY = (10, 12, 16, 210)
 DANGER = (224, 108, 108)
 CODE = (224, 196, 140)
 SELECTION = (74, 110, 165)
+LOCK_DOTTED = (240, 196, 110)
+LOCK_OTHER = (200, 90, 120)
 
 COLUMN_COLORS = [(110, 168, 254), (240, 196, 110), (96, 200, 160), (200, 130, 240), (240, 140, 170)]
 
@@ -70,6 +91,8 @@ def apply_theme(colors: dict) -> None:
     g["DANGER"] = colors["danger"]
     g["CODE"] = colors["code"]
     g["SELECTION"] = colors["selection"]
+    g["LOCK_DOTTED"] = colors["lock_dotted"]
+    g["LOCK_OTHER"] = colors["lock_other"]
     g["COLUMN_COLORS"] = colors["column_colors"]
 
 
@@ -396,7 +419,8 @@ class App:
     SEARCH = "search"
     VIEW_HISTORY = "view_history"
 
-    def __init__(self, board: Board, keys: Keybindings, git: GitSync, settings: "Settings"):
+    def __init__(self, client, keys: Keybindings, settings: "Settings",
+                 user: dict, board_name: str):
         pygame.init()
         pygame.display.set_caption("tododo — kanban on YAML")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -410,15 +434,19 @@ class App:
         self._build_md_fonts()
         # Background fetcher for real avatar images (GitHub, by author email).
         self.avatars = avatars.AvatarStore()
-        self._authors_dirty = False  # board.authors changed -> persist soon
-        # Background fetcher for real avatar images (GitHub, by author email).
-        self.avatars = avatars.AvatarStore()
-        self._authors_dirty = False  # board.authors changed -> persist soon
+        self._authors_dirty = False  # unused (authors registry removed); kept for old paths
 
-        self.board = board
+        self.client = client
+        # Identity of the local user (from the server's git config).
+        self.user = user or {}
+        self.actor = self.user.get("github") or self.user.get("user") or "someone"
         self.keys = keys
-        self.git = git
         self.settings = settings
+        # Client-backed board adapter (all reads/writes go through the server).
+        self.board = UiBoard(client, board_name, self.actor)
+        # Item id we currently hold a server lock on (released when selection moves).
+        self._locked_id: str | None = None
+        self._last_poll = 0
 
         self.mode = self.NORMAL
         self.selected_id: str | None = None
@@ -488,11 +516,8 @@ class App:
         # relationships editor state
         self.rel_index = 0
 
-        # Git history cache: item_id -> list[HistoryEvent] (newest-first)
-        # None = full-load in progress; absent = not warmed; [] = no history found.
+        # Per-item history is fetched on demand from the server (git-derived).
         self._history_cache: dict[str, list | None] = {}
-        self._history_dirty = threading.Event()
-        self.git.on_commit = self._history_dirty.set
         # History modal state.
         self._history_item_id: str | None = None
         self._history_scroll = 0
@@ -504,14 +529,8 @@ class App:
         self.toast = ""
         self.toast_until = 0
 
-        # Hot-reload: watch the source files for external edits (mtime polling).
-        self._watch = {
-            "board": self.board.path,
-            "settings": SETTINGS_USER_PATH,
-            "keybindings": KB_USER_PATH,
-            "theme": theme.CURRENT_PATH,
-        }
-        self._watch_mtime = {k: self._mtime(p) for k, p in self._watch.items()}
+        # Theme is still a local file; watch it for live re-skin.
+        self._theme_mtime = self._mtime(theme.CURRENT_PATH)
         self._last_watch = 0
 
     # --- helpers ---------------------------------------------------------
@@ -528,45 +547,19 @@ class App:
         self.toast_until = pygame.time.get_ticks() + ms
 
     def persist(self, message: str) -> None:
-        """Save board to disk and queue a git push."""
-        self._ensure_self_author()
-        self.board.save()
-        # Record our own write so the file watcher doesn't treat it as external.
-        self._watch_mtime["board"] = self._mtime(self.board.path)
-        self.git.push_change(message)
-
-    def _ensure_self_author(self) -> None:
-        """Register the local user in the board's authors registry and cache
-        their GitHub login so avatar lookups are fast on subsequent opens."""
-        name, email = self.git.identity()
-        if not email:
-            return
-        if self.board.register_author(email, name):
-            self._authors_dirty = True
-        rec = self.board.authors.get(email, {})
-        gh_login = rec.get("github") or self.git.github_username()
-        if gh_login and not rec.get("github"):
-            if self.board.set_author_meta(email, github=gh_login):
-                self._authors_dirty = True
+        """Flush buffered field edits to the server (which commits + pushes)."""
+        self.board.flush()
 
     def selected(self) -> Item | None:
         return self.board.find(self.selected_id) if self.selected_id else None
 
     def _actor(self) -> str:
-        """Display name credited with the current action.
-
-        Prefers the GitHub username (unique, stable) over the git display name.
-        """
-        name, email = self.git.identity()
-        if email:
-            gh = self.board.authors.get(email, {}).get("github")
-            if gh:
-                return gh
-        return name or "someone"
+        """Github username credited with the current action."""
+        return self.actor
 
     def _board_key(self) -> str:
-        """Workspace namespace key for the current board (its file stem)."""
-        return self.board.path.stem
+        """Namespace key for the current board (its name)."""
+        return self.board.name
 
     def _build_md_fonts(self) -> None:
         """(Re)build markdown fonts, which bake in the current theme colours."""
@@ -581,99 +574,76 @@ class App:
     def _invalidate_history_cache(self) -> None:
         self._history_cache.clear()
 
-    def _warm_history_cache(self) -> None:
-        """Background daemon: load latest_event for each board item into cache."""
-        from .history import latest_event
-        for item_id in [it.id for it in self.board.items]:
-            evt = latest_event(self.git.repo_root, self.git._rel, item_id)
-            self._history_cache[item_id] = [evt] if evt else []
-
     def _ensure_history_loaded(self, item_id: str) -> None:
-        """Background: load full history for one item (for the history modal)."""
-        from .history import load_item_history
-        root = self.git.repo_root
-        rel = self.git._rel
-
+        """Background: fetch one item's git history from the server (for the modal)."""
         def _load() -> None:
-            events = load_item_history(root, rel, item_id)
-            self._history_cache[item_id] = events
-
+            self._history_cache[item_id] = self.client.item_history(item_id)
         threading.Thread(target=_load, name="histload", daemon=True).start()
 
     def run(self) -> None:
-        threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
         while self.running:
             for event in pygame.event.get():
                 self.handle_event(event)
-            # External pulls may have changed the file on disk.
-            if self.git.board_changed.is_set():
-                self.git.board_changed.clear()
-                self.reload_board()
-                self._invalidate_history_cache()
-                threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
-            self.check_file_reloads()
-            # Persist newly-registered authors / resolved avatars (version control).
-            if self._authors_dirty:
-                self._authors_dirty = False
-                self.persist("update authors")
-            # Re-warm blame cache after a local commit.
-            if self._history_dirty.is_set():
-                self._history_dirty.clear()
-                self._invalidate_history_cache()
-                threading.Thread(target=self._warm_history_cache, name="histwarm", daemon=True).start()
+            self._acquire_lock(self.selected_id)  # lock follows the selection
+            self.poll_board()       # pick up others' edits from the server
+            self.check_theme_reload()
             self.render()
             self.clock.tick(60)
-        self.git.stop()
+        self._release_lock()
         pygame.quit()
 
     def reload_board(self) -> None:
-        self.board = Board.load(self.board.path)
+        """Re-fetch the board + items from the server, keeping selection sane."""
+        self.board.refresh()
         if self.selected_id and not self.board.find(self.selected_id):
             self.selected_id = None
         if self.focused_col not in self.board.columns:
             self.focused_col = None
-        # Drop any multi-selected ids that no longer exist.
         self.multi = {i for i in self.multi if self.board.find(i)}
-        # A column may have been deleted elsewhere: drop it from the persisted
-        # minimized set (save() prunes against the current columns).
-        before = set(self.minimized)
         self.minimized &= set(self.board.columns)
-        if self.minimized != before:
-            self.workspace.save(self._board_key(), self.board.columns)
-        self._watch_mtime["board"] = self._mtime(self.board.path)
-        self.notify("board reloaded")
 
-    def check_file_reloads(self) -> None:
-        """Hot-reload board / settings / keybindings when edited on disk."""
+    def poll_board(self) -> None:
+        """Poll the server for board/item changes at ~1s cadence."""
         now = pygame.time.get_ticks()
-        if now - self._last_watch < 1000:  # poll at most once a second
+        if now - self._last_poll < 1000:
+            return
+        self._last_poll = now
+        self.reload_board()
+
+    def check_theme_reload(self) -> None:
+        """The theme is still a local file; hot-reload it on change."""
+        now = pygame.time.get_ticks()
+        if now - self._last_watch < 1000:
             return
         self._last_watch = now
-        for key, path in self._watch.items():
-            m = self._mtime(path)
-            if m and m != self._watch_mtime[key]:
-                self._watch_mtime[key] = m
-                self._reload_file(key)
-
-    def _reload_file(self, key: str) -> None:
-        if key == "board":
-            self.reload_board()
-        elif key == "settings":
-            self.settings = Settings.load()
-            # Push live-tunable values to the running git sync.
-            self.git.merge_option = self.settings.merge_option()
-            self.git.push_interval = self.settings.push_interval()
-            self.git.poll_interval = self.settings.poll_interval()
-            self.git.poll_backoff_max = self.settings.poll_backoff_max()
-            self.notify("settings reloaded")
-        elif key == "keybindings":
-            self.keys = Keybindings.load()
-            self.notify("keybindings reloaded")
-        elif key == "theme":
+        m = self._mtime(theme.CURRENT_PATH)
+        if m and m != self._theme_mtime:
+            self._theme_mtime = m
             apply_theme(theme.load_current())
             self._build_md_fonts()
             self._theme_cache.clear()
             self.notify("theme reloaded")
+
+    # --- server-backed locking ------------------------------------------
+
+    def _acquire_lock(self, item_id: str | None) -> None:
+        """Acquire the server lock on the newly-selected item (releasing the old)."""
+        if item_id == self._locked_id:
+            return
+        self._release_lock()
+        if item_id and self.board.find(item_id):
+            locked, holder = self.client.lock_item(item_id)
+            if locked:
+                self._locked_id = item_id
+
+    def _release_lock(self) -> None:
+        if self._locked_id:
+            self.client.unlock_item(self._locked_id)
+            self._locked_id = None
+
+    def _can_edit(self, item: Item | None) -> bool:
+        """True when the item is editable by us (not locked by another user)."""
+        return bool(item) and not item.locked_by_other(self.actor)
 
     # --- event handling --------------------------------------------------
 
@@ -853,7 +823,8 @@ class App:
         self.mouse_down_pos = pos
         self.drag_item = None
         self.drag_candidate = None
-        if item:
+        # An item locked by another user may be selected (to view) but not dragged.
+        if item and not item.locked_by_other(self.actor):
             for cr in self.card_rects:
                 if cr.item.id == item.id:
                     self.drag_candidate = item
@@ -1089,8 +1060,7 @@ class App:
 
     def _copy_payload(self, item: Item) -> dict:
         """The portable subset of an item (no ids/timestamps/blame)."""
-        d: dict = {"title": item.title, "points": item.points,
-                   "description": item.description}
+        d: dict = {"title": item.title, "description": item.description}
         if item.due:
             d["due"] = item.due
         if item.assignee:
@@ -1127,7 +1097,6 @@ class App:
             col = self.focused_col
         else:
             col = self.board.columns[0]
-        name, email = self.git.identity()
         created: list[Item] = []
         for entry in data:
             if not isinstance(entry, dict):
@@ -1136,9 +1105,7 @@ class App:
             if not title:
                 continue
             item = self.board.create(title, column=col,
-                                     points=int(entry.get("points", 0) or 0),
-                                     description=str(entry.get("description", "") or ""),
-                                     author=email)
+                                     description=str(entry.get("description", "") or ""))
             item.due = str(entry.get("due", "") or "")
             item.assignee = str(entry.get("assignee", "") or "")
             item.reporter = str(entry.get("reporter", "") or "")
@@ -1146,7 +1113,6 @@ class App:
         if not created:
             self.notify("clipboard isn't an item")
             return
-        self.board.register_author(email, name)
         self.selected_id = created[-1].id
         self.focused_col = None
         self.persist(f"paste {len(created)} item(s)")
@@ -1160,23 +1126,32 @@ class App:
         else:
             col = self.board.columns[0]
 
-        name, email = self.git.identity()
-
         def submit(title: str, description: str) -> None:
             title = title.strip()
             if title:
-                item = self.board.create(title, column=col, description=description.strip(),
-                                         author=email)
-                self.board.register_author(email, name)  # track contributor in version control
+                item = self.board.create(title, column=col, description=description.strip())
                 self.selected_id = item.id
                 self.focused_col = None
-                self.persist(f"create '{title}'")
         self.editor = ItemEditor(f"New item in '{col}'", submit)
         self.mode = self.EDIT
+
+    def _guard_locked(self) -> bool:
+        """Refuse a mutation when any selected item is locked by another user.
+
+        Returns True if blocked (and notifies), False if the edit may proceed.
+        """
+        for it in self.selection():
+            if it.locked_by_other(self.actor):
+                self.notify(f"locked by {it.lock_value}")
+                self.mode = self.NORMAL
+                return True
+        return False
 
     def start_edit(self) -> None:
         item = self.selected()
         if not item:
+            return
+        if self._guard_locked():
             return
 
         orig_title, orig_desc = item.title, item.description
@@ -1216,11 +1191,7 @@ class App:
         Excludes the app's own config files (settings/keybindings/workspace and
         the version-controlled ``default_*`` templates).
         """
-        skip = {"settings", "keybindings", "workspace",
-                "default_settings", "default_keybindings"}
-        boards = sorted(p.stem for p in self.board.path.parent.glob("*.yaml")
-                        if p.stem not in skip)
-        return boards
+        return sorted(b.get("name", "") for b in self.client.list_boards() if b.get("name"))
 
     def start_new_board(self) -> None:
         """Prompt for a name and create a brand-new board file (CTRL+M)."""
@@ -1317,7 +1288,7 @@ class App:
             return
         apply_theme(colors)
         self._build_md_fonts()  # markdown fonts bake in colours; rebuild them
-        self._watch_mtime["theme"] = self._mtime(theme.CURRENT_PATH)
+        self._theme_mtime = self._mtime(theme.CURRENT_PATH)
         self.notify(f"theme: {name}")
 
     def handle_themes(self, event) -> None:
@@ -1493,39 +1464,35 @@ class App:
                              border_radius=2)
 
     def _open_board(self, name: str, create: bool) -> None:
-        # Keep it a sibling .yaml file (no path traversal); add the extension.
-        stem = Path(name).name
-        if not stem.endswith(".yaml"):
-            stem += ".yaml"
-        path = self.board.path.parent / stem
-        if not path.exists() and not create:
-            self.notify(f"no board '{Path(stem).stem}' — use CTRL+M to create it")
+        name = name.strip()
+        if not name:
             return
-        existed = path.exists()
-        self.board = Board.load(path)  # creates a default board if missing
+        exists = self.client.get_board(name) is not None
+        if not exists:
+            if not create:
+                self.notify(f"no board '{name}' — use CTRL+M to create it")
+                return
+            # Default columns mirror the built-in board layout.
+            self.client.create_board(name, ["Todo", "Doing", "Done"])
+        self._release_lock()
+        self.board = UiBoard(self.client, name, self.actor)
         self.selected_id = None
         self._clear_multi()
         self._invalidate_history_cache()
-        # Retarget git sync + the file watcher at the new board.
-        self.git.set_tracked_file(path)
-        self._watch["board"] = path
-        self._watch_mtime["board"] = self._mtime(path)
         # Minimized columns are namespaced per board: load this board's own set.
         self.minimized = self.workspace.minimized(self._board_key())
         self.minimized &= set(self.board.columns)
         self.workspace.touch_opened(self._board_key())  # bump recency for ordering
         self.workspace.save(self._board_key(), self.board.columns)
-        if existed:
-            self.notify(f"switched to board '{self._board_key()}'")
-        else:
-            self.persist(f"create board '{stem}'")
-            self.notify(f"created board '{self._board_key()}'")
+        self.notify(f"{'created' if create and not exists else 'switched to'} board '{name}'")
 
     def start_delete(self) -> None:
         sel = self.selection()
         if not sel:
             self.notify("no item selected")
             self.mode = self.NORMAL
+            return
+        if self._guard_locked():
             return
 
         ids = [it.id for it in sel]
@@ -1541,25 +1508,15 @@ class App:
         self.mode = self.CONFIRM
 
     def start_point(self) -> None:
-        item = self.selected()
-        if not item:
-            self.notify("no item selected")
-            self.mode = self.NORMAL
-            return
-
-        def submit(text: str) -> None:
-            try:
-                item.points = int(text or 0)
-            except ValueError:
-                item.points = 0
-            self.persist(f"point '{item.title}' = {item.points}")
-        self.text_input = TextInput(f"Points for '{item.title}':", submit,
-                                    initial=str(item.points), numeric=True)
-        self.mode = self.TEXT
+        # Points were removed from the item schema.
+        self.notify("points are no longer supported")
+        self.mode = self.NORMAL
 
     def start_due_date(self) -> None:
         item = self.selected()
         if not item:
+            return
+        if self._guard_locked():
             return
 
         def submit(text: str) -> None:
@@ -1578,6 +1535,8 @@ class App:
         if not sel:
             self.notify("no item selected")
             self.mode = self.NORMAL
+            return
+        if self._guard_locked():
             return
         for item in sel:
             self.board.move_relative(item.id, delta)
@@ -1622,17 +1581,16 @@ class App:
             return
         flat = self._kb_actions_flat()
         if self.kb_capturing:
-            # Capture the next key as the new binding for the selected action.
+            # Capture the next key as the new binding for the selected action; the
+            # server owns the keybindings file, so persist through the client.
             action = flat[self.kb_index]
-            self.keys.mapping[action] = code_to_key_name(event.key)
+            value = code_to_key_name(event.key)
+            self.keys.mapping[action] = value
             self.kb_capturing = False
-            self.keys.save()
-            self._watch_mtime["keybindings"] = self._mtime(KB_USER_PATH)
-            self.notify(f"{action} -> {code_to_key_name(event.key)}")
+            self.client.update_keybinding(action, value)
+            self.notify(f"{action} -> {value}")
             return
         if self.keys.matches("cancel", event.key):
-            self.keys.save()
-            self._watch_mtime["keybindings"] = self._mtime(KB_USER_PATH)
             self.mode = self.PALETTE
         elif event.key == pygame.K_UP:
             self.kb_index = (self.kb_index - 1) % len(flat)
@@ -1686,11 +1644,10 @@ class App:
         board_name = self.font_lg.render(self._board_key(), True, ACCENT)
         self.screen.blit(board_name, (16 + title.get_width() + 14,
                                       TOPBAR_H // 2 - board_name.get_height() // 2))
-        total = sum(it.points for it in self.board.items)
         palette_key = self.keys.label("open_palette") or "SPACE"
         left_edge = 16 + title.get_width() + 14 + board_name.get_width() + 20
         hint = self.font_sm.render(
-            f"{len(self.board.items)} items · {total} pts   ·   "
+            f"{len(self.board.items)} items   ·   "
             f"CTRL+{palette_key}: commands   ·   arrows: navigate   ·   drag to move",
             True, MUTED)
         self.screen.blit(hint, (left_edge, TOPBAR_H // 2 - hint.get_height() // 2))
@@ -1768,10 +1725,9 @@ class App:
         pygame.draw.line(self.screen, TEXT if hover else MUTED, (bx - 7, by), (bx + 7, by), 2)
 
         items = self.board.items_in(name)
-        pts = sum(it.points for it in items)
         label = self.font.render(name, True, ACCENT if focused else TEXT)
         self.screen.blit(label, (rect.x + 16, rect.y + HEADER_H // 2 - label.get_height() // 2))
-        meta = self.font_sm.render(f"{pts} pts", True, MUTED)
+        meta = self.font_sm.render(f"{len(items)}", True, MUTED)
         self.screen.blit(meta, (btn.x - meta.get_width() - 8,
                                 rect.y + HEADER_H // 2 - meta.get_height() // 2))
 
@@ -1830,31 +1786,17 @@ class App:
         return item.id == self.selected_id
 
     def show_timestamp(self, item: Item, floating: bool) -> bool:
-        events = self._history_cache.get(item.id)
-        if events is None:
-            return self.settings.timestamps_always or item.id == self.selected_id
-        if not events:
+        if not item.last_edited_at():
             return False
         return self.settings.timestamps_always or item.id == self.selected_id
 
     def blame_line(self, item: Item) -> str:
-        """Git-blame-style sentence derived from the history cache."""
-        events = self._history_cache.get(item.id)
-        if events is None:
-            return "Loading…"
-        if not events:
+        """Blame sentence from the item's own per-field provenance (no git needed)."""
+        when = item.last_edited_at()
+        if not when:
             return ""
-        evt = events[0]
-        fmt = self.settings.timestamp_format()
-        ts = timefmt.ago(evt.timestamp, fmt)
-        by = f" by {evt.author_name}" if evt.author_name else ""
-        if evt.action == "created":
-            return f"Created {ts}{by}"
-        if evt.action == "column":
-            col = evt.new_value or item.column
-            return f"Marked '{col}' {ts}{by}"
-        if evt.action == "deleted":
-            return f"Deleted {ts}{by}"
+        ts = timefmt.ago(_iso_epoch(when), self.settings.timestamp_format())
+        by = f" by {item.author}" if item.author else ""
         return f"Last edited {ts}{by}"
 
     # --- unified item display ---------------------------------------------
@@ -1957,7 +1899,7 @@ class App:
             expanded = force_expanded
         else:
             expanded = self.show_description(item, False) or self.show_timestamp(item, False)
-        layout = self.settings.item_layout("expanded" if expanded else "collapsed")
+        layout = CARD_LAYOUT["expanded" if expanded else "collapsed"]
         total_h, rows_data = self._layout_card(item, content_w, layout)
         n_gaps = max(0, len(rows_data) - 1)
         return max(CARD_MIN_H, total_h + n_gaps * 4 + 2 * CARD_PAD)
@@ -1975,7 +1917,7 @@ class App:
             expanded = force_expanded
         else:
             expanded = self.show_description(item, floating) or self.show_timestamp(item, floating)
-        layout = self.settings.item_layout("expanded" if expanded else "collapsed")
+        layout = CARD_LAYOUT["expanded" if expanded else "collapsed"]
 
         total_content_h, rows_data = self._layout_card(item, content_w, layout)
         n_gaps = max(0, len(rows_data) - 1)
@@ -1989,8 +1931,17 @@ class App:
         else:
             color = CARD_BG
         pygame.draw.rect(self.screen, color, rect, border_radius=8)
+        locked_other = item.locked_by_other(self.actor)
+        if not floating and locked_other:
+            # Held by another user: distinct lockee highlight (thick tint fill edge).
+            pygame.draw.rect(self.screen, LOCK_OTHER, rect, width=3, border_radius=8)
         if not floating and item.id == self.selected_id:
-            pygame.draw.rect(self.screen, ACCENT, rect, width=2, border_radius=8)
+            # We hold the lock on our selection: dotted outline in the lock colour,
+            # layered over the lockee highlight during the brief hand-over window.
+            if self._locked_id == item.id:
+                self._draw_dotted_rect(rect, LOCK_DOTTED)
+            else:
+                pygame.draw.rect(self.screen, ACCENT, rect, width=2, border_radius=8)
         elif not floating and (item.id in self.multi or force_selected):
             pygame.draw.rect(self.screen, ACCENT, rect, width=1, border_radius=8)
 
@@ -2009,6 +1960,16 @@ class App:
             ty += row_h
 
         return rect
+
+    def _draw_dotted_rect(self, rect: pygame.Rect, color, dash: int = 5, gap: int = 4) -> None:
+        """Draw a dotted/dashed rectangle border (used for a held-lock selection)."""
+        step = dash + gap
+        for x in range(rect.left, rect.right, step):
+            pygame.draw.line(self.screen, color, (x, rect.top), (min(x + dash, rect.right), rect.top), 2)
+            pygame.draw.line(self.screen, color, (x, rect.bottom - 1), (min(x + dash, rect.right), rect.bottom - 1), 2)
+        for y in range(rect.top, rect.bottom, step):
+            pygame.draw.line(self.screen, color, (rect.left, y), (rect.left, min(y + dash, rect.bottom)), 2)
+            pygame.draw.line(self.screen, color, (rect.right - 1, y), (rect.right - 1, min(y + dash, rect.bottom)), 2)
 
     def _avatar_image(self, email: str, name: str, size: int):
         """A circular GitHub avatar Surface for the email, or None (use monogram).
@@ -2084,9 +2045,11 @@ class App:
     def draw_statusbar(self, w: int, h: int) -> None:
         rect = pygame.Rect(0, h - STATUSBAR_H, w, STATUSBAR_H)
         pygame.draw.rect(self.screen, COL_HEADER, rect)
-        with self.git._lock:
-            status = self.git.status
-        line = f"{status}   ·   last fetch: {self.git.last_fetch_label()}"
+        if self.client.last_error:
+            status = f"server: {self.client.last_error}"
+        else:
+            status = f"server: connected ({self.actor})"
+        line = f"{status}"
         surf = self.font_sm.render(line, True, MUTED)
         self.screen.blit(surf, (12, h - STATUSBAR_H + 5))
         # Footnote: how to reach the command palette.
@@ -2550,6 +2513,8 @@ class App:
 
     def start_relationships(self) -> None:
         if not self.selected():
+            return
+        if self._guard_locked():
             return
         self.rel_index = 0
         self.mode = self.RELATIONSHIPS
