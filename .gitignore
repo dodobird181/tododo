@@ -221,6 +221,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# tododo: raw plaintext event log is machine-local; only the encrypted mirror
+# (events-encrypted/) is version-controlled.
+events/
+
 # tododo: user-local files live in userdata/ (auto-generated / machine-specific)
 userdata/
 board.yaml.tmp
