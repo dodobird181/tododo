@@ -24,6 +24,7 @@ git github-username, so no per-request auth is needed on a single-user machine.
 from __future__ import annotations
 
 import json
+import mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -37,6 +38,13 @@ from .store import Store
 from .workspace import Workspace
 
 ROOT = Path(__file__).resolve().parent.parent
+WEB_DIR = Path(__file__).resolve().parent / "web"
+
+# GET paths served by the JSON API; every other GET is a static web-client asset.
+_API_GET_PATHS = {
+    "/user", "/item", "/item/history", "/board", "/board/list",
+    "/keybindings", "/settings",
+}
 
 
 class Server:
@@ -256,8 +264,33 @@ def _make_handler(app: Server):
             self.end_headers()
             self.wfile.write(data)
 
+        def _serve_static(self, path: str):
+            """Serve the HTML+JS web client from tododo/web (same origin as the API)."""
+            rel = "index.html" if path in ("/", "") else path.lstrip("/")
+            target = (WEB_DIR / rel).resolve()
+            # Contain within WEB_DIR; fall back to the SPA entry point.
+            if WEB_DIR not in target.parents and target != WEB_DIR:
+                target = WEB_DIR / "index.html"
+            if not target.is_file():
+                target = WEB_DIR / "index.html"
+            try:
+                data = target.read_bytes()
+            except OSError:
+                self._send(404, {"error": "not found"})
+                return
+            ctype = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
         def do_GET(self):
-            self._dispatch("GET")
+            parsed = urlparse(self.path)
+            if parsed.path in _API_GET_PATHS:
+                self._dispatch("GET")
+            else:
+                self._serve_static(parsed.path)
 
         def do_POST(self):
             self._dispatch("POST")

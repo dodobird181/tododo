@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tododo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">tododo</div>
+    <div class="board-switch">
+      <select id="board-select" title="Switch board"></select>
+      <button id="new-board-btn" title="New board (Ctrl+B)">+ Board</button>
+      <button id="edit-board-btn" title="Edit columns / rename">Edit</button>
+    </div>
+    <div class="topbar-search">
+      <input id="search" type="search" placeholder="Search items… (Ctrl+F)" autocomplete="off">
+    </div>
+    <div class="topbar-actions">
+      <button id="new-item-btn" title="New item (Ctrl+N)">+ Item</button>
+      <button id="settings-btn" title="Settings">⚙</button>
+      <button id="keys-btn" title="Keybindings">⌨</button>
+    </div>
+    <div class="user" id="user-badge" title="Signed-in git user"></div>
+  </header>
+
+  <main id="board" aria-label="Kanban board"></main>
+
+  <div id="statusbar">
+    <span id="status-conn" class="status-dot">●</span>
+    <span id="status-text">connecting…</span>
+    <span id="status-spacer"></span>
+    <span id="status-hint">Ctrl+Space for shortcuts</span>
+  </div>
+
+  <!-- Modal host -->
+  <div id="overlay" class="hidden" aria-hidden="true"></div>
+
+  <template id="tpl-card">
+    <article class="card" tabindex="0" draggable="true">
+      <div class="card-lock" title="locked"></div>
+      <div class="card-avatar"></div>
+      <div class="card-title"></div>
+      <div class="card-desc"></div>
+      <div class="card-meta"></div>
+    </article>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>

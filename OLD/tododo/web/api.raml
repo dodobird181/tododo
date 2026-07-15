@@ -1,0 +1,340 @@
+#%RAML 1.0
+title: tododo local data server
+version: v1
+baseUri: http://127.0.0.1:{serverPort}
+baseUriParameters:
+  serverPort:
+    description: Port the local HTTP data server binds to.
+    type: integer
+    default: 8770
+mediaType: application/json
+protocols: [ HTTP ]
+
+documentation:
+  - title: Overview
+    content: |
+      The tododo data server is the only process that touches the filesystem
+      (items/, boards/), git, and encryption. Both the pygame GUI and this web
+      client are pure clients: every read and mutation goes through the JSON
+      endpoints below.
+
+      The caller identity — used for lock ownership and edit provenance — is the
+      server's own git github-username, so requests carry no auth (single-user
+      localhost machine). The web client is served static from the same origin as
+      the API, so browser fetch() is same-origin and needs no CORS.
+
+      Each item field (except id/lock) is a provenance block:
+      `{ value, last_edited_at, last_edited_by }`. The lock is
+      `{ value: "<github login>" | null, last_edited_at }`.
+
+types:
+
+  Provenance:
+    description: One provenance-tracked value.
+    type: object
+    properties:
+      value: string
+      last_edited_at: string  # ISO 8601, "" == none
+      last_edited_by: string
+
+  Lock:
+    type: object
+    properties:
+      value:
+        type: string | nil   # github login of holder, or null
+      last_edited_at: string
+
+  Item:
+    description: A single card. See itemspec.yaml.
+    type: object
+    properties:
+      id: string             # uuid4 hex
+      title: Provenance
+      description: Provenance
+      start: Provenance      # ISO datetime string, "" == none
+      end: Provenance        # ISO datetime string, "" == none
+      column: Provenance
+      board: Provenance
+      assigned_to: Provenance
+      report_to: Provenance
+      lock: Lock
+
+  ItemCreate:
+    type: object
+    properties:
+      board: string
+      column: string
+      title?: string
+      description?: string
+      start?: string
+      end?: string
+      assigned_to?: string
+      report_to?: string
+
+  ItemFilter:
+    description: Every field optional; any omitted filter is ignored.
+    type: object
+    properties:
+      title_contains?: string
+      title_does_not_contain?: string
+      description_contains?: string
+      description_does_not_contain?: string
+      started_before?: string
+      started_after?: string
+      ended_before?: string
+      ended_after?: string
+      in_column?: string
+      not_in_column?: string
+      in_board?: string
+      not_in_board?: string
+      locked_by?: string
+      not_locked_by?: string
+
+  Board:
+    type: object
+    properties:
+      name: string
+      columns: string[]      # ordered, unique per board
+
+  HistoryEvent:
+    type: object
+    properties:
+      commit: string
+      email: string
+      name: string
+      timestamp: string      # ISO 8601
+
+  Error:
+    type: object
+    properties:
+      error: string
+
+/user:
+  get:
+    description: The local git user driving this server.
+    responses:
+      200:
+        body:
+          type: object
+          properties:
+            user: string     # git name
+            email: string
+            github: string | nil
+
+/item:
+  get:
+    description: Fetch one item by id.
+    queryParameters:
+      id: string
+    responses:
+      200: { body: Item }
+      404: { body: Error }
+  post:
+    description: Create an item. Stamps provenance + commits. board and column required.
+    body: ItemCreate
+    responses:
+      200: { body: Item }
+      400: { body: Error }
+  put:
+    description: |
+      Update fields. The caller MUST hold the item lock (see /item/lock),
+      otherwise 409.
+    body:
+      type: object
+      properties:
+        id: string
+        title?: string
+        description?: string
+        start?: string
+        end?: string
+        column?: string
+        board?: string
+        assigned_to?: string
+        report_to?: string
+    responses:
+      200: { body: Item }
+      400: { body: Error }
+      404: { body: Error }
+      409: { body: Error }   # you do not hold the lock
+  delete:
+    description: Delete an item. Requires the lock (else 409).
+    queryParameters:
+      id: string
+    responses:
+      200:
+        body:
+          type: object
+          properties: { deleted: boolean }
+      404: { body: Error }
+      409: { body: Error }
+
+  /list:
+    post:
+      description: Filtered item query.
+      body: ItemFilter
+      responses:
+        200:
+          body:
+            type: object
+            properties:
+              items: Item[]
+
+  /lock:
+    post:
+      description: Acquire the exclusive edit lock (succeeds if free, stale, or already yours).
+      body:
+        type: object
+        properties: { id: string }
+      responses:
+        200:
+          body:
+            type: object
+            properties:
+              locked: boolean
+              holder: string | nil
+    delete:
+      description: Release the lock (only if you hold it).
+      queryParameters:
+        id: string
+      responses:
+        200:
+          body:
+            type: object
+            properties: { released: boolean }
+
+  /history:
+    get:
+      description: Commits touching this item's file, newest-first (from git).
+      queryParameters:
+        id: string
+      responses:
+        200:
+          body:
+            type: object
+            properties:
+              events: HistoryEvent[]
+
+/board:
+  get:
+    description: Fetch one board by name.
+    queryParameters:
+      name: string
+    responses:
+      200: { body: Board }
+      404: { body: Error }
+  post:
+    description: Create a board. Name must be unique (else 409).
+    body: Board
+    responses:
+      200: { body: Board }
+      400: { body: Error }
+      409: { body: Error }
+  put:
+    description: |
+      Rename and/or replace columns. Held under a board-edit lock while a
+      rename / add-column dialog is open. 409 if another user holds the board
+      lock or the new name is taken.
+    body:
+      type: object
+      properties:
+        name: string
+        new_name?: string
+        columns?: string[]
+    responses:
+      200: { body: Board }
+      404: { body: Error }
+      409: { body: Error }
+  delete:
+    description: Delete a board.
+    queryParameters:
+      name: string
+    responses:
+      200:
+        body:
+          type: object
+          properties: { deleted: boolean }
+      404: { body: Error }
+
+  /list:
+    get:
+      description: All boards.
+      responses:
+        200:
+          body:
+            type: object
+            properties:
+              boards: Board[]
+
+  /lock:
+    description: |
+      Coarse board-level lock, held while a client opens an add-column / rename
+      dialog so two users can't restructure the same board at once.
+    post:
+      body:
+        type: object
+        properties: { name: string }
+      responses:
+        200:
+          body:
+            type: object
+            properties:
+              locked: boolean
+              holder: string | nil
+    delete:
+      queryParameters:
+        name: string
+      responses:
+        200:
+          body:
+            type: object
+            properties: { released: boolean }
+
+/keybindings:
+  get:
+    description: All action -> key-name bindings.
+    responses:
+      200:
+        body:
+          type: object
+          properties:
+            bindings: object
+  put:
+    description: Update one binding.
+    body:
+      type: object
+      properties:
+        action: string
+        value: string
+    responses:
+      200:
+        body:
+          type: object
+          properties:
+            bindings: object
+      404: { body: Error }
+
+/settings:
+  get:
+    description: |
+      All settings. Values keep native JSON types (bool/int/float/str) so a
+      client can render the right control per primitive.
+    responses:
+      200:
+        body:
+          type: object
+          properties:
+            settings: object
+  put:
+    description: Update one setting; live-tunable git values are pushed to the sync loop.
+    body:
+      type: object
+      properties:
+        key: string
+        value: any
+    responses:
+      200:
+        body:
+          type: object
+          properties:
+            settings: object
+      404: { body: Error }
