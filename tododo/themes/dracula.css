@@ -1,0 +1,17 @@
+/* Dracula — Tododo theme. Edit or drop your own *.css here. */
+:root {
+  color-scheme: dark;
+  --bg:rgb(40,42,54);
+  --panel:rgb(47,49,63);
+  --line:rgb(56,58,74);
+  --fg:rgb(248,248,242);
+  --muted:rgb(98,114,164);
+  --accent:rgb(189,147,249);
+  --warn:rgb(241,250,140);
+  --danger:rgb(255,85,85);
+  --card:rgb(68,71,90);
+  --card-sel:rgb(98,84,140);
+  --card-drag:rgb(140,110,190);
+  --sel:rgb(98,84,140);
+  --shadow:rgba(0,0,0,.5);
+}

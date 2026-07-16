@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tododo</title>
+<style id="theme-base">
+  :root {
+    color-scheme: dark;
+    --bg:#14161a; --panel:#1e2127; --line:#2c313a; --fg:#e6e8eb; --muted:#8b93a0;
+    --accent:#6ea8fe; --warn:#f0a35e; --danger:#f0768e;
+    --card:#181b20; --card-sel:#2b3550; --card-drag:#37507a; --sel:#2b3550;
+    --shadow:rgba(0,0,0,.5);
+  }
+</style>
+<style id="theme"></style>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { display:flex; gap:.6rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header h1 { font-size:1rem; margin:0 .8rem 0 0; letter-spacing:.06em; }
+  select, input, button, textarea { font:inherit; color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:.35rem .55rem; }
+  button { cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.link { background:none; border:none; color:var(--muted); padding:.1rem .3rem; }
+  button.link:hover { color:var(--accent); }
+  kbd { font:inherit; font-size:.72rem; background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:.02rem .32rem; color:var(--muted); }
+  #work { display:flex; align-items:stretch; }
+  main { padding:1rem; flex:1; min-width:0; }
+  #editpane { flex:0 0 400px; width:400px; border-left:1px solid var(--line); background:var(--panel); padding:1rem; overflow:auto; max-height:calc(100vh - 54px); position:sticky; top:0; }
+  #editpane[hidden] { display:none; }
+  .panehead { display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem; }
+  .panehead strong { font-size:.95rem; }
+  @media (max-width:820px) { #editpane { flex-basis:320px; width:320px; } }
+  .board { display:flex; gap:1rem; align-items:flex-start; overflow-x:auto; }
+  .col { background:var(--panel); border:1px solid var(--line); border-radius:10px; min-width:264px; max-width:264px; padding:.6rem; }
+  .col h2 { font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:.1rem .2rem .6rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .col h2 .count { color:var(--muted); font-weight:400; }
+  .col.min { min-width:44px; max-width:44px; padding:.6rem .3rem; }
+  .col.min h2 { writing-mode:vertical-rl; transform:rotate(180deg); margin:0; height:180px; justify-content:flex-start; gap:.5rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.5rem .6rem; margin-bottom:.5rem; cursor:pointer; }
+  .card.sel { background:var(--card-sel); }
+  .card.cursor { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .col.colfocus { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .col.colfocus .add { border-color:var(--accent); color:var(--fg); }
+  .card.dragging { opacity:.4; }
+  .card.dropbefore { box-shadow:0 -2px 0 0 var(--accent); }
+  .card.dropafter { box-shadow:0 2px 0 0 var(--accent); }
+  .card .title { font-weight:600; }
+  .card .meta { color:var(--muted); font-size:.75rem; margin-top:.25rem; }
+  .card .actions { display:flex; gap:.15rem; margin-top:.4rem; flex-wrap:wrap; }
+  .add { width:100%; margin-top:.3rem; background:none; border:1px dashed var(--line); color:var(--muted); }
+  .conflicts { margin-top:1.5rem; border:1px solid var(--warn); border-radius:10px; padding:.75rem 1rem; }
+  .conflicts h2 { color:var(--warn); margin:.2rem 0 .6rem; font-size:.9rem; }
+  .conflict { border-top:1px solid var(--line); padding:.5rem 0; }
+  .conflict .cands { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.3rem; }
+  .empty { color:var(--muted); padding:2rem; text-align:center; }
+  #status { color:var(--muted); font-size:.8rem; margin-left:auto; }
+
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-start; justify-content:center; padding-top:10vh; z-index:50; }
+  .overlay[hidden] { display:none; }
+  .modal { background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 40px var(--shadow); width:min(620px, 94vw); max-height:80vh; overflow:auto; padding:1rem 1.1rem; }
+  .modal h3 { margin:0 0 .8rem; font-size:1rem; }
+  .modal label { display:block; color:var(--muted); font-size:.78rem; margin:.6rem 0 .2rem; }
+  .modal input[type=text], .modal input[type=datetime-local], .modal textarea, .modal select { width:100%; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 .8rem; }
+  .modal .row { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem; }
+  .modal .hint { color:var(--muted); font-size:.75rem; margin-top:.3rem; }
+  .kbtable { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .kbtable td { padding:.28rem .3rem; border-bottom:1px solid var(--line); }
+  .kbtable td.k { text-align:right; width:12rem; }
+  .kbtable tr.capturing td.k { color:var(--accent); }
+  .plist { list-style:none; margin:0; padding:0; }
+  .plist li { display:flex; justify-content:space-between; align-items:center; padding:.4rem .5rem; border-radius:6px; cursor:pointer; }
+  .plist li.on, .plist li:hover { background:var(--sel); }
+  .plist li.disabled { color:var(--muted); cursor:default; }
+  .plist li.disabled:hover, .plist li.disabled.on { background:none; }
+  button.btnfocus { outline:2px solid var(--accent); outline-offset:1px; }
+  pre.yaml { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.7rem; overflow:auto; font-size:.8rem; white-space:pre-wrap; word-break:break-word; }
+
+  .mdtoolbar { display:flex; gap:.25rem; margin:.2rem 0 .3rem; flex-wrap:wrap; }
+  .mdtoolbar button { padding:.12rem .5rem; font-size:.8rem; }
+  /* In-place editor: transparent textarea over a highlighted backdrop. Both must
+     share identical box metrics so characters line up. */
+  .mdwrap { position:relative; }
+  .mdta, .mdback {
+    font:.85rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding:.5rem .6rem; margin:0; border:1px solid var(--line); border-radius:6px;
+    box-sizing:border-box; width:100%; min-height:200px;
+    white-space:pre-wrap; overflow-wrap:break-word; word-break:break-word; letter-spacing:normal; tab-size:2;
+  }
+  .mdta { position:relative; display:block; background:transparent; color:transparent; caret-color:var(--fg); resize:vertical; z-index:2; }
+  .mdta::selection { background:var(--card-sel); color:transparent; }
+  .mdback { position:absolute; inset:0; z-index:1; color:var(--fg); pointer-events:none; overflow:hidden; background:var(--bg); }
+  .md-syn { color:var(--muted); opacity:.55; }
+  .md-strong { font-weight:700; }
+  .md-em { font-style:italic; }
+  .md-code { color:var(--warn); }
+  .md-link { color:var(--accent); text-decoration:underline; }
+  .md-h { color:var(--accent); font-weight:700; }
+  .md-quote { color:var(--muted); font-style:italic; }
+  @media (max-width:640px) { .grid2 { grid-template-columns:1fr; } }
+
+  /* Calendar mode: a Google-Calendar-style week grid (day columns × hour rows)
+     replacing the kanban board while active. Only items with both a start and
+     an end appear; multi-day items sit in the all-day band. */
+  .calweek { display:flex; flex-direction:column; height:calc(100vh - 96px); }
+  .calweek .gutter { flex:0 0 56px; }
+  .calnav { display:flex; align-items:center; gap:.3rem; margin-bottom:.5rem; }
+  .calnav .range { font-weight:600; margin-left:.5rem; }
+  .calnav .arrow { font-size:1.1rem; line-height:1; padding:.15rem .5rem; }
+
+  .calhead { display:flex; }
+  .calhead .day { flex:1; text-align:center; padding:.25rem 0 .45rem; border-left:1px solid var(--line); }
+  .calhead .day .dow { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .calhead .day .dom { font-size:1.4rem; line-height:1.7; color:var(--fg); }
+  .calhead .day.today .dom { background:var(--accent); color:#fff; border-radius:50%; width:1.9rem; height:1.9rem; display:inline-flex; align-items:center; justify-content:center; line-height:1; }
+
+  .callday { display:flex; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .callday .gutter { font-size:.6rem; color:var(--muted); text-align:right; padding:.2rem .35rem 0 0; }
+  .callday .lanes { flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:1.35rem; gap:2px; padding:2px 0; min-height:1.5rem; }
+  .calspan { background:var(--card-sel); border-left:3px solid var(--accent); border-radius:4px; padding:.05rem .4rem; font-size:.72rem; line-height:1.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .calspan:hover { filter:brightness(1.12); }
+
+  .calbody { flex:1; display:flex; overflow-y:auto; position:relative; }
+  .calbody .gutter { position:relative; }
+  .calbody .gutter .hourlabel { position:absolute; right:.4rem; font-size:.66rem; color:var(--muted); transform:translateY(-.5em); }
+  .caldays { flex:1; display:flex; position:relative; }
+  .caldaycol { flex:1; position:relative; border-left:1px solid var(--line); }
+  .calhour { position:absolute; left:0; right:0; border-top:1px solid var(--line); pointer-events:none; }
+  .calevent { position:absolute; box-sizing:border-box; background:var(--card-sel); border:1px solid var(--accent); border-left-width:3px; border-radius:5px; padding:.05rem .3rem; overflow:hidden; cursor:pointer; }
+  .calevent:hover { filter:brightness(1.12); }
+  .calevent .cn { font-weight:600; font-size:.72rem; line-height:1.15; }
+  .calevent .ct { color:var(--muted); font-size:.66rem; }
+  .calnow { position:absolute; left:0; right:0; height:0; border-top:2px solid var(--danger); z-index:6; pointer-events:none; }
+  .calnow .dot { position:absolute; left:-4px; top:-5px; width:9px; height:9px; border-radius:50%; background:var(--danger); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="boardTitle">TODODO</h1>
+  <button data-action="switch_board" class="link">boards <kbd>space b</kbd></button>
+  <button data-action="new_board">+ board</button>
+  <button data-action="open_palette" class="link">palette <kbd>space</kbd></button>
+  <button id="calendarBtn" data-action="calendar" class="link">calendar <kbd>space C</kbd></button>
+  <button data-action="keybindings" class="link">keys</button>
+  <button data-action="themes" class="link">theme</button>
+  <button data-action="settings" class="link">settings</button>
+  <button id="editModeBtn" class="link">edit: modal</button>
+  <button id="refresh" class="link">refresh</button>
+  <span id="status"></span>
+</header>
+<div id="work">
+  <main>
+    <div id="board" class="board"></div>
+    <div id="conflicts"></div>
+  </main>
+  <aside id="editpane" hidden></aside>
+</div>
+
+<div id="overlay" class="overlay" hidden><div id="modal" class="modal"></div></div>
+
+<script>
+/* ---------------- API ---------------- */
+const api = {
+  async get(path) { const r = await fetch(path); return r.json(); },
+  async post(path, body) {
+    const r = await fetch(path, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+    return r.json();
+  },
+  async text(path) { const r = await fetch(path); return r.ok ? r.text() : ""; },
+};
+const status = (t) => { document.getElementById("status").textContent = t; };
+
+async function waitJob(uuid) {
+  for (let i = 0; i < 100; i++) {
+    const job = await api.get(`/job?uuid=${uuid}`);
+    if (job.status && job.status !== "pending") return job;
+    await new Promise(r => setTimeout(r, 30));
+  }
+  return null;
+}
+// Enqueue a write without re-rendering (for batching); returns the job.
+async function submit(path, body) {
+  const { uuid, error } = await api.post(path, body);
+  if (error) { status("error: " + error); return null; }
+  return waitJob(uuid);
+}
+async function write(path, body, label) {
+  status(label + "…");
+  const job = await submit(path, body);
+  status(job && job.status === "done" ? "ok" : "error");
+  await render();
+  return job;
+}
+
+/* ---------------- Keybindings ---------------- */
+// Leader model: tap the leader key (default Space) to arm command mode, then the
+// next key runs the mapped action. Ctrl is reserved for dragging (Ctrl+Arrow).
+const DEFAULT_KEYS = {
+  leader:" ", open_palette:" ", create:"n", edit:"Enter", delete:"d",
+  new_board:"m", switch_board:"b", keybindings:"k", view_yaml:"y", search:"f",
+  due_date:"w", themes:"t", minimize:"z", calendar:"C",
+  confirm:"Enter", cancel:"Escape",
+};
+const LEADER = [
+  "open_palette", "create", "edit", "delete", "new_board", "switch_board",
+  "search", "due_date", "minimize", "calendar", "view_yaml", "keybindings", "themes",
+];
+const ACTION_LABELS = {
+  open_palette:"Command palette", create:"Create item", edit:"Edit item",
+  delete:"Delete item(s)", new_board:"New board", switch_board:"Switch board",
+  keybindings:"Edit keybindings", view_yaml:"View item JSON", search:"Search items",
+  due_date:"Set due date", themes:"Switch theme", minimize:"Minimize column",
+  calendar:"Calendar mode",
+};
+const MOVE_HELP = [
+  ["← ↑ → ↓", "Move cursor between cards"],
+  ["Shift + Arrow", "Extend multi-selection"],
+  ["Enter", "Open selected item"],
+  ["Ctrl + ← →", "Drag item(s) across columns"],
+  ["Ctrl + ↑ ↓", "Reorder item in its column"],
+];
+
+async function loadKeys() {
+  try { return { ...DEFAULT_KEYS, ...(await api.get("/keybindings")) }; }
+  catch { return { ...DEFAULT_KEYS }; }
+}
+async function saveKeys(map) { KEYS = { ...DEFAULT_KEYS, ...(await api.post("/keybindings", map)) }; }
+let KEYS = { ...DEFAULT_KEYS };
+// Uppercase single letters (e.g. "C" = Shift+C) are shown as-is; everything
+// else is lowercased and "Arrow" is stripped.
+const keyLabel = (k) => k === " " ? "space"
+  : (k.length === 1 && k !== k.toLowerCase() && k === k.toUpperCase()) ? k
+  : k.replace(/^Arrow/, "").toLowerCase();
+
+/* ---------------- State ---------------- */
+let boards = [], currentBoardId = null, itemsCache = [];
+let cursorId = null;                 // the focused card (null when on an empty column)
+let cursorCol = null;                // the focused column (so empty columns are reachable)
+let selection = new Set();           // multi-selection (shift)
+let dragIds = [];                    // ids currently being drag-and-dropped
+let conflictsCache = [];             // last-fetched conflicts (repainted without refetch)
+let workspace = { current:"", theme:"default", boards:{} };
+let themeList = [];
+let calendarMode = false;            // when true, the agenda view replaces the kanban board
+
+/* ---------------- Workspace + themes ---------------- */
+async function loadWorkspace() { try { return await api.get("/workspace"); } catch { return workspace; } }
+async function saveWorkspace() {
+  workspace.current = currentBoardId || "";
+  workspace = await api.post("/workspace", workspace);
+}
+function minimizedCols() { return workspace.boards[currentBoardId]?.minimized || []; }
+// A minimized column is shown expanded while the cursor or a selected item is in
+// it, so the user can see its contents without un-minimizing it.
+function isCollapsed(col) {
+  if (!minimizedCols().includes(col)) return false;
+  if (focusedColumn() === col) return false;
+  return !itemsCache.some(i => selection.has(i.id) && i.column.value === col);
+}
+function toggleMinimize(col) {
+  const state = workspace.boards[currentBoardId] || (workspace.boards[currentBoardId] = { minimized: [] });
+  const i = state.minimized.indexOf(col);
+  if (i >= 0) state.minimized.splice(i, 1); else state.minimized.push(col);
+  paint();              // reflect immediately from cache
+  saveWorkspace();      // persist in the background
+}
+function recordBoardOpened(id) {
+  const state = workspace.boards[id] || (workspace.boards[id] = { minimized: [] });
+  state.opened = Date.now() / 1000;
+}
+async function openBoard(id) {
+  currentBoardId = id;
+  selection.clear(); cursorId = null;
+  recordBoardOpened(id);
+  await saveWorkspace();
+  await render();
+}
+async function applyTheme(name) {
+  const css = await api.text(`/theme?name=${encodeURIComponent(name || "default")}`);
+  document.getElementById("theme").textContent = css;
+  workspace.theme = name;
+}
+
+/* ---------------- Modals ---------------- */
+const overlay = document.getElementById("overlay");
+const modalEl = document.getElementById("modal");
+let modalKeyHandler = null;
+
+function openModal(node, onKey) {
+  modalEl.innerHTML = ""; modalEl.appendChild(node);
+  overlay.hidden = false; modalKeyHandler = onKey || null;
+  const focusable = modalEl.querySelector("input, textarea, button, select");
+  if (focusable) focusable.focus();
+}
+function closeModal() { overlay.hidden = true; modalEl.innerHTML = ""; modalKeyHandler = null; }
+const modalOpen = () => !overlay.hidden;
+overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  Object.assign(n, props);
+  for (const k of kids) if (k != null) n.append(k.nodeType ? k : document.createTextNode(k));
+  return n;
+}
+
+function modalText({ title, label, value = "", multiline = false, placeholder = "" }) {
+  return new Promise((resolve) => {
+    const input = multiline ? el("textarea", { value, rows: 4, placeholder }) : el("input", { type: "text", value, placeholder });
+    const submit_ = () => { closeModal(); resolve(input.value); };
+    const cancel = () => { closeModal(); resolve(null); };
+    const node = el("div", {}, el("h3", {}, title), el("label", {}, label), input,
+      el("div", { className: "row" }, el("button", { className: "link", onclick: cancel }, "Cancel"), el("button", { onclick: submit_ }, "OK")));
+    openModal(node, (e) => {
+      if (e.key === KEYS.confirm && !multiline) { e.preventDefault(); submit_(); }
+      else if (e.key === KEYS.cancel) { e.preventDefault(); cancel(); }
+    });
+  });
+}
+
+function modalConfirm({ title, message, confirmLabel = "Delete" }) {
+  return new Promise((resolve) => {
+    const done = (v) => { closeModal(); resolve(v); };
+    // Buttons: [Cancel, Confirm]; arrow keys move focus, Enter fires the focused one.
+    const buttons = [
+      el("button", { className: "link", onclick: () => done(false) }, "Cancel"),
+      el("button", { onclick: () => done(true) }, confirmLabel),
+    ];
+    let idx = 0;
+    const focus = () => { buttons.forEach((b, i) => b.classList.toggle("btnfocus", i === idx)); buttons[idx].focus(); };
+    const node = el("div", {}, el("h3", {}, title), el("div", {}, message),
+      el("div", { className: "row" }, ...buttons));
+    openModal(node, (e) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); idx = (idx - 1 + buttons.length) % buttons.length; focus(); }
+      else if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); idx = (idx + 1) % buttons.length; focus(); }
+      else if (e.key === KEYS.confirm) { e.preventDefault(); buttons[idx].click(); }
+      else if (e.key === KEYS.cancel) { e.preventDefault(); done(false); }
+    });
+    focus();
+  });
+}
+
+async function modalNewBoard() {
+  const name = el("input", { type: "text", placeholder: "Board name" });
+  const cols = el("input", { type: "text", value: "Todo, Doing, Done" });
+  const submit_ = async () => {
+    const columns = cols.value.split(",").map(s => s.trim()).filter(Boolean);
+    if (!name.value || !columns.length) return;
+    closeModal();
+    const job = await write("/board", { name: name.value, columns }, "creating board");
+    if (job && job.event) await openBoard(job.event.target);
+  };
+  const node = el("div", {}, el("h3", {}, "New board"),
+    el("label", {}, "Name"), name, el("label", {}, "Columns (comma-separated)"), cols,
+    el("div", { className: "row" }, el("button", { className: "link", onclick: closeModal }, "Cancel"), el("button", { onclick: submit_ }, "Create")));
+  openModal(node, (e) => {
+    if (e.key === KEYS.confirm) { e.preventDefault(); submit_(); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+
+// In-place syntax highlighting for the editor: a backdrop that colourises the
+// markdown while preserving exact character metrics (monospace), so it lines up
+// under a transparent textarea — one pane, edit and see formatting together
+// (Obsidian-ish). Never adds/removes visible characters, only span wrappers.
+function mdHighlight(src) {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (h) => h
+    .replace(/`([^`]+)`/g, '<span class="md-syn">`</span><span class="md-code">$1</span><span class="md-syn">`</span>')
+    .replace(/\*\*([^*]+)\*\*/g, '<span class="md-syn">**</span><span class="md-strong">$1</span><span class="md-syn">**</span>')
+    .replace(/(^|[^*])\*([^*]+)\*/g, '$1<span class="md-syn">*</span><span class="md-em">$2</span><span class="md-syn">*</span>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="md-syn">[</span><span class="md-link">$1</span><span class="md-syn">](</span><span class="md-code">$2</span><span class="md-syn">)</span>');
+  return String(src || "").split(/\n/).map((line) => {
+    let h = inline(esc(line));
+    if (/^#{1,6}\s/.test(line)) return `<span class="md-h">${h}</span>`;
+    if (/^\s*&gt;\s?/.test(esc(line))) return `<span class="md-quote">${h}</span>`;
+    if (/^\s*([-*+]|\d+\.)\s/.test(line)) h = h.replace(/^(\s*)([-*+]|\d+\.)/, '$1<span class="md-syn">$2</span>');
+    return h;
+  }).join("\n");
+}
+
+// Single-pane markdown editor: toolbar + overlay-highlighted textarea.
+function markdownEditor(initial) {
+  const ta = el("textarea", { value: initial || "", spellcheck: true, className: "mdta" });
+  const back = el("div", { className: "mdback", "aria-hidden": "true" });
+  const paint = () => { back.innerHTML = mdHighlight(ta.value) + "\n"; };
+  const sync = () => { back.scrollTop = ta.scrollTop; back.scrollLeft = ta.scrollLeft; };
+  ta.addEventListener("input", () => { paint(); });
+  ta.addEventListener("scroll", sync);
+  const after = () => { paint(); ta.focus(); ta.dispatchEvent(new Event("input")); };
+  const wrap = (pre, post) => {
+    const s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+    ta.value = v.slice(0, s) + pre + v.slice(s, e) + post + v.slice(e);
+    ta.selectionStart = s + pre.length; ta.selectionEnd = e + pre.length; after();
+  };
+  const prefix = (p) => {
+    const s = ta.selectionStart, v = ta.value, ls = v.lastIndexOf("\n", s - 1) + 1;
+    ta.value = v.slice(0, ls) + p + v.slice(ls); after();
+  };
+  const tb = (label, fn, title) => el("button", { type: "button", title, onclick: fn }, label);
+  const toolbar = el("div", { className: "mdtoolbar" },
+    tb("B", () => wrap("**", "**"), "bold"),
+    tb("i", () => wrap("*", "*"), "italic"),
+    tb("H", () => prefix("## "), "heading"),
+    tb("• list", () => prefix("- "), "list"),
+    tb("1.", () => prefix("1. "), "numbered"),
+    tb("code", () => wrap("`", "`"), "inline code"),
+    tb("“ ”", () => prefix("> "), "quote"),
+    tb("link", () => wrap("[", "](https://)"), "link"));
+  paint();
+  const root = el("div", {}, toolbar, el("div", { className: "mdwrap" }, back, ta));
+  return { root, textarea: ta, get value() { return ta.value; } };
+}
+
+// The full item editor: every field except id/order/deleted. Rendered either in
+// a modal or in the right-hand pane (workspace.edit_pane) via the same builder.
+const toLocal = (iso) => iso ? iso.slice(0, 16) : "";
+function buildEditForm(item) {
+  const board = currentBoard();
+  const description = markdownEditor(item.description.value);
+  const f = {
+    title: el("input", { type: "text", value: item.title.value }),
+    start: el("input", { type: "datetime-local", value: toLocal(item.start.value) }),
+    end: el("input", { type: "datetime-local", value: toLocal(item.end.value) }),
+    column: el("select", {}),
+    board: el("select", {}),
+    assigned_to: el("input", { type: "text", value: item.assigned_to.value }),
+    report_to: el("input", { type: "text", value: item.report_to.value }),
+  };
+  for (const b of boards) f.board.append(el("option", { value: b.id, textContent: b.name.value || "(unnamed)", selected: b.id === item.board.value }));
+  const cols = (boards.find(b => b.id === (item.board.value || board?.id))?.columns) || board?.columns || [];
+  for (const c of cols) f.column.append(el("option", { value: c, textContent: c, selected: c === item.column.value }));
+  f.board.onchange = () => {
+    const bc = boards.find(b => b.id === f.board.value)?.columns || [];
+    f.column.innerHTML = "";
+    for (const c of bc) f.column.append(el("option", { value: c, textContent: c }));
+  };
+  const body = el("div", {},
+    el("label", {}, "Title"), f.title,
+    el("label", {}, "Description (markdown)"), description.root,
+    el("div", { className: "grid2" },
+      el("div", {}, el("label", {}, "Start"), f.start),
+      el("div", {}, el("label", {}, "End (due)"), f.end),
+      el("div", {}, el("label", {}, "Board"), f.board),
+      el("div", {}, el("label", {}, "Column"), f.column),
+      el("div", {}, el("label", {}, "Assigned to"), f.assigned_to),
+      el("div", {}, el("label", {}, "Report to"), f.report_to)));
+  const error = el("div", { className: "hint", style: "color:var(--danger)" });
+  body.append(error);
+  const save = async (close) => {
+    // An item's schedule must be complete: both start and end, or neither.
+    if (Boolean(f.start.value) !== Boolean(f.end.value)) {
+      error.textContent = "Start and end must both be set, or both be empty.";
+      return;
+    }
+    if (f.start.value && f.end.value && f.end.value < f.start.value) {
+      error.textContent = "End must be on or after start.";
+      return;
+    }
+    error.textContent = "";
+    close();
+    const changes = [
+      ["title", f.title.value], ["description", description.value],
+      ["start", f.start.value], ["end", f.end.value],
+      ["column", f.column.value], ["board", f.board.value],
+      ["assigned_to", f.assigned_to.value], ["report_to", f.report_to.value],
+    ].filter(([field, value]) => value !== (item[field].value || ""));
+    if (!changes.length) return;
+    status("saving…");
+    for (const [field, value] of changes) await submit("/item/edit", { target: item.id, field, value });
+    status("ok"); await render();
+  };
+  return { body, save };
+}
+
+function openEdit(item) { return workspace.edit_pane ? mountPane(item) : modalEdit(item); }
+
+function modalEdit(item) {
+  const { body, save } = buildEditForm(item);
+  const node = el("div", {}, el("h3", {}, "Edit item"), body,
+    el("div", { className: "row" },
+      el("span", { className: "hint", style: "margin-right:auto" }, "Ctrl+Enter to save"),
+      el("button", { className: "link", onclick: closeModal }, "Cancel"),
+      el("button", { onclick: () => save(closeModal) }, "Save")));
+  openModal(node, (e) => {
+    if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); save(closeModal); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+let paneItemId = null;
+function closePane() {
+  paneItemId = null;
+  const pane = document.getElementById("editpane");
+  pane.hidden = true; pane.innerHTML = "";
+  document.body.classList.remove("pane-open");
+}
+function mountPane(item) {
+  paneItemId = item.id;
+  const { body, save } = buildEditForm(item);
+  const pane = document.getElementById("editpane");
+  pane.innerHTML = "";
+  pane.append(
+    el("div", { className: "panehead" }, el("strong", {}, "Edit item"), el("button", { className: "link", onclick: closePane }, "✕")),
+    body,
+    el("div", { className: "row" },
+      el("span", { className: "hint", style: "margin-right:auto" }, "Ctrl+Enter to save"),
+      el("button", { onclick: () => save(closePane) }, "Save")));
+  pane.onkeydown = (e) => {
+    if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); save(closePane); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closePane(); }
+  };
+  pane.hidden = false;
+  document.body.classList.add("pane-open");
+  const first = body.querySelector("input, textarea");
+  if (first) first.focus();
+}
+
+function modalPalette() {
+  const list = el("ul", { className: "plist" });
+  let idx = 0;
+  const rows = LEADER.map((action) => {
+    const li = el("li", {}, el("span", {}, ACTION_LABELS[action]), el("kbd", {}, keyLabel(KEYS.leader) + " " + keyLabel(KEYS[action])));
+    li.onclick = () => { closeModal(); runAction(action); };
+    list.append(li);
+    return { li, action };
+  });
+  const highlight = () => rows.forEach((r, i) => r.li.classList.toggle("on", i === idx));
+  highlight();
+  const help = el("ul", { className: "plist" });
+  for (const [keys, desc] of MOVE_HELP) help.append(el("li", { className: "disabled" }, el("span", {}, desc), el("kbd", {}, keys)));
+  const node = el("div", {}, el("h3", {}, "Command palette"),
+    el("div", { className: "hint" }, `Tap ${keyLabel(KEYS.leader)}, then a key — or click.`), list,
+    el("div", { className: "hint" }, "Navigation"), help);
+  openModal(node, (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); idx = (idx + 1) % rows.length; highlight(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = (idx - 1 + rows.length) % rows.length; highlight(); }
+    else if (e.key === KEYS.confirm) { e.preventDefault(); closeModal(); runAction(rows[idx].action); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+function modalKeybindings() {
+  const table = el("table", { className: "kbtable" });
+  let capturing = null;
+  const render_ = () => {
+    table.innerHTML = "";
+    for (const action of ["leader", ...LEADER]) {
+      const tr = el("tr", { className: capturing === action ? "capturing" : "" });
+      const btn = el("button", { className: "link", onclick: () => { capturing = action; render_(); } },
+        capturing === action ? "press a key…" : keyLabel(KEYS[action]));
+      tr.append(el("td", {}, action === "leader" ? "Leader key" : ACTION_LABELS[action]), el("td", { className: "k" }, btn));
+      table.append(tr);
+    }
+    for (const [keys, desc] of MOVE_HELP) table.append(el("tr", {}, el("td", {}, desc), el("td", { className: "k" }, el("span", {}, keys))));
+  };
+  render_();
+  const reset = () => { saveKeys({ ...DEFAULT_KEYS }).then(render_); };
+  const node = el("div", {}, el("h3", {}, "Keybindings"),
+    el("div", { className: "hint" }, "Tap the leader, then the action key. Click a key to rebind."), table,
+    el("div", { className: "row" }, el("button", { className: "link", onclick: reset }, "Reset defaults"), el("button", { onclick: closeModal }, "Done")));
+  openModal(node, (e) => {
+    if (capturing) {
+      e.preventDefault();
+      if (e.key !== "Escape") { KEYS[capturing] = e.key; saveKeys(KEYS); }
+      capturing = null; render_();
+    } else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+function modalThemes() {
+  const list = el("ul", { className: "plist" });
+  let idx = Math.max(0, themeList.indexOf(workspace.theme));
+  const rows = themeList.map((name) => {
+    const li = el("li", {}, el("span", {}, name), name === workspace.theme ? el("kbd", {}, "active") : null);
+    li.onclick = async () => { await applyTheme(name); await saveWorkspace(); closeModal(); };
+    list.append(li); return { li, name };
+  });
+  const highlight = () => rows.forEach((r, i) => r.li.classList.toggle("on", i === idx));
+  highlight();
+  const node = el("div", {}, el("h3", {}, "Theme"),
+    el("div", { className: "hint" }, "Files live in userdata/themes/*.css"), list);
+  openModal(node, (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); idx = (idx + 1) % rows.length; highlight(); applyTheme(rows[idx].name); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = (idx - 1 + rows.length) % rows.length; highlight(); applyTheme(rows[idx].name); }
+    else if (e.key === KEYS.confirm) { e.preventDefault(); applyTheme(rows[idx].name).then(saveWorkspace).then(closeModal); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); applyTheme(workspace.theme); closeModal(); }
+  });
+}
+
+// App settings editor: the defaults applied to a new item's start/end times,
+// relative to now. Persisted via GET/POST /settings -> userdata/settings.yaml.
+async function modalSettings() {
+  // Each setting arrives as { value, help }; help is shown as a hover tooltip.
+  const s = await api.get("/settings");
+  const val = (key) => s[key]?.value;
+  const help = (key) => s[key]?.help || "";
+  const field = (key, label, node) => el("div", { title: help(key) }, el("label", { title: help(key) }, label), node);
+  const number = (key, min, step) => el("input", { type: "number", value: String(val(key)), min: String(min), step: String(step || 1), title: help(key) });
+  const mode = (key) => {
+    const sel = el("select", { title: help(key) });
+    for (const m of ["ceil", "floor", "none"]) sel.append(el("option", { value: m, textContent: m, selected: m === val(key) }));
+    return sel;
+  };
+  const f = {
+    default_start_offset_minutes: number("default_start_offset_minutes", 0),
+    default_start_rounding: mode("default_start_rounding"),
+    default_start_interval_minutes: number("default_start_interval_minutes", 5, 5),
+    default_end_offset_minutes: number("default_end_offset_minutes", 0),
+    default_end_rounding: mode("default_end_rounding"),
+    default_end_interval_minutes: number("default_end_interval_minutes", 5, 5),
+  };
+  const save = async () => {
+    closeModal();
+    status("saving settings…");
+    await api.post("/settings", {
+      default_start_offset_minutes: Number(f.default_start_offset_minutes.value),
+      default_start_rounding: f.default_start_rounding.value,
+      default_start_interval_minutes: Number(f.default_start_interval_minutes.value),
+      default_end_offset_minutes: Number(f.default_end_offset_minutes.value),
+      default_end_rounding: f.default_end_rounding.value,
+      default_end_interval_minutes: Number(f.default_end_interval_minutes.value),
+    });
+    status("ok");
+  };
+  const node = el("div", {}, el("h3", {}, "Settings"),
+    el("div", { className: "hint" }, "Defaults for a new item's start & end, relative to now. Hover a field for its description. Grid interval is clamped to a 5-minute minimum."),
+    el("div", { className: "grid2" },
+      field("default_start_offset_minutes", "Start offset (min)", f.default_start_offset_minutes),
+      field("default_end_offset_minutes", "End offset (min)", f.default_end_offset_minutes),
+      field("default_start_rounding", "Start rounding", f.default_start_rounding),
+      field("default_end_rounding", "End rounding", f.default_end_rounding),
+      field("default_start_interval_minutes", "Start interval (min)", f.default_start_interval_minutes),
+      field("default_end_interval_minutes", "End interval (min)", f.default_end_interval_minutes)),
+    el("div", { className: "row" },
+      el("button", { className: "link", onclick: closeModal }, "Cancel"),
+      el("button", { onclick: save }, "Save")));
+  openModal(node, (e) => {
+    if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+// Board switcher: a searchable list, current board excluded, ordered by most
+// recently opened (from workspace.yaml) descending.
+function modalBoards() {
+  const input = el("input", { type: "text", placeholder: "Search boards…" });
+  const results = el("ul", { className: "plist" });
+  const ordered = boards
+    .filter(b => b.id !== currentBoardId)
+    .sort((a, b) => (workspace.boards[b.id]?.opened || 0) - (workspace.boards[a.id]?.opened || 0));
+  let matches = [], idx = 0;
+  const update = () => {
+    const q = input.value.toLowerCase();
+    matches = ordered.filter(b => (b.name.value || "").toLowerCase().includes(q));
+    idx = 0; results.innerHTML = "";
+    matches.forEach((b, i) => {
+      const when = workspace.boards[b.id]?.opened;
+      const li = el("li", { className: i === 0 ? "on" : "" },
+        el("span", {}, b.name.value || "(unnamed)"),
+        el("kbd", {}, when ? new Date(when * 1000).toLocaleDateString() : "new"));
+      li.onclick = () => pick(b); results.append(li);
+    });
+  };
+  const highlight = () => [...results.children].forEach((li, i) => li.classList.toggle("on", i === idx));
+  const pick = (b) => { closeModal(); openBoard(b.id); };
+  input.addEventListener("input", update); update();
+  const node = el("div", {}, el("h3", {}, "Switch board"), input, results,
+    matches.length ? null : el("div", { className: "hint" }, "No other boards."));
+  openModal(node, (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); idx = Math.min(idx + 1, matches.length - 1); highlight(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(idx - 1, 0); highlight(); }
+    else if (e.key === KEYS.confirm) { e.preventDefault(); if (matches[idx]) pick(matches[idx]); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+function modalSearch() {
+  const input = el("input", { type: "text", placeholder: "Search item titles…" });
+  const results = el("ul", { className: "plist" });
+  let matches = [], idx = 0;
+  const update = () => {
+    const q = input.value.toLowerCase();
+    matches = itemsCache.filter(i => (i.title.value || "").toLowerCase().includes(q)).slice(0, 12);
+    idx = 0; results.innerHTML = "";
+    matches.forEach((item, i) => {
+      const li = el("li", { className: i === 0 ? "on" : "" }, el("span", {}, item.title.value || "(untitled)"), el("kbd", {}, item.column.value || ""));
+      li.onclick = () => pick(item); results.append(li);
+    });
+  };
+  const highlight = () => [...results.children].forEach((li, i) => li.classList.toggle("on", i === idx));
+  const pick = (item) => { closeModal(); setCursor(item.id); };
+  input.addEventListener("input", update); update();
+  const node = el("div", {}, el("h3", {}, "Search"), input, results);
+  openModal(node, (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); idx = Math.min(idx + 1, matches.length - 1); highlight(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(idx - 1, 0); highlight(); }
+    else if (e.key === KEYS.confirm) { e.preventDefault(); if (matches[idx]) pick(matches[idx]); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+async function modalDueDate(item) {
+  const input = el("input", { type: "datetime-local", value: toLocal(item.end.value) });
+  const submit_ = async () => { closeModal(); await write("/item/edit", { target: item.id, field: "end", value: input.value }, "setting due date"); };
+  const node = el("div", {}, el("h3", {}, "Due date"), el("label", {}, `“${item.title.value || "(untitled)"}”`), input,
+    el("div", { className: "row" }, el("button", { className: "link", onclick: closeModal }, "Cancel"), el("button", { onclick: submit_ }, "Save")));
+  openModal(node, (e) => {
+    if (e.key === KEYS.confirm) { e.preventDefault(); submit_(); }
+    else if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); }
+  });
+}
+
+async function modalYaml(item) {
+  const full = await api.get(`/item?id=${item.id}`);
+  const node = el("div", {}, el("h3", {}, "Item JSON"),
+    el("pre", { className: "yaml", textContent: JSON.stringify(full, null, 2) }),
+    el("div", { className: "row" }, el("button", { onclick: closeModal }, "Close")));
+  openModal(node, (e) => { if (e.key === KEYS.cancel) { e.preventDefault(); closeModal(); } });
+}
+
+/* ---------------- Selection ---------------- */
+function cursorItem() { return itemsCache.find(i => i.id === cursorId) || null; }
+function selectedItems() {
+  const chosen = itemsCache.filter(i => selection.has(i.id));
+  return chosen.length ? chosen : (cursorItem() ? [cursorItem()] : []);
+}
+function setCursor(id, mode = "replace") {
+  cursorId = id;
+  const item = itemsCache.find(i => i.id === id);
+  if (item) cursorCol = item.column.value;
+  if (mode === "toggle") { selection.has(id) ? selection.delete(id) : selection.add(id); }
+  else if (mode === "add") { selection.add(id); }
+  else { selection = new Set([id]); }
+  refocus(`[data-item="${CSS.escape(id)}"]`);
+}
+// Focus a column with no card (so it can still receive new items).
+function setCursorCol(col) {
+  cursorCol = col; cursorId = null; selection = new Set();
+  refocus(`[data-col="${CSS.escape(col)}"]`);
+}
+// Repaint from cache (so a minimized column with the cursor expands immediately),
+// then scroll the focused element into view — no network, so it's instant.
+function refocus(selector) {
+  paint();
+  const c = document.querySelector(selector);
+  if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function focusedColumn() { return cursorItem()?.column.value || cursorCol || null; }
+
+/* ---------------- Board helpers ---------------- */
+function currentBoard() { return boards.find(b => b.id === currentBoardId) || null; }
+function columnItems(col) {
+  return itemsCache.filter(i => i.column.value === col).sort((a, b) => effOrder(a) - effOrder(b) || (a.id < b.id ? -1 : 1));
+}
+const effOrder = (item) => { const v = parseFloat(item.order.value); return Number.isFinite(v) ? v : 0; };
+
+async function moveHorizontal(dir) {
+  const board = currentBoard(); if (!board) return;
+  const items = selectedItems(); if (!items.length) return;
+  status("moving…");
+  for (const item of items) {
+    const idx = board.columns.indexOf(item.column.value);
+    const target = board.columns[idx + dir];
+    if (target) await submit("/item/edit", { target: item.id, field: "column", value: target });
+  }
+  status("ok"); await render();
+}
+async function moveVertical(dir) {
+  const item = cursorItem(); if (!item) return;
+  const siblings = columnItems(item.column.value);
+  const pos = siblings.findIndex(i => i.id === item.id);
+  const swapWith = siblings[pos + dir]; if (!swapWith) return;
+  const beyond = siblings[pos + 2 * dir];
+  const base = effOrder(swapWith);
+  const newOrder = beyond ? (base + effOrder(beyond)) / 2 : base + dir;
+  await write("/item/edit", { target: item.id, field: "order", value: String(newOrder) }, "reordering");
+}
+
+/* ---------------- Cursor / drag from keyboard ---------------- */
+function moveCursor(key, shift) {
+  const board = currentBoard(); if (!board || !board.columns.length) return;
+  // Navigate every column, including empty ones (which become the focused column
+  // so a new item can be created there). Minimized columns expand on arrival.
+  const cols = board.columns;
+  const items = (c) => columnItems(c);
+  let ci = cursorCol ? cols.indexOf(cursorCol) : -1;
+  if (ci < 0) ci = 0;
+  const cur = cursorItem();
+  const pi = cur ? items(cols[ci]).findIndex(i => i.id === cur.id) : -1;
+  const go = (id) => setCursor(id, shift ? "add" : "replace");
+  if (key === "ArrowUp") { const t = items(cols[ci])[pi - 1]; if (t) go(t.id); }
+  else if (key === "ArrowDown") {
+    const list = items(cols[ci]);
+    const t = list[pi < 0 ? 0 : pi + 1]; if (t) go(t.id);
+  } else {
+    const dir = key === "ArrowLeft" ? -1 : 1;
+    const j = ci + dir;
+    if (j < 0 || j >= cols.length) return;
+    const list = items(cols[j]);
+    if (!list.length) setCursorCol(cols[j]);                       // land on empty column
+    else go(list[Math.min(Math.max(pi, 0), list.length - 1)].id);
+  }
+}
+function dragSelected(key) {
+  if (!selectedItems().length) { status("select an item first"); return; }
+  if (key === "ArrowLeft") return moveHorizontal(-1);
+  if (key === "ArrowRight") return moveHorizontal(1);
+  if (key === "ArrowUp") return moveVertical(-1);
+  if (key === "ArrowDown") return moveVertical(1);
+}
+
+/* ---------------- Actions ---------------- */
+async function runAction(action) {
+  const board = currentBoard();
+  switch (action) {
+    case "open_palette": return modalPalette();
+    case "keybindings": return modalKeybindings();
+    case "themes": return modalThemes();
+    case "settings": return modalSettings();
+    case "calendar": return toggleCalendar();
+    case "new_board": return modalNewBoard();
+    case "search": return modalSearch();
+    case "switch_board": return modalBoards();
+    case "create": {
+      if (!board) return;
+      const col = focusedColumn() || board.columns.find(c => !minimizedCols().includes(c)) || board.columns[0];
+      return addItem(col);
+    }
+    case "minimize": {
+      const col = focusedColumn() || board?.columns[0];
+      if (col) await toggleMinimize(col);
+      return;
+    }
+  }
+  const item = cursorItem();
+  if (!item) { status("select an item first"); return; }
+  switch (action) {
+    case "edit": return openEdit(item);
+    case "due_date": return modalDueDate(item);
+    case "view_yaml": return modalYaml(item);
+    case "delete": {
+      const items = selectedItems();
+      const msg = items.length > 1 ? `Delete ${items.length} items?` : `Delete “${item.title.value || "(untitled)"}”?`;
+      if (await modalConfirm({ title: "Delete", message: msg })) {
+        status("deleting…");
+        for (const it of items) await submit("/item/delete", { target: it.id });
+        selection.clear(); status("ok"); await render();
+      }
+      return;
+    }
+  }
+}
+
+/* ---------------- Rendering ---------------- */
+async function loadBoards() {
+  boards = (await api.get("/boards")).boards;
+  if (!currentBoardId || !boards.find(b => b.id === currentBoardId)) currentBoardId = boards[0]?.id || null;
+  updateTitle();
+}
+function updateTitle() {
+  const name = currentBoard()?.name.value || "Tododo";
+  document.title = name;
+  document.getElementById("boardTitle").textContent = name;
+}
+
+// Full reload: hit the network, refresh the caches, then paint. Called after
+// writes and on the periodic tick.
+async function render() {
+  await loadBoards();
+  if (!currentBoardId) { paint(); return; }
+  const [items, conflicts] = await Promise.all([
+    api.get("/items"),
+    api.get(`/conflicts?board=${currentBoardId}`),
+  ]);
+  itemsCache = items.items.filter(i => i.board.value === currentBoardId);
+  conflictsCache = conflicts.conflicts;
+  paint();
+}
+
+// Pure repaint from the in-memory caches — no network. Cursor moves and
+// minimize toggles call this so expand/collapse is instant.
+function paint() {
+  const boardEl = document.getElementById("board");
+  const conflictsEl = document.getElementById("conflicts");
+  boardEl.innerHTML = ""; conflictsEl.innerHTML = "";
+  if (!currentBoardId) { boardEl.innerHTML = '<div class="empty">No boards yet — tap <kbd>space</kbd> then <kbd>m</kbd>.</div>'; return; }
+
+  const board = currentBoard();
+  selection = new Set([...selection].filter(id => itemsCache.find(i => i.id === id)));
+  if (cursorId && !itemsCache.find(i => i.id === cursorId)) cursorId = null;
+  if (cursorCol && !board.columns.includes(cursorCol)) cursorCol = null;
+
+  if (calendarMode) { paintCalendar(boardEl); return; }
+
+  for (const col of board.columns) {
+    const items = columnItems(col);
+    const collapsed = isCollapsed(col);
+    const pinnedMin = minimizedCols().includes(col);
+    const colEl = el("div", { className: "col" + (collapsed ? " min" : "") });
+    colEl.setAttribute("data-col", col);
+    const badge = collapsed ? `${items.length} ▸` : (pinnedMin ? `${items.length} ▾` : `${items.length}`);
+    const head = el("h2", {}, el("span", {}, col), el("span", { className: "count" }, badge));
+    head.title = "click to minimize/expand";
+    head.onclick = () => toggleMinimize(col);
+    colEl.append(head);
+    if (!collapsed) {
+      for (const item of items) colEl.append(cardEl(item, board));
+      colEl.append(el("button", { className: "add", textContent: "+ item", onclick: () => addItem(col) }));
+      colEl.ondragover = (e) => { if (dragIds.length) { e.preventDefault(); } };
+      colEl.ondrop = (e) => { if (dragIds.length) { e.preventDefault(); dropItems(col, columnItems(col).filter(i => !dragIds.includes(i.id)).length); } };
+    }
+    boardEl.append(colEl);
+  }
+  renderSelection();
+  renderConflicts(conflictsEl);
+}
+
+async function addItem(col) {
+  const title = await modalText({ title: "New item", label: `Column: ${col}`, placeholder: "Title" });
+  if (title) await write("/item", { board: currentBoardId, column: col, title }, "creating item");
+}
+
+function cardEl(item, board) {
+  const node = el("div", { className: "card", draggable: true });
+  node.setAttribute("data-item", item.id);
+  node.onclick = (e) => setCursor(item.id, e.shiftKey ? "toggle" : "replace");
+  node.ondblclick = () => { setCursor(item.id); openEdit(item); };
+  node.append(el("div", { className: "title", textContent: item.title.value || "(untitled)" }));
+  if (item.end.value) node.append(el("div", { className: "meta", textContent: "due " + item.end.value.slice(0, 16).replace("T", " ") }));
+  if (item.assigned_to.value) node.append(el("div", { className: "meta", textContent: "@" + item.assigned_to.value }));
+  node.append(el("div", { className: "meta", textContent: "by " + (item.title.last_edited_by || "?") }));
+  const actions = el("div", { className: "actions" });
+  actions.append(btn("edit", () => { setCursor(item.id); openEdit(item); }));
+  actions.append(btn("del", () => { setCursor(item.id); runAction("delete"); }));
+  node.append(actions);
+
+  // Drag & drop: reorder within a column and move between columns.
+  node.ondragstart = (e) => {
+    dragIds = (selection.has(item.id) && selection.size > 1) ? [...selection] : [item.id];
+    if (!selection.has(item.id)) setCursor(item.id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", item.id);
+    node.classList.add("dragging");
+  };
+  node.ondragend = () => { dragIds = []; document.querySelectorAll(".card").forEach(c => c.classList.remove("dragging", "dropbefore", "dropafter")); };
+  node.ondragover = (e) => {
+    if (!dragIds.length || dragIds.includes(item.id)) return;
+    e.preventDefault();
+    const below = (e.clientY - node.getBoundingClientRect().top) > node.offsetHeight / 2;
+    node.classList.toggle("dropafter", below);
+    node.classList.toggle("dropbefore", !below);
+  };
+  node.ondragleave = () => node.classList.remove("dropbefore", "dropafter");
+  node.ondrop = (e) => {
+    if (!dragIds.length) return;
+    e.preventDefault(); e.stopPropagation();
+    const below = (e.clientY - node.getBoundingClientRect().top) > node.offsetHeight / 2;
+    const rest = columnItems(item.column.value).filter(i => !dragIds.includes(i.id));
+    const xi = rest.findIndex(i => i.id === item.id);
+    dropItems(item.column.value, (xi < 0 ? rest.length : xi) + (below ? 1 : 0));
+  };
+  return node;
+}
+
+// Move the dragged item(s) into `col` at position `index` (among the column's
+// non-dragged items), assigning fractional order values between neighbours.
+async function dropItems(col, index) {
+  const targets = itemsCache.filter(i => dragIds.includes(i.id)).sort((a, b) => effOrder(a) - effOrder(b));
+  if (!targets.length) return;
+  const rest = columnItems(col).filter(i => !dragIds.includes(i.id));
+  const before = rest[index - 1], after = rest[index];
+  const b = before ? effOrder(before) : null, a = after ? effOrder(after) : null;
+  let start, step;
+  if (b == null && a == null) { start = 0; step = 1; }
+  else if (b == null) { start = a - targets.length; step = 1; }
+  else if (a == null) { start = b + 1; step = 1; }
+  else { const gap = (a - b) / (targets.length + 1); start = b + gap; step = gap; }
+  status("moving…");
+  for (let k = 0; k < targets.length; k++) {
+    const it = targets[k];
+    if (it.column.value !== col) await submit("/item/edit", { target: it.id, field: "column", value: col });
+    await submit("/item/edit", { target: it.id, field: "order", value: String(start + step * k) });
+  }
+  dragIds = []; status("ok"); await render();
+}
+function renderSelection() {
+  document.querySelectorAll(".card").forEach(c => {
+    const id = c.getAttribute("data-item");
+    c.classList.toggle("sel", selection.has(id));
+    c.classList.toggle("cursor", id === cursorId);
+  });
+  const focusCol = focusedColumn();
+  document.querySelectorAll(".col").forEach(c => c.classList.toggle("colfocus", !cursorId && c.getAttribute("data-col") === focusCol));
+}
+function btn(label, onclick) {
+  return el("button", { className: "link", textContent: label, onclick: (e) => { e.stopPropagation(); onclick(); } });
+}
+
+function renderConflicts(host) {
+  const conflicts = conflictsCache;
+  if (!conflicts.length) return;
+  host.className = "conflicts";
+  host.innerHTML = `<h2>⚠ ${conflicts.length} conflict(s)</h2>`;
+  for (const c of conflicts) {
+    const div = el("div", { className: "conflict" });
+    div.innerHTML = `<div><b>${c.field}</b> on <code>${c.target.slice(0,8)}</code> — pick one:</div>`;
+    const cands = el("div", { className: "cands" });
+    for (const ev of c.events) {
+      const value = ev.payload.value ?? "";
+      cands.append(btn(`"${value}" (${ev.by || "?"})`, () => write("/resolve", { target: c.target, field: c.field, parents: c.events.map(e => e.id), value }, "resolving")));
+    }
+    div.append(cands); host.append(div);
+  }
+}
+
+/* ---------------- Calendar mode (week grid) ---------------- */
+const HOUR_PX = 48;                  // pixels per hour row in the time grid
+let calWeekStart = null;             // Date at 00:00 on the Sunday of the shown week
+let calScrollTop = null;            // preserved vertical scroll across repaints
+
+// Every item on the board that carries both a start and an end, as {item,s,e}.
+function calendarEvents() {
+  return itemsCache
+    .filter(i => i.start.value && i.end.value)
+    .map(i => ({ item: i, s: new Date(i.start.value), e: new Date(i.end.value) }))
+    .filter(ev => !isNaN(ev.s) && !isNaN(ev.e));
+}
+const fmtCalTime = (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }); };
+function fmtCalRange(startIso, endIso) {
+  const same = startIso.slice(0, 10) === endIso.slice(0, 10);
+  return same ? `${fmtCalTime(startIso)} – ${fmtCalTime(endIso)}`
+    : `${fmtCalTime(startIso)} – ${endIso.slice(0, 10)} ${fmtCalTime(endIso)}`;
+}
+function startOfWeek(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; }
+function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+function dayIndex(weekStart, d) { return Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - weekStart) / 86400000); }
+function hourLabel(h) { if (h <= 0 || h >= 24) return ""; const ap = h < 12 ? "AM" : "PM"; return `${(h % 12) || 12} ${ap}`; }
+function shiftWeek(delta) {
+  if (!calWeekStart) calWeekStart = startOfWeek(new Date());
+  const d = new Date(calWeekStart); d.setDate(d.getDate() + delta * 7); calWeekStart = d; paint();
+}
+// Greedy side-by-side packing: each event takes the first lane free at its start.
+function packLanes(events) {
+  const laneEnds = [], placed = [];
+  for (const ev of events) {
+    let lane = 0;
+    while (lane < laneEnds.length && laneEnds[lane] > ev.s) lane++;
+    laneEnds[lane] = ev.e; placed.push({ ev, lane });
+  }
+  return { placed, laneCount: Math.max(1, laneEnds.length) };
+}
+
+function paintCalendar(host) {
+  if (!calWeekStart) calWeekStart = startOfWeek(new Date());
+  const weekStart = calWeekStart;
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const today = new Date();
+  const events = calendarEvents().filter(ev => ev.e > weekStart && ev.s < weekEnd);
+  const allDay = events.filter(ev => !sameDay(ev.s, ev.e)).sort((a, b) => a.s - b.s);
+  const timed = events.filter(ev => sameDay(ev.s, ev.e));
+
+  // Nav bar.
+  const nav = el("div", { className: "calnav" },
+    el("button", { className: "link arrow", title: "Previous week", onclick: () => shiftWeek(-1) }, "‹"),
+    el("button", { className: "link", onclick: () => { calWeekStart = startOfWeek(new Date()); paint(); } }, "Today"),
+    el("button", { className: "link arrow", title: "Next week", onclick: () => shiftWeek(1) }, "›"),
+    el("span", { className: "range" }, weekRangeLabel(weekStart)));
+
+  // Day-of-week header.
+  const head = el("div", { className: "calhead" }, el("div", { className: "gutter" }));
+  for (let c = 0; c < 7; c++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + c);
+    head.append(el("div", { className: "day" + (sameDay(d, today) ? " today" : "") },
+      el("div", { className: "dow" }, d.toLocaleDateString(undefined, { weekday: "short" })),
+      el("div", { className: "dom" }, String(d.getDate()))));
+  }
+
+  // All-day / multi-day band.
+  const lanes = el("div", { className: "lanes" });
+  const rows = [];
+  for (const ev of allDay) {
+    const startCol = Math.max(0, dayIndex(weekStart, ev.s));
+    const endCol = Math.min(6, dayIndex(weekStart, new Date(ev.e.getTime() - 1)));
+    let r = 0;
+    while (rows[r] && rows[r].some(x => !(endCol < x.a || startCol > x.b))) r++;
+    (rows[r] = rows[r] || []).push({ a: startCol, b: endCol });
+    const bar = el("div", { className: "calspan", textContent: ev.item.title.value || "(untitled)" });
+    bar.style.gridColumn = `${startCol + 1} / ${endCol + 2}`;
+    bar.style.gridRow = String(r + 1);
+    bar.onclick = () => { setCursor(ev.item.id); openEdit(ev.item); };
+    lanes.append(bar);
+  }
+  const allDayEl = el("div", { className: "callday" }, el("div", { className: "gutter" }, "all-day"), lanes);
+
+  // Scrolling time grid.
+  const gutter = el("div", { className: "gutter" });
+  for (let h = 0; h <= 24; h++) {
+    const label = el("div", { className: "hourlabel", textContent: hourLabel(h) });
+    label.style.top = (h * HOUR_PX) + "px"; gutter.append(label);
+  }
+  const days = el("div", { className: "caldays" });
+  days.style.height = (24 * HOUR_PX) + "px";
+  for (let c = 0; c < 7; c++) {
+    const col = el("div", { className: "caldaycol" });
+    for (let h = 1; h < 24; h++) { const line = el("div", { className: "calhour" }); line.style.top = (h * HOUR_PX) + "px"; col.append(line); }
+    const dayEvents = timed.filter(ev => dayIndex(weekStart, ev.s) === c).sort((a, b) => a.s - b.s || b.e - a.e);
+    const { placed, laneCount } = packLanes(dayEvents);
+    for (const { ev, lane } of placed) {
+      const startMin = ev.s.getHours() * 60 + ev.s.getMinutes();
+      const endMin = Math.max(startMin + 15, ev.e.getHours() * 60 + ev.e.getMinutes());
+      const box = el("div", { className: "calevent" });
+      box.style.top = (startMin / 60 * HOUR_PX) + "px";
+      box.style.height = ((endMin - startMin) / 60 * HOUR_PX - 2) + "px";
+      box.style.left = (lane / laneCount * 100) + "%";
+      box.style.width = (1 / laneCount * 100) + "%";
+      box.append(
+        el("div", { className: "cn", textContent: ev.item.title.value || "(untitled)" }),
+        el("div", { className: "ct", textContent: fmtCalRange(ev.item.start.value, ev.item.end.value) }));
+      box.onclick = () => { setCursor(ev.item.id); openEdit(ev.item); };
+      col.append(box);
+    }
+    const colDate = new Date(weekStart); colDate.setDate(colDate.getDate() + c);
+    if (sameDay(colDate, today)) {
+      const nowMin = today.getHours() * 60 + today.getMinutes();
+      const now = el("div", { className: "calnow" }, el("div", { className: "dot" }));
+      now.style.top = (nowMin / 60 * HOUR_PX) + "px"; col.append(now);
+    }
+    days.append(col);
+  }
+  const body = el("div", { className: "calbody" }, gutter, days);
+  body.addEventListener("scroll", () => { calScrollTop = body.scrollTop; });
+
+  host.append(el("div", { className: "calweek" }, nav, head, allDayEl, body));
+  // Preserve the user's scroll across the periodic repaints; default to ~7 AM.
+  body.scrollTop = calScrollTop == null ? 7 * HOUR_PX : calScrollTop;
+}
+function weekRangeLabel(weekStart) {
+  const end = new Date(weekStart); end.setDate(end.getDate() + 6);
+  const month = (d) => d.toLocaleDateString(undefined, { month: "short" });
+  const sameMonth = weekStart.getMonth() === end.getMonth();
+  return sameMonth
+    ? `${month(weekStart)} ${weekStart.getDate()} – ${end.getDate()}, ${end.getFullYear()}`
+    : `${month(weekStart)} ${weekStart.getDate()} – ${month(end)} ${end.getDate()}, ${end.getFullYear()}`;
+}
+function updateCalendarBtn() {
+  const btn = document.getElementById("calendarBtn");
+  if (btn) btn.classList.toggle("btnfocus", calendarMode);
+}
+function toggleCalendar(on) {
+  calendarMode = on === undefined ? !calendarMode : on;
+  updateCalendarBtn();
+  paint();
+}
+
+/* ---------------- Global keys (Space leader; Ctrl only for drag) ---------------- */
+let leaderArmed = false, leaderTimer = null;
+function armLeader() { leaderArmed = true; status("… command"); clearTimeout(leaderTimer); leaderTimer = setTimeout(cancelLeader, 2000); }
+function cancelLeader() { clearTimeout(leaderTimer); if (leaderArmed) { leaderArmed = false; status(""); } }
+const leaderAction = (key) => LEADER.find(a => KEYS[a] === key);
+const inField = () => ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+
+document.addEventListener("keydown", (e) => {
+  if (modalOpen()) { if (modalKeyHandler) modalKeyHandler(e); return; }
+  if (e.ctrlKey || e.metaKey) {
+    if (!inField() && !calendarMode && e.key.startsWith("Arrow")) { e.preventDefault(); dragSelected(e.key); }
+    return;  // every other Ctrl chord (Ctrl+N …) stays with the browser
+  }
+  if (e.altKey || inField()) return;
+
+  if (leaderArmed) { e.preventDefault(); const a = leaderAction(e.key); cancelLeader(); if (a) runAction(a); return; }
+  if (e.key === KEYS.leader) { e.preventDefault(); armLeader(); return; }
+  if (calendarMode && e.key === KEYS.cancel) { e.preventDefault(); toggleCalendar(false); return; }
+  if (calendarMode && e.key.startsWith("Arrow")) {
+    e.preventDefault();
+    if (e.key === "ArrowLeft") shiftWeek(-1); else if (e.key === "ArrowRight") shiftWeek(1);
+    return;
+  }
+  if (e.key.startsWith("Arrow")) { e.preventDefault(); moveCursor(e.key, e.shiftKey); return; }
+  if (e.key === KEYS.edit && cursorItem()) { e.preventDefault(); openEdit(cursorItem()); }
+});
+
+/* ---------------- Wiring ---------------- */
+document.getElementById("refresh").onclick = render;
+document.querySelectorAll("[data-action]").forEach(b => b.onclick = () => runAction(b.dataset.action));
+function updateEditModeBtn() { document.getElementById("editModeBtn").textContent = "edit: " + (workspace.edit_pane ? "pane" : "modal"); }
+document.getElementById("editModeBtn").onclick = async () => {
+  workspace.edit_pane = !workspace.edit_pane;
+  if (!workspace.edit_pane) closePane();
+  updateEditModeBtn();
+  await saveWorkspace();
+};
+
+(async () => {
+  KEYS = await loadKeys();
+  workspace = await loadWorkspace();
+  themeList = (await api.get("/themes")).themes;
+  await applyTheme(workspace.theme);
+  updateEditModeBtn();
+  if (workspace.current) currentBoardId = workspace.current;
+  render();
+})();
+setInterval(() => { if (!modalOpen()) render(); }, 4000);
+</script>
+</body>
+</html>

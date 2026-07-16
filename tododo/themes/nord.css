@@ -1,0 +1,17 @@
+/* Nord — Tododo theme. Edit or drop your own *.css here. */
+:root {
+  color-scheme: dark;
+  --bg:rgb(46,52,64);
+  --panel:rgb(54,61,76);
+  --line:rgb(59,66,82);
+  --fg:rgb(216,222,233);
+  --muted:rgb(129,140,160);
+  --accent:rgb(136,192,208);
+  --warn:rgb(235,203,139);
+  --danger:rgb(191,97,106);
+  --card:rgb(67,76,94);
+  --card-sel:rgb(70,95,130);
+  --card-drag:rgb(94,129,172);
+  --sel:rgb(70,95,130);
+  --shadow:rgba(0,0,0,.5);
+}

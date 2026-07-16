@@ -24,12 +24,22 @@ from tododo.actor import Command
 from tododo.actor import Job
 from tododo.filewatcher import FileWatcher
 from tododo.gitsync import GitSync
+from tododo.keybindings import load_keybindings
+from tododo.keybindings import save_keybindings
 from tododo.log import EventLog
 from tododo.models import Board
 from tododo.models import Conflict
 from tododo.models import Event
 from tododo.models import Item
 from tododo.projection import Projection
+from tododo.settings import default_datetimes
+from tododo.settings import load_settings
+from tododo.settings import save_settings
+from tododo.themes import list_themes
+from tododo.themes import read_theme
+from tododo.themes import seed_themes
+from tododo.workspace import load_workspace
+from tododo.workspace import save_workspace
 
 
 class Backend:
@@ -42,6 +52,15 @@ class Backend:
         self.root = Path(root)
         self.default_by = default_by
         self.lock = threading.Lock()
+        self.keybindings_path = self.root / "userdata" / "keybindings.yaml"
+        self.workspace_path = self.root / "userdata" / "workspace.yaml"
+        self.settings_path = self.root / "userdata" / "settings.yaml"
+        self.themes_dir = self.root / "userdata" / "themes"
+        seed_themes(self.themes_dir)
+        # Write the config files through on startup so both exist and carry the
+        # current help annotations (upgrading any legacy flat file in place).
+        save_settings(self.settings_path, load_settings(self.settings_path))
+        save_keybindings(self.keybindings_path, load_keybindings(self.keybindings_path))
 
         self.log = EventLog(self.root / "events")
         self.projection = Projection()
@@ -125,6 +144,34 @@ class Backend:
         with self.lock:
             return self.projection.conflicts(board_id)
 
+    # --- keybindings (local per-machine config, not event-sourced) -------
+
+    def keybindings(self) -> dict[str, str]:
+        return load_keybindings(self.keybindings_path)
+
+    def set_keybindings(self, mapping: dict[str, str]) -> dict[str, str]:
+        return save_keybindings(self.keybindings_path, mapping)
+
+    # --- workspace + themes (local per-machine view state) ---------------
+
+    def workspace(self) -> dict:
+        return load_workspace(self.workspace_path)
+
+    def set_workspace(self, data: dict) -> dict:
+        return save_workspace(self.workspace_path, data)
+
+    def settings(self) -> dict:
+        return load_settings(self.settings_path)
+
+    def set_settings(self, data: dict) -> dict:
+        return save_settings(self.settings_path, data)
+
+    def themes(self) -> list[str]:
+        return list_themes(self.themes_dir)
+
+    def theme_css(self, name: str) -> str | None:
+        return read_theme(self.themes_dir, name)
+
     # --- operations (shared by the HTTP and MCP adapters) ----------------
 
     def create_board(self, name: str, columns: list[str], by: str = "") -> str:
@@ -151,8 +198,10 @@ class Backend:
         return self.submit(Command(op="DeleteColumn", by=by, target=board, args={"col": col}))
 
     def create_item(self, board: str, column: str, title: str, by: str = "") -> str:
+        start, end = default_datetimes(self.settings())
         return self.submit(Command(
-            op="CreateItem", by=by, args={"board": board, "column": column, "title": title},
+            op="CreateItem", by=by,
+            args={"board": board, "column": column, "title": title, "start": start, "end": end},
         ))
 
     def edit_item(self, target: str, field: str, value: str, by: str = "") -> str:

@@ -7,10 +7,11 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import avatars, clipboard, markdown, theme, timefmt
 import pygame
 import yaml
 
-from . import avatars, clipboard, markdown, theme, timefmt, workspace
+from . import workspace
 from .guimodel import UiBoard, UiItem as Item
 from .keybindings import ACTIONS, Keybindings, code_to_key_name
 from .settings import Settings
@@ -1827,7 +1828,7 @@ class App:
                 return 0, None
             return self.font_sm.get_linesize() + 4, f"Due: {item.due}"
         if field == "relationships":
-            from tododo.board import PERSON_FIELDS
+            from OLD.tododo.board import PERSON_FIELDS
             parts = [f"{f}: @{self._handle_for(getattr(item, f))}"
                      for f in PERSON_FIELDS if getattr(item, f, "")]
             text = " · ".join(parts)
@@ -2525,7 +2526,7 @@ class App:
         if self.keys.matches("cancel", event.key) or self.keys.matches("relationships", event.key):
             self.mode = self.NORMAL
             return
-        from tododo.board import PERSON_FIELDS
+        from OLD.tododo.board import PERSON_FIELDS
         item = self.selected()
         if not item:
             return
@@ -2546,7 +2547,7 @@ class App:
         self.persist(f"set {field} on '{item.title}'")
 
     def draw_relationships(self, w: int, h: int) -> None:
-        from tododo.board import PERSON_FIELDS
+        from OLD.tododo.board import PERSON_FIELDS
         self.dim(w, h)
         rect = self.panel(w, h, 520, 300)
         item = self.selected()

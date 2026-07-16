@@ -15,10 +15,13 @@ from __future__ import annotations
 import json
 from http.server import BaseHTTPRequestHandler
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs
 from urllib.parse import urlparse
 
 from tododo.app import Backend
+
+WEB_ROOT = Path(__file__).parent / "web"
 
 
 def dispatch(backend: Backend, method: str, path: str, query: dict, body: dict) -> tuple[int, dict]:
@@ -57,6 +60,27 @@ def dispatch(backend: Backend, method: str, path: str, query: dict, body: dict) 
     if route == ("GET", "/conflicts"):
         conflicts = backend.conflicts(query.get("board"))
         return 200, {"conflicts": [conflict.model_dump(mode="json") for conflict in conflicts]}
+
+    if route == ("GET", "/keybindings"):
+        return 200, backend.keybindings()
+
+    if route == ("POST", "/keybindings"):
+        return 200, backend.set_keybindings(body)
+
+    if route == ("GET", "/workspace"):
+        return 200, backend.workspace()
+
+    if route == ("POST", "/workspace"):
+        return 200, backend.set_workspace(body)
+
+    if route == ("GET", "/settings"):
+        return 200, backend.settings()
+
+    if route == ("POST", "/settings"):
+        return 200, backend.set_settings(body)
+
+    if route == ("GET", "/themes"):
+        return 200, {"themes": backend.themes()}
 
     if method == "POST":
         return _dispatch_write(backend, path, body)
@@ -108,9 +132,43 @@ def make_handler(backend: Backend):
             self.end_headers()
             self.wfile.write(blob)
 
+        def _serve_static(self, path: str) -> bool:
+            relative = "index.html" if path == "/" else path.lstrip("/")
+            target = (WEB_ROOT / relative).resolve()
+            if WEB_ROOT.resolve() not in target.parents or not target.is_file():
+                return False
+            content_type = "text/html" if target.suffix == ".html" else "application/octet-stream"
+            blob = target.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(blob)))
+            self.end_headers()
+            self.wfile.write(blob)
+            return True
+
+        def _serve_theme(self, name: str) -> None:
+            css = backend.theme_css(name)
+            if css is None:
+                self._respond(404, {"error": "unknown theme"})
+                return
+            blob = css.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/css")
+            self.send_header("Content-Length", str(len(blob)))
+            self.end_headers()
+            self.wfile.write(blob)
+
         def _handle(self, method: str) -> None:
             parsed = urlparse(self.path)
             query = {key: values[0] for key, values in parse_qs(parsed.query).items()}
+            if method == "GET" and parsed.path == "/theme":
+                self._serve_theme(query.get("name", ""))
+                return
+            api_prefixes = ("/job", "/board", "/item", "/items", "/boards", "/conflicts",
+                            "/column", "/resolve", "/keybindings", "/workspace", "/settings", "/themes")
+            if method == "GET" and (parsed.path == "/" or not parsed.path.startswith(api_prefixes)):
+                if self._serve_static(parsed.path):
+                    return
             body = {}
             length = int(self.headers.get("Content-Length", 0) or 0)
             if length:

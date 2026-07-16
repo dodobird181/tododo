@@ -1,0 +1,17 @@
+/* Tokyo Night — Tododo theme. Edit or drop your own *.css here. */
+:root {
+  color-scheme: dark;
+  --bg:rgb(26,27,38);
+  --panel:rgb(31,33,48);
+  --line:rgb(41,46,66);
+  --fg:rgb(192,202,245);
+  --muted:rgb(120,124,153);
+  --accent:rgb(122,162,247);
+  --warn:rgb(224,175,104);
+  --danger:rgb(247,118,142);
+  --card:rgb(45,50,74);
+  --card-sel:rgb(54,68,120);
+  --card-drag:rgb(74,92,150);
+  --sel:rgb(54,68,120);
+  --shadow:rgba(0,0,0,.5);
+}

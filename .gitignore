@@ -1,7 +1,11 @@
 poetry.lock
 .claude
 .codegraph
+.mcp.json
+.vscode
 
+
+# Auto-generated gitignore below:
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

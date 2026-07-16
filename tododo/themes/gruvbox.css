@@ -1,0 +1,17 @@
+/* Gruvbox — Tododo theme. Edit or drop your own *.css here. */
+:root {
+  color-scheme: dark;
+  --bg:rgb(40,40,40);
+  --panel:rgb(45,43,41);
+  --line:rgb(60,56,54);
+  --fg:rgb(235,219,178);
+  --muted:rgb(146,131,116);
+  --accent:rgb(254,128,25);
+  --warn:rgb(250,189,47);
+  --danger:rgb(251,73,52);
+  --card:rgb(80,73,69);
+  --card-sel:rgb(122,96,52);
+  --card-drag:rgb(168,128,64);
+  --sel:rgb(122,96,52);
+  --shadow:rgba(0,0,0,.5);
+}

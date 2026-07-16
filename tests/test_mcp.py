@@ -1,16 +1,24 @@
 """
 Parity: an MCP tool call produces an event indistinguishable from the HTTP path
-(same op/field/payload/parent-shape), since both go through the same Backend
-operations.
+(same op/field/payload/parent-shape). The MCP host forwards over HTTP, so both
+paths land in `dispatch` against one `Backend`; the tests wire the host's `_send`
+seam straight to `dispatch` to exercise that mapping without a socket.
 """
 
 from __future__ import annotations
 
 import time
 
+from tododo import mcp
 from tododo.app import Backend
-from tododo.mcp import call_tool
 from tododo.server import dispatch
+
+
+def _route_through(backend: Backend):
+    def _send(method, path, query, body):
+        _, payload = dispatch(backend, method, path, query, body)
+        return payload
+    return _send
 
 
 def _wait(backend: Backend, uuid: str, timeout: float = 3.0):
@@ -27,7 +35,7 @@ def _fingerprint(event):
     return (event.op, event.field, event.payload, len(event.parent))
 
 
-def test_create_item_parity(tmp_path):
+def test_create_item_parity(tmp_path, monkeypatch):
     http_backend = Backend(tmp_path / "http", "pw", enable_git=False)
     mcp_backend = Backend(tmp_path / "mcp", "pw", enable_git=False)
     http_backend.start()
@@ -35,7 +43,9 @@ def test_create_item_parity(tmp_path):
     try:
         args = {"board": "b", "column": "todo", "title": "Buy milk"}
         _, http_result = dispatch(http_backend, "POST", "/item", {}, args)
-        mcp_result = call_tool(mcp_backend, "create_item", args)
+
+        monkeypatch.setattr(mcp, "_send", _route_through(mcp_backend))
+        mcp_result = mcp.create_item(args["board"], args["column"], args["title"])
 
         http_event = _wait(http_backend, http_result["uuid"]).event
         mcp_event = _wait(mcp_backend, mcp_result["uuid"]).event
@@ -45,12 +55,13 @@ def test_create_item_parity(tmp_path):
         mcp_backend.stop()
 
 
-def test_mcp_reads(backend: Backend):
+def test_mcp_reads(backend: Backend, monkeypatch):
     backend.start()
     try:
-        created = call_tool(backend, "create_board", {"name": "Work", "columns": ["a"]})
+        monkeypatch.setattr(mcp, "_send", _route_through(backend))
+        created = mcp.create_board("Work", ["a"])
         _wait(backend, created["uuid"])
-        boards = call_tool(backend, "list_boards", {})
+        boards = mcp.list_boards()
         assert any(board["name"]["value"] == "Work" for board in boards["boards"])
     finally:
         backend.stop()
