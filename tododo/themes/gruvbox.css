@@ -14,4 +14,6 @@
   --card-drag:rgb(168,128,64);
   --sel:rgb(122,96,52);
   --shadow:rgba(0,0,0,.5);
+  --col1:#83a598; --col2:#b8bb26; --col3:#fabd2f; --col4:#fb4934;
+  --col5:#d3869b; --col6:#8ec07c; --col7:#fe8019; --col8:#d65d0e;
 }

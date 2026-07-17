@@ -67,6 +67,9 @@ def dispatch(backend: Backend, method: str, path: str, query: dict, body: dict) 
     if route == ("POST", "/keybindings"):
         return 200, backend.set_keybindings(body)
 
+    if route == ("GET", "/keybinding-contexts"):
+        return 200, backend.keybinding_contexts()
+
     if route == ("GET", "/workspace"):
         return 200, backend.workspace()
 
@@ -106,7 +109,10 @@ def _dispatch_write(backend: Backend, path: str, body: dict) -> tuple[int, dict]
         elif path == "/column/delete":
             uuid = backend.delete_column(body["board"], body["col"], by=by)
         elif path == "/item":
-            uuid = backend.create_item(body["board"], body["column"], body["title"], by=by)
+            uuid = backend.create_item(
+                body["board"], body["column"], body["title"], by=by,
+                start=body.get("start", ""), end=body.get("end", ""),
+            )
         elif path == "/item/edit":
             uuid = backend.edit_item(body["target"], body["field"], body["value"], by=by)
         elif path == "/item/delete":
@@ -165,7 +171,8 @@ def make_handler(backend: Backend):
                 self._serve_theme(query.get("name", ""))
                 return
             api_prefixes = ("/job", "/board", "/item", "/items", "/boards", "/conflicts",
-                            "/column", "/resolve", "/keybindings", "/workspace", "/settings", "/themes")
+                            "/column", "/resolve", "/keybindings", "/keybinding-contexts",
+                            "/workspace", "/settings", "/themes")
             if method == "GET" and (parsed.path == "/" or not parsed.path.startswith(api_prefixes)):
                 if self._serve_static(parsed.path):
                     return

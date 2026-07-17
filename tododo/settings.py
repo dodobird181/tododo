@@ -49,6 +49,8 @@ DEFAULT_SETTINGS = {
     "default_end_offset_minutes": 60,
     "default_end_rounding": "ceil",
     "default_end_interval_minutes": 15,
+    "calendar_increment_minutes": 30,
+    "now_timezone": None,
 }
 
 SETTINGS_HELP = {
@@ -64,6 +66,11 @@ SETTINGS_HELP = {
         "How to snap the end onto the interval grid: 'ceil', 'floor', or 'none'.",
     "default_end_interval_minutes":
         "Grid size in minutes the end snaps to (clamped to a 5-minute minimum).",
+    "calendar_increment_minutes":
+        "Minutes the calendar cursor/selection moves or resizes per vertical arrow step.",
+    "now_timezone":
+        "IANA timezone for the calendar 'now' marker (e.g. 'America/New_York'). "
+        "Leave empty to inherit the browser's timezone.",
 }
 
 
@@ -163,6 +170,8 @@ def _cleaned(data: dict) -> dict:
         "default_end_offset_minutes": _as_int(data.get("default_end_offset_minutes"), 60),
         "default_end_rounding": _as_mode(data.get("default_end_rounding")),
         "default_end_interval_minutes": _as_interval(data.get("default_end_interval_minutes")),
+        "calendar_increment_minutes": _as_positive_int(data.get("calendar_increment_minutes"), 30),
+        "now_timezone": _as_timezone(data.get("now_timezone")),
     }
 
 
@@ -180,3 +189,14 @@ def _as_mode(value) -> str:
 
 def _as_interval(value) -> int:
     return max(MINIMUM_INTERVAL_MINUTES, _as_int(value, MINIMUM_INTERVAL_MINUTES))
+
+
+def _as_positive_int(value, fallback: int) -> int:
+    return max(1, _as_int(value, fallback))
+
+
+def _as_timezone(value) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None

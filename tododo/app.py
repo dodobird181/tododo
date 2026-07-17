@@ -26,6 +26,7 @@ from tododo.filewatcher import FileWatcher
 from tododo.gitsync import GitSync
 from tododo.keybindings import load_keybindings
 from tododo.keybindings import save_keybindings
+from tododo.keybinding_contexts import load_keybinding_contexts
 from tododo.log import EventLog
 from tododo.models import Board
 from tododo.models import Conflict
@@ -152,6 +153,9 @@ class Backend:
     def set_keybindings(self, mapping: dict[str, str]) -> dict[str, str]:
         return save_keybindings(self.keybindings_path, mapping)
 
+    def keybinding_contexts(self) -> dict:
+        return load_keybinding_contexts()
+
     # --- workspace + themes (local per-machine view state) ---------------
 
     def workspace(self) -> dict:
@@ -197,8 +201,11 @@ class Backend:
     def delete_column(self, board: str, col: str, by: str = "") -> str:
         return self.submit(Command(op="DeleteColumn", by=by, target=board, args={"col": col}))
 
-    def create_item(self, board: str, column: str, title: str, by: str = "") -> str:
-        start, end = default_datetimes(self.settings())
+    def create_item(self, board: str, column: str, title: str, by: str = "",
+                    start: str = "", end: str = "") -> str:
+        default_start, default_end = default_datetimes(self.settings())
+        start = start or default_start
+        end = end or default_end
         return self.submit(Command(
             op="CreateItem", by=by,
             args={"board": board, "column": column, "title": title, "start": start, "end": end},

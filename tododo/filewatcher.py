@@ -15,6 +15,8 @@ full replay.
 from __future__ import annotations
 
 import os
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
@@ -27,6 +29,39 @@ from tododo.crypto import encrypt
 from tododo.models import Event
 
 ENC_SUFFIX = ".yaml.enc"
+
+
+class DecryptionProgress:
+    """
+    Minecraft-server-style console progress for a bulk decryption pass: a
+    percentage line printed at most once per `interval_seconds`, plus a final
+    100% line. Silent when there is nothing to decrypt.
+    """
+
+    def __init__(self, total: int, interval_seconds: float = 1.0):
+        self.total = total
+        self.interval_seconds = interval_seconds
+        self.last_emit = float("-inf")
+        self.last_done = -1
+
+    def update(self, done: int) -> None:
+        if self.total <= 0:
+            return
+        moment = time.monotonic()
+        if moment - self.last_emit < self.interval_seconds:
+            return
+        self.last_emit = moment
+        self._emit(done)
+
+    def finish(self) -> None:
+        if self.total > 0 and self.last_done != self.total:
+            self._emit(self.total)
+
+    def _emit(self, done: int) -> None:
+        self.last_done = done
+        percent = int(done * 100 / self.total)
+        stamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{stamp}] [Tododo/INFO]: Decrypting event log: {percent}% ({done}/{self.total})", flush=True)
 
 
 class FileWatcher:
@@ -97,18 +132,24 @@ class FileWatcher:
 
     def ingest(self) -> list[Event]:
         """
-        Decrypt every mirrored event missing a plaintext counterpart (i.e. pulled
-        from git), apply each via `on_inbound`, and return them.
+        Decrypt every mirrored event missing a plaintext counterpart (a fresh
+        clone's whole log, or the events pulled from git), apply each via
+        `on_inbound`, and return them. Prints decryption progress once a second.
         """
+        pending = [
+            path for path in sorted(self.encrypted_dir.glob(f"*{ENC_SUFFIX}"))
+            if not self.raw_path_for(path.name[: -len(ENC_SUFFIX)]).exists()
+        ]
         ingested = []
-        for path in sorted(self.encrypted_dir.glob(f"*{ENC_SUFFIX}")):
+        progress = DecryptionProgress(len(pending))
+        for done, path in enumerate(pending, start=1):
             event_id = path.name[: -len(ENC_SUFFIX)]
-            if self.raw_path_for(event_id).exists():
-                continue
             event = self.decrypt_file(event_id)
             if self.on_inbound:
                 self.on_inbound(event)
             ingested.append(event)
+            progress.update(done)
+        progress.finish()
         return ingested
 
     def start(self) -> None:

@@ -1,0 +1,41 @@
+# Keybinding availability contexts.
+#
+# Business-logic map of WHEN each keybinding action is active, evaluated against
+# the live app state. This is app configuration — committed and identical for
+# everyone — NOT per-machine userdata like keybindings.yaml / settings.yaml.
+#
+# App state shape (what the front-end evaluates each rule against):
+#   app_mode:     "kanban" | "calendar"      -- the base view currently showing
+#   open_views:   [view, ...]                -- every view open right now: the
+#                   base view plus any modal/pane on top. Known view names:
+#                   kanban | calendar | edit_item | create_item | create_board |
+#                   create_column | switch_board | palette | keybindings |
+#                   settings | themes | search | due_date | view_yaml
+#   cursor_items: [item_id, ...]             -- the selected / cursor items
+#
+# Per action, ALL listed conditions must hold for the binding to be active.
+# An action with no rule here is always active.
+#   modes:            app_mode must be one of these         (default: any mode)
+#   selection:        how many items must be selected — one of:
+#                       none  -> cursor_items is empty
+#                       one   -> exactly one item selected  (single-item edits)
+#                       any   -> one or more selected        (move / delete)
+#                     (default: no constraint on the selection)
+#   only_when_views:  every listed view must be open          (default: none)
+#   not_when_views:   none of the listed views may be open    (default: none)
+
+version: 1
+
+actions:
+  create:           { modes: [kanban, calendar] }
+  edit:             { modes: [kanban, calendar], selection: one }
+  delete:           { modes: [kanban, calendar], selection: any }
+  due_date:         { modes: [kanban], selection: one }
+  view_yaml:        { modes: [kanban], selection: one }
+  minimize:         { modes: [kanban] }
+  search:           { modes: [kanban] }
+  new_column:       { modes: [kanban] }
+  delete_board:     { modes: [kanban, calendar] }
+  calendar:         { modes: [kanban] }
+  kanban:           { modes: [calendar] }
+  reset_cal_cursor: { modes: [calendar] }
