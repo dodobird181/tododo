@@ -3,8 +3,8 @@ Dev launcher: start the backend + HTTP server and serve the test UI.
 
     python -m tododo [--root DIR] [--port N] [--no-git]
 
-Passphrase comes from `TODODO_PASSPHRASE` (default a dev value). GitHub login,
-if `gh` is installed, is used as the event author.
+Passphrase comes from `TODODO_PASSPHRASE` (required; the process exits if unset
+or empty). GitHub login, if `gh` is installed, is used as the event author.
 """
 
 from __future__ import annotations
@@ -37,7 +37,13 @@ def main() -> int:
     parser.add_argument("--no-git", action="store_true", help="disable git sync")
     args = parser.parse_args()
 
-    passphrase = os.environ.get("TODODO_PASSPHRASE", "dev-passphrase")
+    passphrase = os.environ.get("TODODO_PASSPHRASE", "").strip()
+    if not passphrase:
+        parser.error(
+            "TODODO_PASSPHRASE is not set. Export it before starting tododo; "
+            "it is the only secret protecting the encrypted event log and cannot "
+            "be recovered if lost."
+        )
     backend = Backend(
         Path(args.root),
         passphrase=passphrase,

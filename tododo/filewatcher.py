@@ -24,8 +24,9 @@ import yaml
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from tododo.crypto import decrypt
-from tododo.crypto import encrypt
+from tododo.crypto import Cipher
+from tododo.crypto import is_shared_key
+from tododo.crypto import load_or_create_salt
 from tododo.models import Event
 
 ENC_SUFFIX = ".yaml.enc"
@@ -82,9 +83,8 @@ class FileWatcher:
         self.encrypted_dir = Path(encrypted_dir)
         self.events_dir.mkdir(parents=True, exist_ok=True)
         self.encrypted_dir.mkdir(parents=True, exist_ok=True)
-        self.passphrase = passphrase
+        self.cipher = Cipher(passphrase, load_or_create_salt(self.encrypted_dir), iterations)
         self.on_inbound = on_inbound
-        self.iterations = iterations
         self._observer: Observer | None = None
 
     def enc_path_for(self, event_id: str) -> Path:
@@ -112,14 +112,20 @@ class FileWatcher:
             plaintext = source.read_bytes()
         except FileNotFoundError:
             return
-        self._atomic_write(destination, encrypt(plaintext, self.passphrase, self.iterations))
+        self._atomic_write(destination, self.cipher.encrypt(plaintext))
 
     def decrypt_file(self, event_id: str) -> Event:
         """
         Decrypt one mirrored event into `events/` and return the parsed `Event`.
+
+        A legacy (per-file-salt) blob is re-encrypted in the shared-key format
+        as a side effect, so a one-time ingest upgrades the whole log in place.
         """
-        blob = self.enc_path_for(event_id).read_bytes()
-        plaintext = decrypt(blob, self.passphrase, self.iterations)
+        encrypted_path = self.enc_path_for(event_id)
+        blob = encrypted_path.read_bytes()
+        plaintext = self.cipher.decrypt(blob)
+        if not is_shared_key(blob):
+            self._atomic_write(encrypted_path, self.cipher.encrypt(plaintext))
         self._atomic_write(self.raw_path_for(event_id), plaintext)
         return Event.from_dict(yaml.safe_load(plaintext))
 
