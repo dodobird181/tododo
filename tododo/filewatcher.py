@@ -26,7 +26,7 @@ from watchdog.observers import Observer
 
 from tododo.crypto import Cipher
 from tododo.crypto import is_shared_key
-from tododo.crypto import load_or_create_salt
+from tododo.crypto import load_or_create_data_key
 from tododo.models import Event
 
 ENC_SUFFIX = ".yaml.enc"
@@ -83,7 +83,8 @@ class FileWatcher:
         self.encrypted_dir = Path(encrypted_dir)
         self.events_dir.mkdir(parents=True, exist_ok=True)
         self.encrypted_dir.mkdir(parents=True, exist_ok=True)
-        self.cipher = Cipher(passphrase, load_or_create_salt(self.encrypted_dir), iterations)
+        data_key = load_or_create_data_key(self.encrypted_dir, passphrase, iterations)
+        self.cipher = Cipher(data_key, legacy_passphrase=passphrase, legacy_iterations=iterations)
         self.on_inbound = on_inbound
         self._observer: Observer | None = None
 
